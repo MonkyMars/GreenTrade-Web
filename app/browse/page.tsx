@@ -24,6 +24,7 @@ import {
   TbGoGame,
 } from "react-icons/tb";
 import { FetchedListing } from "../../lib/types/main";
+import { getListings } from "@/lib/backend/getListings";
 
 const BrowsePage = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -35,9 +36,8 @@ const BrowsePage = () => {
 
   useEffect(() => {
     const fetchListings = async () => {
-      const response = await fetch("http://localhost:8080/listings");
-      const data: FetchedListing[] = await response.json();
-      setListings(data);
+      const data = await getListings();
+      setListings(data as FetchedListing[]);
     };
     fetchListings();
   }, []);

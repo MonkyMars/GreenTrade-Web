@@ -7,14 +7,6 @@ export default function About() {
     <main className="pt-16">
       {/* Hero section */}
       <section className="relative bg-gradient-to-br from-green-600 to-green-800 text-white py-24 md:py-32">
-        <div className="absolute inset-0 opacity-20">
-          <Image
-            src="/images/pattern-bg.png" 
-            alt="Background pattern"
-            fill
-            style={{ objectFit: 'cover' }}
-          />
-        </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
             Transforming How Europe <span className="text-green-200">Trades Sustainably</span>
