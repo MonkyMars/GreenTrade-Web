@@ -12,20 +12,10 @@ import {
   FaStar,
 } from "react-icons/fa";
 import { FiSearch, FiGrid, FiList, FiChevronDown, FiX } from "react-icons/fi";
-import {
-  TbShirt,
-  TbDeviceLaptop,
-  TbCar,
-  TbHome,
-  TbDiamond,
-  TbBooks,
-  TbFolder,
-  TbQuestionMark,
-  TbGoGame,
-} from "react-icons/tb";
+import { TbFolder } from "react-icons/tb";
 import { FetchedListing } from "../../lib/types/main";
 import { getListings } from "@/lib/backend/getListings";
-
+import { categories, findCategory } from "@/lib/functions/categories";
 const BrowsePage = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -43,27 +33,12 @@ const BrowsePage = () => {
   }, []);
 
   // Categories for filter
-  const categories: { id: string; icon: React.ElementType; name: string }[] = [
-    { id: "all", icon: TbFolder, name: "All Categories" },
-    { id: "home-garden", icon: TbHome, name: "Home & Garden" },
-    { id: "fashion", icon: TbShirt, name: "Fashion" },
-    { id: "electronics", icon: TbDeviceLaptop, name: "Electronics" },
-    { id: "vehicles", icon: TbCar, name: "Vehicles" },
-    { id: "books", icon: TbBooks, name: "Books" },
-    { id: "jewerly", icon: TbDiamond, name: "Jewerly" },
-    { id: "toys-games", icon: TbGoGame, name: "Toys & Games" },
-    { id: "other", icon: TbQuestionMark, name: "Other" },
-  ];
 
   // Toggle favorite status
   // const toggleFavorite = (id: number) => {
   //   // In a real app, this would call an API
   //   console.log(`Toggle favorite for item ${id}`);
   // };
-
-  const findCategory = (id: string) => {
-    return categories.find((category) => category.id === id);
-  };
 
   return (
     <main className="pt-16 bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -304,7 +279,9 @@ const BrowsePage = () => {
             {viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {listings.map((listing, index) => {
-                  let category = findCategory(listing.category.toLocaleLowerCase());
+                  let category = findCategory(
+                    listing.category.toLocaleLowerCase()
+                  );
                   // TODO: Add an image slider with imageUrl.length and disable when sectedImage == imgeUrl.length
                   if (!category)
                     category = { id: "all", icon: TbFolder, name: "Unknown" };
@@ -318,6 +295,7 @@ const BrowsePage = () => {
                           src={listing.imageUrl[0]}
                           alt={listing.title}
                           fill
+                          priority
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           className="object-cover w-full h-full"
                         />
@@ -343,7 +321,7 @@ const BrowsePage = () => {
                         </div>
                       </div>
                       <div className="p-4">
-                        <Link href={`/listing/${listing.id}`} className="block">
+                        <Link href={`/listings/${listing.id}`} className="block">
                           <h3 className="text-lg font-medium text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-green-400 line-clamp-2">
                             {listing.title}
                           </h3>
@@ -410,7 +388,9 @@ const BrowsePage = () => {
             ) : (
               <div className="space-y-4">
                 {listings.map((listing, index) => {
-                  let category = findCategory(listing.category.toLocaleLowerCase());
+                  let category = findCategory(
+                    listing.category.toLocaleLowerCase()
+                  );
                   if (!category)
                     category = { id: "all", icon: TbFolder, name: "Unknown" };
                   return (
@@ -424,13 +404,13 @@ const BrowsePage = () => {
                             src={listing.imageUrl[0]}
                             alt={listing.title}
                             fill
+                            priority
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             style={{ objectFit: "cover" }}
                           />
                           <div className="absolute bottom-2 left-2 bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 px-2 py-1 rounded text-sm font-medium flex items-center">
                             <FaLeaf className="h-4 w-4 text-green-500 mr-1" />
-                            <span>
-                              {listing.ecoScore}
-                            </span>
+                            <span>{listing.ecoScore}</span>
                           </div>
                         </div>
                         <div className="p-4 flex-grow">
@@ -467,7 +447,9 @@ const BrowsePage = () => {
                               </span>
                               <span className="mx-2 text-gray-400">•</span>
                               <span className="text-gray-500 dark:text-gray-400">
-                                {new Date(listing.created_at).toLocaleDateString()}
+                                {new Date(
+                                  listing.created_at
+                                ).toLocaleDateString()}
                               </span>
                             </div>
 

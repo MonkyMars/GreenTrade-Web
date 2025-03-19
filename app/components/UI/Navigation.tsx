@@ -39,7 +39,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
 
   return (
     <header 
-      className={`fixed w-full z-50 transition-all duration-300 ${
+      className={`fixed w-full z-99 transition-all duration-300 ${
         scrolled || !transparent 
           ? 'bg-white dark:bg-gray-900 shadow-md' 
           : 'bg-transparent'
@@ -147,7 +147,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white dark:bg-gray-900 shadow-lg"
+            className="md:hidden bg-white dark:bg-gray-900 shadow-lg z-99"
           >
             <div className="px-4 pt-2 pb-4 space-y-1">
               <div className="relative mb-4">

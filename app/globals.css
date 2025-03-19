@@ -61,11 +61,15 @@
 }
 
 body {
-  background: var(--background);
+  @apply bg-slate-900;
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
 button {
   @apply flex;
+}
+
+.tabslist{
+  @apply bg-gray-900;
 }
