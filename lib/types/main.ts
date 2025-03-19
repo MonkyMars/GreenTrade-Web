@@ -1,0 +1,35 @@
+export interface Listing {
+    id: number;
+    title: string;
+    description: string;
+    image: string;
+    price: string;
+    ecoScore: number;
+    location: string;
+    category: string;
+    date: string;
+    condition: string;
+    isFavorite: boolean;
+    seller: {
+      name: string;
+      rating: number;
+      verified: boolean;
+    };
+}
+
+export interface UploadListing {
+    title: string;
+    description: string;
+    price: number;
+    location: string;
+    category: string;
+    condition: string;
+    ecoAttributes: string[];
+    negotiable: boolean;
+    imageUrl: string[];
+    seller: {
+        name: string;
+        rating: number;
+        verified: boolean;
+    }
+}
