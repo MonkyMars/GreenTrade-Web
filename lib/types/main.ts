@@ -25,11 +25,18 @@ export interface UploadListing {
     category: string;
     condition: string;
     ecoAttributes: string[];
+    ecoScore: number;
     negotiable: boolean;
     imageUrl: string[];
     seller: {
+        id: number;
         name: string;
         rating: number;
         verified: boolean;
     }
+}
+
+export interface FetchedListing extends UploadListing {
+    id: number;
+    created_at: string;
 }

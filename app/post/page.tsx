@@ -8,6 +8,7 @@ import { FiX } from "react-icons/fi";
 import { uploadImage } from "../../lib/backend/uploadImage"
 import { uploadListing } from "../../lib/backend/uploadListing";
 import { UploadListing } from "@/lib/types/main";
+import { calculateEcoScore } from "@/lib/functions/calculateEcoScore";
 
 const PostListingPage = () => {
   const [formData, setFormData] = useState({
@@ -36,7 +37,6 @@ const PostListingPage = () => {
     "Jewelry",
     "Sports",
     "Toys & Games",
-    "Services",
     "Other",
   ];
 
@@ -213,14 +213,17 @@ const PostListingPage = () => {
         price: parseFloat(formData.price), 
         negotiable: formData.negotiable,
         ecoAttributes: formData.ecoAttributes,
+        ecoScore: calculateEcoScore(formData.ecoAttributes),
         imageUrl: imageUploadResponse,
         seller: {
+          id: 1,
           name: "John Doe",
           rating: 4.5,
           verified: true
         }
       };
-
+      console.table(formData.ecoAttributes)
+      console.log(calculateEcoScore(formData.ecoAttributes));
       const uploadResponse = await uploadListing(listing);
       if (!uploadResponse) {
         throw new Error("Failed to post listing");
@@ -406,7 +409,7 @@ const PostListingPage = () => {
                   onChange={handleChange}
                   className={`block w-full px-4 py-3 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out
                     ${
-                      formErrors.title
+                      formErrors.condition
                         ? "border-2 border-red-300 focus:ring-2 focus:ring-red-500 focus:border-red-500"
                         : "border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300"
                     }

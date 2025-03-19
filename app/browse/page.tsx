@@ -7,8 +7,8 @@ import {
   FaLeaf,
   FaMapMarkedAlt,
   FaFilter,
-  FaHeart,
-  FaRegHeart,
+  // FaHeart,
+  // FaRegHeart,
   FaStar,
 } from "react-icons/fa";
 import { FiSearch, FiGrid, FiList, FiChevronDown, FiX } from "react-icons/fi";
@@ -20,8 +20,10 @@ import {
   TbDiamond,
   TbBooks,
   TbFolder,
+  TbQuestionMark,
+  TbGoGame,
 } from "react-icons/tb";
-import { Listing } from "../../lib/types/main";
+import { FetchedListing } from "../../lib/types/main";
 
 const BrowsePage = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -29,12 +31,12 @@ const BrowsePage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("newest");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [listings, setListings] = useState<Listing[]>([]);
-  
+  const [listings, setListings] = useState<FetchedListing[]>([]);
+
   useEffect(() => {
     const fetchListings = async () => {
       const response = await fetch("http://localhost:8080/listings");
-      const data: Listing[] = await response.json();
+      const data: FetchedListing[] = await response.json();
       setListings(data);
     };
     fetchListings();
@@ -49,13 +51,15 @@ const BrowsePage = () => {
     { id: "vehicles", icon: TbCar, name: "Vehicles" },
     { id: "books", icon: TbBooks, name: "Books" },
     { id: "jewerly", icon: TbDiamond, name: "Jewerly" },
+    { id: "toys-games", icon: TbGoGame, name: "Toys & Games" },
+    { id: "other", icon: TbQuestionMark, name: "Other" },
   ];
 
   // Toggle favorite status
-  const toggleFavorite = (id: number) => {
-    // In a real app, this would call an API
-    console.log(`Toggle favorite for item ${id}`);
-  };
+  // const toggleFavorite = (id: number) => {
+  //   // In a real app, this would call an API
+  //   console.log(`Toggle favorite for item ${id}`);
+  // };
 
   const findCategory = (id: string) => {
     return categories.find((category) => category.id === id);
@@ -299,26 +303,26 @@ const BrowsePage = () => {
           <div className="mt-6 lg:mt-0 lg:col-span-9">
             {viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {listings.map((listing) => {
-                  let category = findCategory(listing.category);
+                {listings.map((listing, index) => {
+                  let category = findCategory(listing.category.toLocaleLowerCase());
+                  // TODO: Add an image slider with imageUrl.length and disable when sectedImage == imgeUrl.length
                   if (!category)
                     category = { id: "all", icon: TbFolder, name: "Unknown" };
                   return (
                     <div
-                      key={listing.id}
+                      key={index}
                       className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1"
                     >
                       <div className="relative h-52 group">
                         <Image
-                          src={listing.image}
+                          src={listing.imageUrl[0]}
                           alt={listing.title}
                           fill
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          priority={listing.id <= 4}
-                          className="object-contain"
+                          className="object-cover w-full h-full"
                         />
                         <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-200" />
-                        <button
+                        {/* <button
                           onClick={() => toggleFavorite(listing.id)}
                           aria-label={
                             listing.isFavorite
@@ -332,7 +336,7 @@ const BrowsePage = () => {
                           ) : (
                             <FaRegHeart className="h-5 w-5 text-gray-600 dark:text-gray-300" />
                           )}
-                        </button>
+                        </button> */}
                         <div className="absolute bottom-2 left-2 bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 px-2 py-1 rounded text-sm font-medium flex items-center">
                           <FaLeaf className="h-4 w-4 text-green-500 mr-1" />
                           <span className="font-bold">{listing.ecoScore}</span>
@@ -346,7 +350,7 @@ const BrowsePage = () => {
                         </Link>
                         <div className="mt-1 flex items-baseline">
                           <span className="text-green-600 dark:text-green-400 text-lg font-bold">
-                            {listing.price}
+                            €{listing.price}
                           </span>
                           <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
                             Exc. Shipping
@@ -360,30 +364,44 @@ const BrowsePage = () => {
                           <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                             <category.icon className="mr-2 h-4 w-4 flex-shrink-0 text-green-400 dark:text-green-500" />
                             <span className="truncate text-green-400 dark:text-green-500">
-                              {category.name}
+                              {listing.category}
                             </span>
                           </div>
                         </div>
                         <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between"></div>
-                        <div className="flex items-center text-sm">
-                          {listing.seller.verified && (
-                            <span className="mr-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded-full flex items-center">
-                              ✓
+                        {listing.seller ? (
+                          <>
+                            <div className="flex items-center text-sm">
+                              {listing.seller.verified && (
+                                <span className="mr-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded-full flex items-center">
+                                  ✓
+                                </span>
+                              )}
+                              <span className="text-gray-600 dark:text-gray-300">
+                                {listing.seller.name}
+                              </span>
+                              <div className="ml-2 flex items-center">
+                                <FaStar className="h-3 w-3 text-yellow-400" />
+                                <span className="text-xs ml-1">
+                                  {listing.seller.rating}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {new Date(
+                                listing.created_at
+                              ).toLocaleDateString()}
                             </span>
-                          )}
-                          <span className="text-gray-600 dark:text-gray-300">
-                            {listing.seller.name}
-                          </span>
-                          <div className="ml-2 flex items-center">
-                            <FaStar className="h-3 w-3 text-yellow-400" />
-                            <span className="text-xs ml-1">
-                              {listing.seller.rating}
-                            </span>
-                          </div>
-                        </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {listing.date}
-                        </span>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center text-sm">
+                              <span className="text-gray-600 dark:text-gray-300">
+                                Unknown Seller: Please Try Again.
+                              </span>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   );
@@ -391,26 +409,28 @@ const BrowsePage = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {listings.map((listing) => {
-                  let category = findCategory(listing.category);
+                {listings.map((listing, index) => {
+                  let category = findCategory(listing.category.toLocaleLowerCase());
                   if (!category)
                     category = { id: "all", icon: TbFolder, name: "Unknown" };
                   return (
                     <div
-                      key={listing.id}
+                      key={index}
                       className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow"
                     >
                       <div className="flex flex-col sm:flex-row">
                         <div className="relative h-48 sm:h-auto sm:w-48 flex-shrink-0">
                           <Image
-                            src={listing.image}
+                            src={listing.imageUrl[0]}
                             alt={listing.title}
                             fill
                             style={{ objectFit: "cover" }}
                           />
                           <div className="absolute bottom-2 left-2 bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 px-2 py-1 rounded text-sm font-medium flex items-center">
                             <FaLeaf className="h-4 w-4 text-green-500 mr-1" />
-                            <span>{listing.ecoScore}</span>
+                            <span>
+                              {listing.ecoScore}
+                            </span>
                           </div>
                         </div>
                         <div className="p-4 flex-grow">
@@ -425,10 +445,10 @@ const BrowsePage = () => {
                                 </h3>
                               </Link>
                               <p className="mt-1 text-green-600 dark:text-green-400 text-lg font-bold">
-                                {listing.price}
+                                €{listing.price}
                               </p>
                             </div>
-                            <button
+                            {/* <button
                               onClick={() => toggleFavorite(listing.id)}
                               className="p-2"
                             >
@@ -437,52 +457,66 @@ const BrowsePage = () => {
                               ) : (
                                 <FaRegHeart className="h-5 w-5 text-gray-600 dark:text-gray-300" />
                               )}
-                            </button>
+                            </button> */}
                           </div>
-													<div className="space-y-3 mt-2">
-														<div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-															<FaMapMarkedAlt className="mr-2 h-4 w-4 flex-shrink-0 text-gray-500 dark:text-gray-400" />
-															<span className="truncate">{listing.location}</span>
-															<span className="mx-2 text-gray-400">•</span>
-															<span className="text-gray-500 dark:text-gray-400">{listing.date}</span>
-														</div>
-														
-														<div className="flex items-center">
-															<category.icon className="h-4 w-4 text-green-500 dark:text-green-400 mr-2 flex-shrink-0" />
-															<span className="text-green-600 dark:text-green-400 font-medium">
-																{category.name}
-															</span>
-														</div>
-														
-														<div className="flex items-center justify-between mt-4">
-															<div className="flex items-center">
-																{listing.seller.verified && (
-																	<span className="mr-1.5 px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded-full flex items-center">
-																		✓
-																	</span>
-																)}
-																<span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-																	{listing.seller.name}
-																</span>
-																<div className="ml-2 flex items-center">
-																	<FaStar className="h-3.5 w-3.5 text-yellow-400" />
-																	<span className="text-xs text-gray-600 dark:text-gray-400 ml-1 font-medium">
-																		{listing.seller.rating}
-																	</span>
-																</div>
-															</div>
-															
-															<Link
-																href={`/listing/${listing.id}`}
-																className="inline-flex items-center text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm font-medium transition-colors"
-															>
-																View Details
-																<svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-																</svg>
-															</Link>
-														</div>
-													</div>
+                          <div className="space-y-3 mt-2">
+                            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                              <FaMapMarkedAlt className="mr-2 h-4 w-4 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+                              <span className="truncate">
+                                {listing.location}
+                              </span>
+                              <span className="mx-2 text-gray-400">•</span>
+                              <span className="text-gray-500 dark:text-gray-400">
+                                {new Date(listing.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center">
+                              <category.icon className="h-4 w-4 text-green-500 dark:text-green-400 mr-2 flex-shrink-0" />
+                              <span className="text-green-600 dark:text-green-400 font-medium">
+                                {category.name}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between mt-4">
+                              <div className="flex items-center">
+                                {listing.seller.verified && (
+                                  <span className="mr-1.5 px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded-full flex items-center">
+                                    ✓
+                                  </span>
+                                )}
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                  {listing.seller.name}
+                                </span>
+                                <div className="ml-2 flex items-center">
+                                  <FaStar className="h-3.5 w-3.5 text-yellow-400" />
+                                  <span className="text-xs text-gray-600 dark:text-gray-400 ml-1 font-medium">
+                                    {listing.seller.rating}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <Link
+                                href={`/listing/${listing.id}`}
+                                className="inline-flex items-center text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm font-medium transition-colors"
+                              >
+                                View Details
+                                <svg
+                                  className="ml-1 h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 5l7 7-7 7"
+                                  />
+                                </svg>
+                              </Link>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
