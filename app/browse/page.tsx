@@ -38,7 +38,7 @@ const BrowsePage = () => {
 
   useEffect(() => {
     const category = searchParams.get("category");
-    if(category) setSelectedCategory(category);
+    if (category) setSelectedCategory(category);
   }, [searchParams]);
 
   // Categories for filter
@@ -53,7 +53,7 @@ const BrowsePage = () => {
     setSelectedCategory(id);
     router.replace(`/browse?category=${id}`);
   };
-  
+
   return (
     <main className="pt-16 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Browse Header */}
@@ -305,15 +305,19 @@ const BrowsePage = () => {
                       className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1"
                     >
                       <div className="relative h-52 group">
-                        {listing.imageUrl ? (<Image
-                          src={listing.imageUrl[0]}
-                          alt={listing.title}
-                          fill
-                          priority
-                          unoptimized
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          className="object-cover w-full h-full"
-                        />) : (<div className="w-full h-full bg-gray-200 dark:bg-gray-700" />)}
+                        {listing.imageUrl ? (
+                          <Image
+                            src={listing.imageUrl[0]}
+                            alt={listing.title}
+                            fill
+                            priority
+                            unoptimized
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            className="object-cover w-full h-full"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 dark:bg-gray-700" />
+                        )}
                         <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-200" />
                         {/* <button
                           onClick={() => toggleFavorite(listing.id)}
@@ -336,7 +340,10 @@ const BrowsePage = () => {
                         </div>
                       </div>
                       <div className="p-4">
-                        <Link href={`/listings/${listing.id}`} className="block">
+                        <Link
+                          href={`/listings/${listing.id}`}
+                          className="block"
+                        >
                           <h3 className="text-lg font-medium text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-green-400 line-clamp-2">
                             {listing.title}
                           </h3>
