@@ -16,7 +16,11 @@ import { TbFolder } from "react-icons/tb";
 import { FetchedListing } from "../../lib/types/main";
 import { getListings } from "@/lib/backend/getListings";
 import { categories, findCategory } from "@/lib/functions/categories";
+import { useRouter, useSearchParams } from "next/navigation";
+
 const BrowsePage = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,6 +36,11 @@ const BrowsePage = () => {
     fetchListings();
   }, []);
 
+  useEffect(() => {
+    const category = searchParams.get("category");
+    if(category) setSelectedCategory(category);
+  }, [searchParams]);
+
   // Categories for filter
 
   // Toggle favorite status
@@ -40,6 +49,11 @@ const BrowsePage = () => {
   //   console.log(`Toggle favorite for item ${id}`);
   // };
 
+  const toggleCategory = (id: string) => {
+    setSelectedCategory(id);
+    router.replace(`/browse?category=${id}`);
+  };
+  
   return (
     <main className="pt-16 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Browse Header */}
@@ -160,7 +174,7 @@ const BrowsePage = () => {
                   {categories.map((category) => (
                     <button
                       key={category.id}
-                      onClick={() => setSelectedCategory(category.id)}
+                      onClick={() => toggleCategory(category.id)}
                       className={`flex w-full items-center py-2 px-3 rounded-md transition-colors cursor-pointer ${
                         selectedCategory === category.id
                           ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300"
