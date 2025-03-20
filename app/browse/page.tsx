@@ -305,14 +305,15 @@ const BrowsePage = () => {
                       className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1"
                     >
                       <div className="relative h-52 group">
-                        <Image
+                        {listing.imageUrl ? (<Image
                           src={listing.imageUrl[0]}
                           alt={listing.title}
                           fill
                           priority
+                          unoptimized
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           className="object-cover w-full h-full"
-                        />
+                        />) : (<div className="w-full h-full bg-gray-200 dark:bg-gray-700" />)}
                         <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-200" />
                         {/* <button
                           onClick={() => toggleFavorite(listing.id)}

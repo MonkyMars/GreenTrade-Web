@@ -199,8 +199,10 @@ const PostListingPage = () => {
     }
 
     try{
-      const imageUploadResponse = await uploadImage(imageFiles, formData.title);
-      if (!imageUploadResponse) {
+
+      const imageUrls = await uploadImage(imageFiles, formData.title);
+      
+      if (!imageFiles) {
         throw new Error("Failed to upload images");
       }
 
@@ -214,7 +216,7 @@ const PostListingPage = () => {
         negotiable: formData.negotiable,
         ecoAttributes: formData.ecoAttributes,
         ecoScore: calculateEcoScore(formData.ecoAttributes),
-        imageUrl: imageUploadResponse,
+        imageUrl: imageUrls,
         seller: {
           id: 1,
           name: "John Doe",
