@@ -147,7 +147,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-16 max-w-6xl">
+    <div className="container mx-auto px-4 py-22 max-w-6xl">
       <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar */}
         <div className="md:w-64 flex-shrink-0">
@@ -184,43 +184,48 @@ export default function AccountPage() {
               <div className="w-full mt-2">
                 <Button
                   variant="outline"
-                  className="w-full mb-2"
+                  className="w-full mb-2 relative justify-between"
                   onClick={() => setActiveTab("profile")}
                 >
-                  <FaUser className="mr-2 h-4 w-4" />
+                  <FaUser className="mr-2 left-2 relative h-4 w-4" />
                   Profile
+                  <p></p>
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full mb-2"
+                  className="w-full mb-2 relative justify-between"
                   onClick={() => setActiveTab("seller")}
                 >
-                  <FaStore className="mr-2 h-4 w-4" />
+                  <FaStore className="mr-2 left-2 relative h-4 w-4" />
                   Seller Settings
+                  <p></p>
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full mb-2"
+                  className="w-full mb-2 relative justify-between"
                   onClick={() => setActiveTab("security")}
                 >
-                  <FaShieldAlt className="mr-2 h-4 w-4" />
+                  <FaShieldAlt className="mr-2 left-2 relative h-4 w-4" />
                   Security
+                  <p></p>
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full mb-2"
+                  className="w-full mb-2 relative justify-between"
                   onClick={() => setActiveTab("delete")}
                 >
-                  <FaTrash className="mr-2 h-4 w-4 text-red-500" />
+                  <FaTrash className="mr-2 left-2 relative h-4 w-4 text-red-500" />
                   Delete Account
+                  <p></p>
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-full"
+                  className="w-full shadow-xl mb-2 relative justify-between bg-white/90 text-gray-900 dark:bg-gray-900/80 dark:text-white" 
                   onClick={handleLogout}
                 >
-                  <FaSignOutAlt className="mr-2 h-4 w-4" />
+                  <FaSignOutAlt className="mr-2 left-2 relative h-4 w-4 text-red-500" />
                   Log Out
+                  <p></p>
                 </Button>
               </div>
             </div>
