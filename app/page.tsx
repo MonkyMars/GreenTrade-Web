@@ -54,16 +54,6 @@ export default function Home() {
     <main>
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-green-600 to-green-800 text-white">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <Image
-            src="/images/pattern-bg.png"
-            alt=""
-            fill
-            style={{ objectFit: "cover" }}
-          />
-        </div>
-
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 lg:py-40">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-center">
             <div className="lg:col-span-7">

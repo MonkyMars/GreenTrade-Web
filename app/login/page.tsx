@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { FaLeaf, FaEnvelope, FaLock, FaGoogle } from "react-icons/fa";
 import { z } from "zod";
 import { Button } from "../components/UI/button";
-import { Login } from "@/lib/backend/auth/login";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -18,6 +18,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
@@ -74,25 +75,8 @@ export default function LoginPage() {
     
     try {
       // Call your authentication API
-      const response = await Login({
-        email: formData.email,
-        password: formData.password
-      })
+      await login(formData.email, formData.password);
       
-      if (response.status === 500 || response.status === 401 || response.status === 400) {
-        const errorText = "Authentication failed. Please check your credentials or verify your email.";
-        setLoginError(errorText);
-        return;
-      }
-      
-      if (response.accessToken) {
-        localStorage.setItem("auth_token", response.accessToken as string);
-      }
-
-      if (response.userId) {
-        localStorage.setItem("user_id", response.userId as string);
-      }
-
       router.push("/");
       
     } catch (error) {

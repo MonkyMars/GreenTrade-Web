@@ -24,6 +24,7 @@ import {
   TabsTrigger,
 } from "@/app/components/UI/tabs";
 import { User } from "@/lib/types/user";
+import ProtectedRoute from "../components/UI/ProtectedRoute";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function AccountPage() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const userId = localStorage.getItem("user_id");
+        const userId = localStorage.getItem("userId");
         console.log("User ID:", userId);
         if (!userId) {
           router.push("/login");
@@ -57,7 +58,7 @@ export default function AccountPage() {
       } catch (error) {
         console.error("Error fetching user data:", error);
         // Redirect to login if not authenticated
-        // router.push("/login");
+        router.push("/login");
       }
     };
 
@@ -147,6 +148,7 @@ export default function AccountPage() {
   }
 
   return (
+    <ProtectedRoute>
     <div className="container mx-auto px-4 py-22 max-w-6xl">
       <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar */}
@@ -718,5 +720,6 @@ export default function AccountPage() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

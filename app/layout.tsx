@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navigation from "./components/UI/Navigation";
 import Footer from "./components/UI/Footer";
+import { AuthProvider } from "@/lib/contexts/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
       { url: "/icon.png", sizes: "16x16" },
       { url: "/icon.png", sizes: "32x32" }
     ],
-    apple: { url: "/apple-touch-icon.png" },
+    // apple: { url: "/apple-touch-icon.png" },
     other: [
       { rel: "mask-icon", url: "/safari-pinned-tab.svg" },
       { rel: "msapplication-TileImage", url: "/mstile-150x150.png" }
@@ -66,8 +67,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <AuthProvider>
         <Navigation/>
         {children}
+        </AuthProvider>
         <Footer/>
       </body>
     </html>
