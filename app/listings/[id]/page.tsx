@@ -20,6 +20,7 @@ import {
 import { FetchedListing } from "@/lib/types/main";
 import { SimilairCard, SimilairCardSkeleton } from "./similairCard";
 import { findCategory } from "@/lib/functions/categories";
+import axios from "axios";
 
 export default async function ListingPage({
   params,
@@ -30,18 +31,15 @@ export default async function ListingPage({
 
   const fetchListing = async (): Promise<FetchedListing> => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/listings/${awaitedParams.id}`,
-        {
-          next: { revalidate: 60 }, // Revalidate every minute
-        }
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/listings/${awaitedParams.id}`
       );
 
-      if (!response.ok) {
+      if (!response.data.success) {
         throw new Error("Failed to fetch listing");
       }
 
-      return await response.json();
+      return response.data.data as FetchedListing;
     } catch (error) {
       console.error("Error fetching listing:", error);
       throw new Error("Failed to fetch listing");
@@ -54,35 +52,42 @@ export default async function ListingPage({
   const fetchSimilarListings = async (): Promise<FetchedListing[]> => {
     try {
       console.log("Fetching similar listings");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/listings/category/${listing.category}`,
-        {
-          next: { revalidate: 60 }, // Revalidate every minute
-        }
-      );
+      const category = listing.category;
 
-      if (!response.ok) {
-        console.log(response)
+      if (!category) {
         return [];
-        
       }
 
-      return await response.json();
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/listings/category/${category}`
+      );
+
+      if (!response.data.success) {
+        console.log(response);
+        return [];
+      }
+
+      return response.data.data as FetchedListing[];
     } catch (error) {
       console.error("Error fetching similar listings:", error);
       return [];
     }
   };
-  
+
   // Now fetch similar listings after we have the listing data
   const similarListings = await fetchSimilarListings();
-  let category = findCategory(listing.category.toLocaleLowerCase());
+  let listingCategory = listing.category.toLocaleLowerCase();
+  if (!listingCategory) {
+    listingCategory = "Unknown";
+  }
+  let category = findCategory(listingCategory.toLocaleLowerCase());
+
   if (!category) {
     category = { icon: FaLeaf, name: "Eco", id: "green" };
   }
 
   if (!listing) {
-      return notFound();
+    return notFound();
   }
 
   // Format the creation date to show how long ago it was posted
@@ -243,7 +248,8 @@ export default async function ListingPage({
               <div className="mb-4">
                 <div className="flex items-center justify-between">
                   <Badge variant="secondary" className="mb-2">
-                    <category.icon size="24" className="mr-1" /> {listing.category}
+                    <category.icon size="24" className="mr-1" />{" "}
+                    {listing.category}
                   </Badge>
                   <Button variant="ghost" size="icon" className="h-8 w-8">
                     <FaRegHeart className="h-5 w-5 text-gray-500 dark:text-gray-400" />

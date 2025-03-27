@@ -2,9 +2,17 @@ import { UploadListing } from "../types/main";
 
 export const uploadListing = async (listing: UploadListing) => {   
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/listings`, {
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+            throw new Error("Authentication required. Please log in.");
+        }
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL_PROTECTED}/listings`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
             body: JSON.stringify(listing),
         });
 
@@ -13,5 +21,6 @@ export const uploadListing = async (listing: UploadListing) => {
         return await response.json();
     } catch (error) {
         console.error(error);
+        throw error; // Re-throw the error to be handled by the caller
     }
 };

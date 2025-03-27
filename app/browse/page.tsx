@@ -294,7 +294,7 @@ const BrowsePage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {listings.map((listing, index) => {
                   let category = findCategory(
-                    listing.category.toLocaleLowerCase()
+                    listing.category
                   );
                   // TODO: Add an image slider with imageUrl.length and disable when sectedImage == imgeUrl.length
                   if (!category)

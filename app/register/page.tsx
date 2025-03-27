@@ -129,7 +129,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-slate-800 p-8 rounded-xl">
+      <div className="max-w-md w-full space-y-8 dark:bg-slate-800 p-8 rounded-xl shadow-xl">
         <div className="text-center">
           <Link href="/" className="inline-block">
             <div className="flex items-center justify-center">
@@ -364,7 +364,7 @@ export default function RegisterPage() {
                 onClick={() => handleSocialRegister("google")}
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
-                <FaGoogle className="h-5 w-5 text-white" />
+                <FaGoogle className="h-5 w-5 dark:text-white text-black" />
                 <span className="ml-2">Google</span>
               </Button>
             </div>
