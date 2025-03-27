@@ -63,7 +63,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
       // If user is not authenticated, redirect to login page with redirect query
       return (
         <Link
-          href="/login?redirect=/post"
+          href="/login?redirect=/account"
           className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors"
         >
           <FiUser className="mr-1 w-4 h-4" />
@@ -88,7 +88,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
       // If user is not authenticated, redirect to login page with redirect query
       return (
         <Link
-          href="/login?redirect=/post"
+          href="/login?redirect=/account"
           className="block text-center w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors"
         >
           Log in
