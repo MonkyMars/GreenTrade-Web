@@ -1,9 +1,18 @@
-"use client"
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { FiSearch, FiUser, FiMenu, FiX, FiHeart, FiMessageSquare, FiPlus } from 'react-icons/fi';
-import { FaLeaf } from 'react-icons/fa';
-import { motion, AnimatePresence } from 'framer-motion';
+"use client";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import {
+  FiSearch,
+  FiUser,
+  FiMenu,
+  FiX,
+  FiHeart,
+  FiMessageSquare,
+  FiPlus,
+} from "react-icons/fi";
+import { FaLeaf } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 interface NavigationProps {
   transparent?: boolean;
@@ -11,16 +20,17 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
   // Categories for the navigation dropdown
   const categories = [
-    { name: 'Home & Garden', href: '/category/home-garden' },
-    { name: 'Fashion', href: '/category/fashion' },
-    { name: 'Electronics', href: '/category/electronics' },
-    { name: 'Vehicles', href: '/category/vehicles' },
-    { name: 'Services', href: '/category/services' },
-    { name: 'Community', href: '/category/community' },
+    { name: "Home & Garden", href: "/category/home-garden" },
+    { name: "Fashion", href: "/category/fashion" },
+    { name: "Electronics", href: "/category/electronics" },
+    { name: "Vehicles", href: "/category/vehicles" },
+    { name: "Services", href: "/category/services" },
+    { name: "Community", href: "/category/community" },
   ];
 
   // Handle scroll events for transparent header
@@ -33,16 +43,66 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const HandlePostButtonDesktop = () => {
+    if (isAuthenticated) {
+      // If user is authenticated, redirect to post page
+      return (
+        <Link
+          href="/post"
+          className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors"
+        >
+          <FiPlus className="mr-1 w-4 h-4" />
+          <span>Post Ad</span>
+        </Link>
+      );
+    } else {
+      // If user is not authenticated, redirect to login page with redirect query
+      return (
+        <Link
+          href="/login?redirect=/post"
+          className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors"
+        >
+          <FiUser className="mr-1 w-4 h-4" />
+          <span>Log in</span>
+        </Link>
+      );
+    }
+  };
+
+  const HandlePostButtonMobile = () => {
+    if (isAuthenticated) {
+      // If user is authenticated, redirect to post page
+      return (
+        <Link
+          href="/post"
+          className="block text-center w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors"
+        >
+          Post New Ad
+        </Link>
+      );
+    } else {
+      // If user is not authenticated, redirect to login page with redirect query
+      return (
+        <Link
+          href="/login?redirect=/post"
+          className="block text-center w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors"
+        >
+          Log in
+        </Link>
+      );
+    }
+  };
+
   return (
-    <header 
+    <header
       className={`fixed w-full z-99 transition-all duration-300 ${
-        scrolled || !transparent 
-          ? 'bg-white dark:bg-gray-900 shadow-md' 
-          : 'bg-transparent'
+        scrolled || !transparent
+          ? "bg-white dark:bg-gray-900 shadow-md"
+          : "bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -62,16 +122,27 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
             <div className="relative group">
               <button className="flex items-center text-gray-700 dark:text-gray-200 hover:text-green-500 dark:hover:text-green-400">
                 Categories
-                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                <svg
+                  className="ml-1 w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
                 </svg>
               </button>
-              
+
               {/* Dropdown menu */}
               <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                 {categories.map((category) => (
-                  <Link 
-                    href={category.href} 
+                  <Link
+                    href={category.href}
                     key={category.name}
                     className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-gray-700 hover:text-green-500"
                   >
@@ -81,14 +152,20 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
               </div>
             </div>
 
-            <Link href="/map" className="text-gray-700 dark:text-gray-200 hover:text-green-500 dark:hover:text-green-400">
+            <Link
+              href="/map"
+              className="text-gray-700 dark:text-gray-200 hover:text-green-500 dark:hover:text-green-400"
+            >
               Map View
             </Link>
-            
-            <Link href="/about" className="text-gray-700 dark:text-gray-200 hover:text-green-500 dark:hover:text-green-400">
+
+            <Link
+              href="/about"
+              className="text-gray-700 dark:text-gray-200 hover:text-green-500 dark:hover:text-green-400"
+            >
               About Us
             </Link>
-            
+
             {/* Search Bar */}
             <div className="relative">
               <input
@@ -101,25 +178,28 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
 
             {/* User actions */}
             <div className="flex items-center space-x-4">
-              <Link href="/favorites" className="text-gray-700 dark:text-gray-200 hover:text-green-500">
+              <Link
+                href="/favorites"
+                className="text-gray-700 dark:text-gray-200 hover:text-green-500"
+              >
                 <FiHeart className="w-5 h-5" />
               </Link>
-              
-              <Link href="/messages" className="text-gray-700 dark:text-gray-200 hover:text-green-500">
+
+              <Link
+                href="/messages"
+                className="text-gray-700 dark:text-gray-200 hover:text-green-500"
+              >
                 <FiMessageSquare className="w-5 h-5" />
               </Link>
-              
-              <Link href="/account" className="text-gray-700 dark:text-gray-200 hover:text-green-500">
+
+              <Link
+                href="/account"
+                className="text-gray-700 dark:text-gray-200 hover:text-green-500"
+              >
                 <FiUser className="w-5 h-5" />
               </Link>
-              
-              <Link
-                href="/post"
-                className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors"
-              >
-                <FiPlus className="mr-1 w-4 h-4" />
-                <span>Post Ad</span>
-              </Link>
+
+              <HandlePostButtonDesktop/>
             </div>
           </nav>
 
@@ -145,7 +225,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden bg-white dark:bg-gray-900 shadow-lg z-99"
           >
@@ -158,7 +238,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
                 />
                 <FiSearch className="absolute left-3 top-2.5 text-gray-400" />
               </div>
-              
+
               <div className="py-2">
                 <p className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Categories
@@ -174,7 +254,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
                   </Link>
                 ))}
               </div>
-              
+
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4 pb-2">
                 <Link
                   href="/map"
@@ -183,7 +263,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
                 >
                   Map View
                 </Link>
-                
+
                 <Link
                   href="/about"
                   className="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-gray-800 rounded-md"
@@ -203,7 +283,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
                     <FiHeart className="w-5 h-5" />
                     <span className="text-xs mt-1">Favorites</span>
                   </Link>
-                  
+
                   <Link
                     href="/messages"
                     className="flex flex-col items-center px-3 py-2 text-gray-700 dark:text-gray-200"
@@ -212,7 +292,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
                     <FiMessageSquare className="w-5 h-5" />
                     <span className="text-xs mt-1">Messages</span>
                   </Link>
-                  
+
                   <Link
                     href="/account"
                     className="flex flex-col items-center px-3 py-2 text-gray-700 dark:text-gray-200"
@@ -223,16 +303,9 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
                   </Link>
                 </div>
               </div>
-              
+
               <div className="pt-2">
-                <Link
-                  href="/post"
-                  className="flex items-center justify-center w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <FiPlus className="mr-2 w-5 h-5" />
-                  <span>Post New Ad</span>
-                </Link>
+                <HandlePostButtonMobile/>
               </div>
             </div>
           </motion.div>

@@ -84,6 +84,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       );
       
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Login failed");
+      }
+
       if (!response.data || !response.data.data) {
         throw new Error("Invalid login response format");
       }
@@ -108,11 +112,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           `${process.env.NEXT_PUBLIC_BACKEND_URL_PROTECTED}/auth/user/${userId}`
         );
         
-        console.log('User details response:', userResponse.data);
-        
         if (userResponse.data.success && userResponse.data.data && userResponse.data.data.user) {
           setUser(userResponse.data.data.user);
-          console.log('User set after login:', userResponse.data.data.user);
         } else {
           console.error("Failed to fetch user details:", userResponse.data);
           throw new Error("Failed to fetch user details");
@@ -131,6 +132,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("userId");
       
+      // Check for axios error with response
+      if (axios.isAxiosError(error) && error.response) {
+        // Handle 401 Unauthorized
+        if (error.response.status === 401) {
+          throw error.response.data.message || "Invalid credentials";
+        }
+        // Handle other error responses
+        throw error.response.data.message || error.message || "Login failed";
+      }
+      
+      // Rethrow the error to be handled by the login page
       throw error;
     } finally {
       setLoading(false);
@@ -181,7 +193,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     // Clear user state last
     setUser(null);
     
-    console.log('Logout complete, redirecting to login');
     // Use a slight delay to ensure state is properly cleared before redirect
     setTimeout(() => {
       router.push("/login");
@@ -189,13 +200,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // Add a helper function to check if we have valid tokens
-  const hasValidTokens = () => {
-    if (typeof window !== 'undefined') {
-      return !!localStorage.getItem("accessToken");
-    }
-    return false;
-  };
-
+ 
   return (
     <AuthContext.Provider
       value={{
@@ -204,7 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         login,
         register,
         logout,
-        isAuthenticated: !!user || hasValidTokens(),
+        isAuthenticated: !!user,
       }}
     >
       {children}

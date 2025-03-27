@@ -36,7 +36,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     // Only redirect if auth check is complete, not authenticated, and not already redirecting
     if (!loading && !waitingForAuth && !isAuthenticated && !redirecting) {
       setRedirecting(true);
-      router.push('/login');
+      const path = window.location.pathname;
+      router.push(`/login?redirect=${path}`);
     }
   }, [loading, isAuthenticated, user, router, redirecting, waitingForAuth]);
 

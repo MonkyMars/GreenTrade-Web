@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-// import { useRouter } from "next/navigation";
 import { FaLeaf, FaEnvelope, FaLock, FaGoogle } from "react-icons/fa";
 import { z } from "zod";
 import { Button } from "../components/UI/button";
@@ -17,12 +17,12 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  // const router = useRouter();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
-    rememberMe: false,
   });
   const [errors, setErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -76,12 +76,33 @@ export default function LoginPage() {
     try {
       // Call your authentication API
       await login(formData.email, formData.password);
-      
-      // router.push("/");
+      const path = searchParams.get("redirect") || "/";
+      router.push(path);
       
     } catch (error) {
       console.error("Login error:", error);
-      setLoginError(error as string || "An unexpected error occurred. Please try again.");
+      
+      // Handle the error from the API
+      if (typeof error === 'string') {
+        setLoginError(error);
+      } else if (error && typeof error === 'object') {
+        // Check if it's an axios error with response data
+        if ('response' in error && 
+            error.response && 
+            typeof error.response === 'object' && 
+            'data' in error.response && 
+            error.response.data && 
+            typeof error.response.data === 'object' &&
+            'message' in error.response.data) {
+          setLoginError(error.response.data.message as string);
+        } else if ('message' in error && typeof error.message === 'string') {
+          setLoginError(error.message);
+        } else {
+          setLoginError("Invalid email or password. Please try again.");
+        }
+      } else {
+        setLoginError("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +137,9 @@ export default function LoginPage() {
         
         {loginError && (
           <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded relative" role="alert">
-            <span className="block sm:inline">{loginError}</span>
+            <span className="block sm:inline">
+              {loginError === "Invalid credentials" ? "Invalid email or password. Please try again." : loginError}
+            </span>
           </div>
         )}
         
@@ -178,20 +201,6 @@ export default function LoginPage() {
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="rememberMe"
-                name="rememberMe"
-                type="checkbox"
-                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                checked={formData.rememberMe}
-                onChange={handleChange}
-              />
-              <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-                Remember me
-              </label>
-            </div>
-
             <div className="text-sm">
               <Link
                 href="/forgot-password"
