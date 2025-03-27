@@ -7,6 +7,7 @@ import { FaLeaf, FaUser, FaEnvelope, FaLock, FaGoogle } from "react-icons/fa";
 import { z } from "zod";
 import { Button } from "../components/UI/button";
 import { Register } from "@/lib/backend/auth/register";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -297,13 +298,12 @@ export default function RegisterPage() {
 
           <div className="flex items-start">
             <div className="flex items-center h-5">
-              <input
+              <Checkbox
                 id="acceptTerms"
                 name="acceptTerms"
-                type="checkbox"
                 className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                 checked={formData.acceptTerms}
-                onChange={handleChange}
+                onClick={() => setFormData((prev) => ({ ...prev, acceptTerms: !prev.acceptTerms }))}
                 required
               />
             </div>
