@@ -9,6 +9,7 @@ import { uploadImage } from "../../lib/backend/uploadImage"
 import { uploadListing } from "../../lib/backend/uploadListing";
 import { UploadListing } from "@/lib/types/main";
 import { calculateEcoScore } from "@/lib/functions/calculateEcoScore";
+import ProtectedRoute from "../components/UI/ProtectedRoute";
 
 const PostListingPage = () => {
   const [formData, setFormData] = useState({
@@ -258,6 +259,7 @@ const PostListingPage = () => {
   };
 
   return (
+    <ProtectedRoute>
     <main className="pt-16 pb-16 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="my-8">
@@ -706,6 +708,7 @@ const PostListingPage = () => {
         </form>
       </div>
     </main>
+    </ProtectedRoute>
   );
 };
 

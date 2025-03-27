@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { FaLeaf, FaEnvelope, FaLock, FaGoogle } from "react-icons/fa";
 import { z } from "zod";
 import { Button } from "../components/UI/button";
@@ -17,7 +17,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const router = useRouter();
+  // const router = useRouter();
   const { login } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -77,7 +77,7 @@ export default function LoginPage() {
       // Call your authentication API
       await login(formData.email, formData.password);
       
-      router.push("/");
+      // router.push("/");
       
     } catch (error) {
       console.error("Login error:", error);
@@ -88,7 +88,7 @@ export default function LoginPage() {
   };
 
   const handleSocialLogin = async (provider: string) => {
-    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/${provider}`;
+    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/auth/${provider}`;
   };
 
   return (

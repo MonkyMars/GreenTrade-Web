@@ -9,7 +9,7 @@ export const uploadImage = async (files: File[], listing_title: UploadListing["t
     });
     
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/upload/listing_image`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/upload/listing_image`, {
             method: "POST",
             body: formData,
         });

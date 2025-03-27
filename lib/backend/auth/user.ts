@@ -1,10 +1,17 @@
+import axios from "axios";
+
 export const getUser = async (uuid: string) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/user/${uuid}`, {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+        throw new Error("No access token found");
+    }
+    axios.defaults.headers["Authorization"] = `Bearer ${token}`;
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL_PROTECTED}/auth/user/${uuid}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
         },
     });
-    const user = await response.json();
-    return user.user;
+    const user = response.data.user;
+    return user;
 }

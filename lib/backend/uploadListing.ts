@@ -2,7 +2,7 @@ import { UploadListing } from "../types/main";
 
 export const uploadListing = async (listing: UploadListing) => {   
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/listings`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/listings`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(listing),

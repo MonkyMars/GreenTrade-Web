@@ -4,7 +4,7 @@ interface LoginUser {
 }
 
 export const Login = async (user: LoginUser) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/auth/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

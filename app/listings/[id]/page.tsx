@@ -31,7 +31,7 @@ export default async function ListingPage({
   const fetchListing = async (): Promise<FetchedListing> => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/listings/${awaitedParams.id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/listings/${awaitedParams.id}`,
         {
           next: { revalidate: 60 }, // Revalidate every minute
         }
@@ -55,7 +55,7 @@ export default async function ListingPage({
     try {
       console.log("Fetching similar listings");
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/listings/category/${listing.category}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/listings/category/${listing.category}`,
         {
           next: { revalidate: 60 }, // Revalidate every minute
         }

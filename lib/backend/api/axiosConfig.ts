@@ -1,8 +1,11 @@
+// lib/api.ts
 import axios from 'axios';
 
-// Create an axios instance
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL
+  baseURL: 'http://localhost:8081',
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 // Request interceptor to add the auth token
@@ -24,7 +27,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     
     // If the error is 401 and we haven't already tried to refresh the token
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
       try {
@@ -37,7 +40,7 @@ api.interceptors.response.use(
         }
         
         // Try to get a new token
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh`, {
+        const response = await axios.post('http://localhost:8081/auth/refresh', {
           refreshToken
         });
         

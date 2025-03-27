@@ -68,10 +68,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-        <Navigation/>
-        {children}
+          <Navigation/>
+          {children}
+          <Footer/>
         </AuthProvider>
-        <Footer/>
       </body>
     </html>
   );

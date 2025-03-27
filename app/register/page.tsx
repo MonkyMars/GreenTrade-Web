@@ -124,7 +124,7 @@ export default function RegisterPage() {
 
   const handleSocialRegister = async (provider: string) => {
     // Redirect to OAuth provider for registration
-    router.replace(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/${provider}`);
+    router.replace(`${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/auth/${provider}`);
   };
 
   return (

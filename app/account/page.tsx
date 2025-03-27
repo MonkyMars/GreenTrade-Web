@@ -16,7 +16,6 @@ import {
 } from "react-icons/fa";
 import { Button } from "@/app/components/UI/button";
 import { Badge } from "@/app/components/UI/badge";
-import { getUser } from "@/lib/backend/auth/user";
 import {
   Tabs,
   TabsContent,
@@ -25,9 +24,16 @@ import {
 } from "@/app/components/UI/tabs";
 import { User } from "@/lib/types/user";
 import ProtectedRoute from "../components/UI/ProtectedRoute";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import Link from "next/link";
+
+interface ActiveTab{
+  activeTab: "profile" | "seller" | "security" | "delete";
+}
 
 export default function AccountPage() {
   const router = useRouter();
+  const { user: authUser, logout, loading: authLoading, isAuthenticated } = useAuth();
   const [user, setUser] = useState<User>({
     id: "",
     name: "",
@@ -38,54 +44,42 @@ export default function AccountPage() {
     updatedAt: "",
     createdAt: "",
   });
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState<ActiveTab["activeTab"]>("profile");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState("");
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userId = localStorage.getItem("userId");
-        console.log("User ID:", userId);
-        if (!userId) {
-          router.push("/login");
-          return;
-        }
-        const userData = await getUser(userId as string);
-        setUser(userData);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        // Redirect to login if not authenticated
-        router.push("/login");
+    if (!authLoading) {
+      if (authUser) {
+        // Update the user state with data from AuthContext
+        setUser({
+          id: authUser.id || "",
+          name: authUser.name || "",
+          email: authUser.email || "",
+          location: authUser.location || "",
+          isSeller: authUser.isSeller || false,
+          profileUrl: authUser.profileUrl || "",
+          updatedAt: authUser.updatedAt || "",
+          createdAt: authUser.createdAt || "",
+        });
+      } else if (isAuthenticated) {
+        // We're authenticated but don't have user data yet
+        console.log('Authenticated but no user data available yet - waiting for data');
+        // Could potentially trigger a refresh of user data here if needed
+      } else {
+        console.log('Not authenticated and no user data available');
       }
-    };
-
-    fetchUserData();
-  }, [router]);
+    }
+  }, [authUser, authLoading, isAuthenticated]);
 
   const handleLogout = async () => {
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-
-      // Clear any local storage
-      localStorage.removeItem("auth_token");
-
-      // Redirect to home page
-      router.push("/");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    logout();
   };
 
   const handleBecomeSeller = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/seller`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/user/seller`,
         {
           method: "POST",
           headers: {
@@ -118,7 +112,7 @@ export default function AccountPage() {
   const handleDeleteAccount = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/delete`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/user/delete`,
         {
           method: "DELETE",
           credentials: "include",
@@ -129,23 +123,15 @@ export default function AccountPage() {
         throw new Error("Failed to delete account");
       }
 
-      // Clear any local storage
-      localStorage.removeItem("auth_token");
-
+      // Logout using the auth context
+      logout();
+      
       // Redirect to home page with message
       router.push("/?deleted=true");
     } catch (error) {
       console.error("Error deleting account:", error);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-      </div>
-    );
-  }
 
   return (
     <ProtectedRoute>
@@ -694,7 +680,7 @@ export default function AccountPage() {
                       <p className="text-gray-600 dark:text-gray-400 mb-4">
                         You haven&apos;t created any listings yet.
                       </p>
-                      <Button>Create Your First Listing</Button>
+                      <Button><Link href={'/post'} prefetch>Create Your First Listing</Link></Button>
                     </div>
                   )}
                 </TabsContent>
