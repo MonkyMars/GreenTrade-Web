@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create an axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:8081'
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL
 });
 
 // Request interceptor to add the auth token
@@ -37,7 +37,7 @@ api.interceptors.response.use(
         }
         
         // Try to get a new token
-        const response = await axios.post('http://localhost:8081/auth/refresh', {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh`, {
           refreshToken
         });
         

@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           
           // Fetch user data
-          const response = await axios.get('http://localhost:8081/auth/me');
+          const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/me`);
           setUser(response.data.data.user);
         }
       } catch (error) {
@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:8081/auth/login', {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
         email,
         password
       });
@@ -71,7 +71,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
       
       // Fetch user details
-      const userResponse = await axios.get(`http://localhost:8081/auth/user/${userId}`);
+      const userResponse = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/user/${userId}`);
       setUser(userResponse.data.data.user);
       
       router.push('/account');
@@ -87,7 +87,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   const register = async (name: string, email: string, password: string, location: string) => {
     try {
       setLoading(true);
-      await axios.post('http://localhost:8081/auth/register', {
+      await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/register`, {
         name,
         email,
         password,
