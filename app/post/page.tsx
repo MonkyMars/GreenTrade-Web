@@ -406,7 +406,7 @@ const PostListingPage = () => {
                     Category <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Select>
+                  <Select onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}>
                       <SelectTrigger
                         className={`block w-full px-4 py-6 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out
                     ${
@@ -463,7 +463,7 @@ const PostListingPage = () => {
                   >
                     Condition <span className="text-red-500">*</span>
                   </label>
-                  <Select>
+                  <Select onValueChange={(value) => setFormData((prev) => ({ ...prev, condition: value }))}>
                     <SelectTrigger
                       className={`block w-full px-4 py-6 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out
                     ${
@@ -487,12 +487,6 @@ const PostListingPage = () => {
                         <SelectItem
                           value={condition.name}
                           key={condition.name}
-                          onSelect={() =>
-                            setFormData({
-                              ...formData,
-                              condition: condition.name,
-                            })
-                          }
                         >
                           <div className="flex items-center">
                             <condition.icon className="h-5 w-5 mr-2" />
