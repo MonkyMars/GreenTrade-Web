@@ -55,8 +55,6 @@ const PostListingPage = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Available categories
-
   // Condition options
   const conditions: {
     name: string;
@@ -671,7 +669,7 @@ const PostListingPage = () => {
                           id="image-upload"
                           name="image-upload"
                           type="file"
-                          accept="image/*"
+                          accept="image/jpeg, image/jpg, image/png, image/webp"
                           onChange={handleImageUpload}
                           multiple={true}
                           disabled={uploading}
