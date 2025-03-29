@@ -334,7 +334,7 @@ export default async function ListingPage({
                   {listing.ecoAttributes.map((attr: string, index: number) => (
                     <Badge
                       key={index}
-                      className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 dark:hover:bg-green-900/80"
+                      className="bg-green-100 hover:bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200 dark:hover:bg-green-900/80"
                     >
                       <FaLeaf className="mr-1 h-3 w-3" />
                       {attr}
