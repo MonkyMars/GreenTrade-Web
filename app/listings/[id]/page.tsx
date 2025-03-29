@@ -102,7 +102,7 @@ export default async function ListingPage({
           <div className="mb-8">
             <div className="relative rounded-lg overflow-hidden shadow-md">
               <Tabs defaultValue="0" className="w-full">
-                {/* Main image content - REMOVED mt-12 */}
+                {/* Main image content */}
                 <TabsContent value="0" className="m-0">
                   <div className="relative h-[400px] lg:h-[500px]">
                     {listing.imageUrl.length > 0 ? (
@@ -130,7 +130,7 @@ export default async function ListingPage({
                     value={(index + 1).toString()}
                     className="m-0"
                   >
-                    <div className="relative h-[400px] lg:h-[500px]">
+                    <div className="relative h-[800px] lg:h-[500px]">
                       <Image
                         src={img}
                         alt={`${listing.title} - image ${index + 2}`}
@@ -145,7 +145,7 @@ export default async function ListingPage({
 
                 {/* Image thumbnails */}
                 <div className="mt-4">
-                  <TabsList className="flex justify-start overflow-x-auto space-x-2 py-1 px-0 h-auto tabslist">
+                  <TabsList className="flex justify-start overflow-x-auto space-x-2 py-1 px-0 h-auto bg-gray-100! dark:bg-slate-800 tabslist">
                     {listing.imageUrl.map((img: string, index: number) => (
                       <TabsTrigger
                         key={index}
@@ -420,7 +420,7 @@ export default async function ListingPage({
       </div>
 
       {/* Related listings section - Optional */}
-      <div className="mt-16 bg-gray-900 w-full p-8 rounded-lg">
+      <div className="mt-16 dark:bg-gray-900 bg-gray-100 w-full p-8 rounded-lg">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
           Similar Listings
         </h2>
