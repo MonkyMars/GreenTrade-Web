@@ -11,6 +11,7 @@ import {
   FiPlus,
 } from "react-icons/fi";
 import { FaLeaf } from "react-icons/fa";
+import { categories } from "@/lib/functions/categories";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
@@ -22,16 +23,6 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   const [scrolled, setScrolled] = useState(false);
-
-  // Categories for the navigation dropdown
-  const categories = [
-    { name: "Home & Garden", href: "/category/home-garden" },
-    { name: "Fashion", href: "/category/fashion" },
-    { name: "Electronics", href: "/category/electronics" },
-    { name: "Vehicles", href: "/category/vehicles" },
-    { name: "Services", href: "/category/services" },
-    { name: "Community", href: "/category/community" },
-  ];
 
   // Handle scroll events for transparent header
   useEffect(() => {
@@ -142,7 +133,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
               <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                 {categories.map((category) => (
                   <Link
-                    href={category.href}
+                    href={`/browse?category=${category.id}`}
                     key={category.name}
                     className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-gray-700 hover:text-green-500"
                   >
@@ -246,7 +237,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
                 {categories.map((category) => (
                   <Link
                     key={category.name}
-                    href={category.href}
+                    href={`/browse?category=${category.id}`}
                     className="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-gray-800 rounded-md"
                     onClick={() => setIsOpen(false)}
                   >
