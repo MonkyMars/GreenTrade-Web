@@ -10,6 +10,8 @@ import {
   // FaHeart,
   // FaRegHeart,
   FaStar,
+  FaUser,
+  FaEye,
 } from "react-icons/fa";
 import { FiSearch, FiGrid, FiList, FiChevronDown, FiX } from "react-icons/fi";
 import { TbFolder } from "react-icons/tb";
@@ -17,6 +19,7 @@ import { FetchedListing } from "../../lib/types/main";
 import { getListings } from "@/lib/backend/getListings";
 import { categories, findCategory } from "@/lib/functions/categories";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "../components/UI/button";
 
 const BrowsePage = () => {
   const router = useRouter();
@@ -368,7 +371,7 @@ const BrowsePage = () => {
                             </span>
                           </div>
                         </div>
-                        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between"></div>
+                        <div className="mt-3 pt-3 border-t border-gray-300/60 dark:border-gray-700 flex items-center justify-between"></div>
                         {listing.seller ? (
                           <>
                             <div className="flex items-center text-sm">
@@ -377,9 +380,9 @@ const BrowsePage = () => {
                                   ✓
                                 </span>
                               )}
-                              <span className="text-gray-600 dark:text-gray-300">
+                              <Link title="View seller profile" href={`/${listing.seller.id}`} className="text-green-600 dark:text-green-200 hover:text-green-600 dark:hover:text-green-400">
                                 {listing.seller.name}
-                              </span>
+                              </Link>
                               <div className="ml-2 flex items-center">
                                 <FaStar className="h-3 w-3 text-yellow-400" />
                                 <span className="text-xs ml-1">
@@ -402,6 +405,32 @@ const BrowsePage = () => {
                             </div>
                           </>
                         )}
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex items-center justify-center"
+                          >
+                            <Link href={`/sellers/${listing.seller.id}`}>
+                              <span className="flex items-center gap-1">
+                               <FaUser/>
+                                View Seller
+                              </span>
+                            </Link>
+                          </Button>
+                          <Button 
+                            variant="default" 
+                            size="sm" 
+                            className="flex items-center justify-center bg-green-600 hover:bg-green-700"
+                          >
+                            <Link href={`/listings/${listing.id}`}>
+                              <span className="flex items-center text-white gap-1">
+                               <FaEye/>
+                                Details
+                              </span>
+                            </Link>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   );
