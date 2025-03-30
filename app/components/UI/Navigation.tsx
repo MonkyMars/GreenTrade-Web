@@ -144,10 +144,10 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
             </div>
 
             <Link
-              href="/map"
+              href="/browse"
               className="text-gray-700 dark:text-gray-200 hover:text-green-500 dark:hover:text-green-400"
             >
-              Map View
+              Browse
             </Link>
 
             <Link
@@ -248,11 +248,11 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
 
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4 pb-2">
                 <Link
-                  href="/map"
+                  href="/browse"
                   className="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-gray-800 rounded-md"
                   onClick={() => setIsOpen(false)}
                 >
-                  Map View
+                  Browse
                 </Link>
 
                 <Link
