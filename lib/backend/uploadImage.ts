@@ -1,4 +1,5 @@
 import { UploadListing } from "../types/main";
+import axios from "axios";
 
 export const uploadImage = async (files: File[], listing_title: UploadListing["title"]) => {
     const formData = new FormData();
@@ -14,7 +15,7 @@ export const uploadImage = async (files: File[], listing_title: UploadListing["t
             throw new Error("Authentication required. Please log in.");
         }
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL_PROTECTED}/upload/listing_image`, {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL_PROTECTED}/upload/listing_image`, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -23,9 +24,8 @@ export const uploadImage = async (files: File[], listing_title: UploadListing["t
             body: formData,
         });
 
-        if (!response.ok) throw new Error("Failed to upload image");
-        const data = await response.json();
-        console.log(data);
+        if (!response.data.success) throw new Error("Failed to upload image");
+        const data = response.data.data;
         return await data; // Should return { urls: string[] }
     } catch (error) {
         console.error(error);
