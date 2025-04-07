@@ -20,9 +20,9 @@ import {
 } from "react-icons/md";
 import { RiCheckboxBlankCircleLine } from "react-icons/ri";
 import { FiX } from "react-icons/fi";
-import { uploadImage } from "../../lib/backend/uploadImage";
-import { uploadListing } from "../../lib/backend/uploadListing";
-import { UploadListing } from "@/lib/types/main";
+import { uploadImage } from "@/lib/backend/uploadImage";
+import { uploadListing } from "@/lib/backend/uploadListing";
+import { type UploadListing } from "@/lib/types/main";
 import { calculateEcoScore } from "@/lib/functions/calculateEcoScore";
 import ProtectedRoute from "../components/UI/ProtectedRoute";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -241,7 +241,7 @@ const PostListingPage = () => {
         ecoScore: calculateEcoScore(formData.ecoAttributes),
         imageUrl: imageUrls,
         seller: {
-          id: parseInt(user.id), // Convert string ID to number if needed by the API
+          id: user.id, // Convert string ID to number if needed by the API
           name: user.name,
           rating: user.ecoScore || 0, // Use ecoScore as rating or default to 0
           verified: true,
