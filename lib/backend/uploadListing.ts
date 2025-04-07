@@ -1,3 +1,4 @@
+import axios from "axios";
 import { UploadListing } from "../types/main";
 
 export const uploadListing = async (listing: UploadListing) => {   
@@ -7,7 +8,7 @@ export const uploadListing = async (listing: UploadListing) => {
             throw new Error("Authentication required. Please log in.");
         }
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL_PROTECTED}/listings`, {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL_PROTECTED}/listings`, {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json",
@@ -16,9 +17,9 @@ export const uploadListing = async (listing: UploadListing) => {
             body: JSON.stringify(listing),
         });
 
-        if (!response.ok) throw new Error("Failed to upload listing");
+        if (!response.data.success) throw new Error("Failed to upload listing");
 
-        return await response.json();
+        return await response.data.data; // Should return { listing_id: string, ...otherData }
     } catch (error) {
         console.error(error);
         throw error; // Re-throw the error to be handled by the caller
