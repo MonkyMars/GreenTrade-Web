@@ -20,6 +20,7 @@ import { getListings } from "@/lib/backend/getListings";
 import { categories, findCategory } from "@/lib/functions/categories";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "../components/UI/button";
+import { formatDistanceToNow } from 'date-fns'
 
 const BrowsePage = () => {
   const router = useRouter();
@@ -87,21 +88,19 @@ const BrowsePage = () => {
               <div className="flex items-center">
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`p-2 ${
-                    viewMode === "grid"
-                      ? "text-green-600 bg-green-50 dark:bg-green-900 dark:text-green-300"
-                      : "text-gray-500 dark:text-gray-400"
-                  } rounded-l-md`}
+                  className={`p-2 ${viewMode === "grid"
+                    ? "text-green-600 bg-green-50 dark:bg-green-900 dark:text-green-300"
+                    : "text-gray-500 dark:text-gray-400"
+                    } rounded-l-md`}
                 >
                   <FiGrid className="h-5 w-5" />
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`p-2 ${
-                    viewMode === "list"
-                      ? "text-green-600 bg-green-50 dark:bg-green-900 dark:text-green-300"
-                      : "text-gray-500 dark:text-gray-400"
-                  } rounded-r-md`}
+                  className={`p-2 ${viewMode === "list"
+                    ? "text-green-600 bg-green-50 dark:bg-green-900 dark:text-green-300"
+                    : "text-gray-500 dark:text-gray-400"
+                    } rounded-r-md`}
                 >
                   <FiList className="h-5 w-5" />
                 </button>
@@ -129,9 +128,8 @@ const BrowsePage = () => {
         <div className="lg:grid lg:grid-cols-12 lg:gap-8">
           {/* Filters Sidebar */}
           <aside
-            className={`lg:col-span-3 ${
-              isFilterOpen ? "block" : "hidden"
-            } lg:block`}
+            className={`lg:col-span-3 ${isFilterOpen ? "block" : "hidden"
+              } lg:block`}
           >
             <div className="sticky top-20 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
               <div className="flex justify-between items-center mb-4 lg:hidden">
@@ -178,27 +176,24 @@ const BrowsePage = () => {
                     <button
                       key={category.id}
                       onClick={() => toggleCategory(category.id)}
-                      className={`flex w-full items-center py-2 px-3 rounded-md transition-colors cursor-pointer ${
-                        selectedCategory === category.id
-                          ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300"
-                          : "hover:bg-gray-50 dark:hover:bg-gray-700/30"
-                      }`}
+                      className={`flex w-full items-center py-2 px-3 rounded-md transition-colors cursor-pointer ${selectedCategory === category.id
+                        ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                        : "hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                        }`}
                     >
                       <div
-                        className={`flex-shrink-0 flex items-center justify-center h-6 w-6 ${
-                          selectedCategory === category.id
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-gray-500 dark:text-gray-400"
-                        }`}
+                        className={`flex-shrink-0 flex items-center justify-center h-6 w-6 ${selectedCategory === category.id
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-gray-500 dark:text-gray-400"
+                          }`}
                       >
                         <category.icon className="h-5 w-5" />
                       </div>
                       <span
-                        className={`ml-3 text-sm font-medium ${
-                          selectedCategory === category.id
-                            ? "text-green-700 dark:text-green-300"
-                            : "text-gray-700 dark:text-gray-300"
-                        }`}
+                        className={`ml-3 text-sm font-medium ${selectedCategory === category.id
+                          ? "text-green-700 dark:text-green-300"
+                          : "text-gray-700 dark:text-gray-300"
+                          }`}
                       >
                         {category.name}
                       </span>
@@ -391,9 +386,9 @@ const BrowsePage = () => {
                               </div>
                             </div>
                             <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {new Date(
-                                listing.created_at
-                              ).toLocaleDateString()}
+                              {formatDistanceToNow(new Date(listing.created_at), {
+                                addSuffix: true,
+                              })}
                             </span>
                           </>
                         ) : (
@@ -406,26 +401,26 @@ const BrowsePage = () => {
                           </>
                         )}
                         <div className="mt-3 grid grid-cols-2 gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="flex items-center justify-center"
                           >
                             <Link href={`/sellers/${listing.seller.id}`}>
                               <span className="flex items-center gap-1">
-                               <FaUser/>
+                                <FaUser />
                                 View Seller
                               </span>
                             </Link>
                           </Button>
-                          <Button 
-                            variant="default" 
-                            size="sm" 
+                          <Button
+                            variant="default"
+                            size="sm"
                             className="flex items-center justify-center bg-green-600 hover:bg-green-700"
                           >
                             <Link href={`/listings/${listing.id}`}>
                               <span className="flex items-center text-white gap-1">
-                               <FaEye/>
+                                <FaEye />
                                 Details
                               </span>
                             </Link>
@@ -498,9 +493,9 @@ const BrowsePage = () => {
                               </span>
                               <span className="mx-2 text-gray-400">•</span>
                               <span className="text-gray-500 dark:text-gray-400">
-                                {new Date(
-                                  listing.created_at
-                                ).toLocaleDateString()}
+                                {formatDistanceToNow(new Date(listing.created_at), {
+                                  addSuffix: true,
+                                })}
                               </span>
                             </div>
 
@@ -583,11 +578,10 @@ const BrowsePage = () => {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`relative inline-flex items-center px-4 py-2 border ${
-                          currentPage === page
-                            ? "z-10 bg-green-50 dark:bg-green-900 border-green-500 text-green-600 dark:text-green-200"
-                            : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        } text-sm font-medium`}
+                        className={`relative inline-flex items-center px-4 py-2 border ${currentPage === page
+                          ? "z-10 bg-green-50 dark:bg-green-900 border-green-500 text-green-600 dark:text-green-200"
+                          : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          } text-sm font-medium`}
                       >
                         {page}
                       </button>
