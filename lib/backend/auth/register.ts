@@ -1,3 +1,5 @@
+import api from "../api/axiosConfig";
+
 interface RegisterUser {
     email: string;
     password: string;
@@ -10,7 +12,7 @@ export const Register = async (user: RegisterUser) => {
     if (user.password !== user.passwordConfirm) {
         throw new Error("Passwords do not match");
     }
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/auth/register`, {
+    const response = await api.post(`/auth/register`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -21,5 +23,5 @@ export const Register = async (user: RegisterUser) => {
             name: user.name,
         }),
     });
-    return response.json();
+    return response.data
 };

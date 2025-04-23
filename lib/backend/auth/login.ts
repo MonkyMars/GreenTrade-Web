@@ -1,10 +1,12 @@
+import api from "../api/axiosConfig";
+
 interface LoginUser {
     email: string;
     password: string;
 }
 
 export const Login = async (user: LoginUser) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/auth/login`, {
+    const response = await api.post(`/auth/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -14,5 +16,5 @@ export const Login = async (user: LoginUser) => {
             password: user.password,
         }),
     });
-    return response.json();
+    return response.data
 };

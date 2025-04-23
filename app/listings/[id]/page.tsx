@@ -1,4 +1,5 @@
-import { notFound } from "next/navigation";
+"use client";
+import { notFound, useParams } from "next/navigation";
 import Image from "next/image";
 import {
   FaLeaf,
@@ -20,79 +21,120 @@ import {
 import { FetchedListing } from "@/lib/types/main";
 import { SimilairCard, SimilairCardSkeleton } from "./similairCard";
 import { findCategory } from "@/lib/functions/categories";
-import axios from "axios";
+import { useEffect, useState } from "react";
+import api from "@/lib/backend/api/axiosConfig";
+import { getListings } from "@/lib/backend/getListings";
 
-export default async function ListingPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const awaitedParams = await params;
+export default function ListingPage() {
+  const [listing, setListing] = useState<FetchedListing | null>(null);
+  const [similarListings, setSimilarListings] = useState<FetchedListing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const params = useParams();
 
-  const fetchListing = async (): Promise<FetchedListing> => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/listings/${awaitedParams.id}`
-      );
+  useEffect(() => {
+    const fetchSimilarListings = async (
+      category: string
+    ): Promise<FetchedListing[]> => {
+      try {
+        console.log("Fetching similar listings");
 
-      if (!response.data.success) {
-        throw new Error("Failed to fetch listing");
-      }
+        if (!category) {
+          return [];
+        }
 
-      return response.data.data as FetchedListing;
-    } catch (error) {
-      console.error("Error fetching listing:", error);
-      throw new Error("Failed to fetch listing");
-    }
-  };
+        const response = await api.get(
+          `/listings/category/${category}`
+        );
 
-  // Fetch the listing first
-  const listing = await fetchListing();
+        if (!response.data.success) {
+          console.log(response);
+          return [];
+        }
 
-  const fetchSimilarListings = async (): Promise<FetchedListing[]> => {
-    try {
-      console.log("Fetching similar listings");
-      const category = listing.category;
-
-      if (!category) {
+        return response.data.data;
+      } catch (error) {
+        console.error("Error fetching similar listings:", error);
         return [];
       }
+    };
 
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/listings/category/${category}`
-      );
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const listingData = await getListings(params.id as string) as FetchedListing;
+        setListing(listingData);
 
-      if (!response.data.success) {
-        console.log(response);
-        return [];
+        // Fetch similar listings after we have the listing data
+        if (listingData && listingData.category) {
+          const similarItems = await fetchSimilarListings(listingData.category);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const all = similarItems as any[]
+
+      const validListings: FetchedListing[] = all.map(listing => {
+        return {
+          id: listing.id,
+          title: listing.title,
+          description: listing.description,
+          category: listing.category,
+          condition: listing.condition,
+          location: listing.location,
+          price: listing.price,
+          negotiable: listing.negotiable,
+          ecoScore: listing.ecoScore,
+          ecoAttributes: listing.ecoAttributes,
+          imageUrl: listing.imageUrl,
+          createdAt: listing.created_at,
+          sellerId: listing.seller_id,
+          sellerCreatedAt: listing.seller_created_at,
+          sellerUsername: listing.seller_username,
+          sellerBio: listing.seller_bio,
+          sellerRating: listing.seller_rating,
+          sellerVerified: listing.seller_verified,
+        }
+      })
+
+      setSimilarListings(validListings);
+
+        }
+      } catch (error) {
+        console.error("Error fetching listing:", error);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      return response.data.data as FetchedListing[];
-    } catch (error) {
-      console.error("Error fetching similar listings:", error);
-      return [];
-    }
-  };
+    fetchData();
+  }, [params.id]);
 
-  // Now fetch similar listings after we have the listing data
-  const similarListings = await fetchSimilarListings();
-  let listingCategory = listing.category.toLocaleLowerCase();
-  if (!listingCategory) {
-    listingCategory = "Unknown";
-  }
-  let category = findCategory(listingCategory.toLocaleLowerCase());
-
-  if (!category) {
-    category = { icon: FaLeaf, name: "Eco", id: "green" };
+  if (isLoading) {
+    return (
+      <div className="mx-auto px-4 py-8 max-w-7xl">
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">
+              Loading listing...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!listing) {
     return notFound();
   }
 
+  const listingCategory = listing.category?.toLowerCase() || "Unknown";
+  let category = findCategory(listingCategory);
+
+  if (!category) {
+    category = { icon: FaLeaf, name: "Eco", id: "green" };
+  }
   // Format the creation date to show how long ago it was posted
-  const postedDate = new Date(listing.created_at);
-  const timeAgo = formatDistanceToNow(postedDate, { addSuffix: true });
+  const timeAgo = listing.createdAt 
+    ? formatDistanceToNow(listing.createdAt, { addSuffix: true })
+    : 'Recently';
 
   return (
     <main className="mx-auto px-4 py-8 max-w-7xl">
@@ -185,20 +227,20 @@ export default async function ListingPage({
               <div className="relative h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
                 {/* Placeholder for seller image */}
                 <div className="absolute inset-0 flex items-center justify-center text-gray-500 dark:text-gray-400 text-xl font-bold">
-                  {listing.seller.name.charAt(0)}
+                  {listing.sellerUsername.charAt(0)}
                 </div>
               </div>
               <div>
                 <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                  {listing.seller.name}
+                  {listing.sellerUsername}
                 </h3>
                 <div className="flex items-center">
                   <div className="flex items-center">
                     {[...Array(5)].map((_, i) => {
                       const hasHalfStar =
-                        i + 0.5 === Math.floor(listing.seller.rating) + 0.5 &&
-                        !Number.isInteger(listing.seller.rating);
-                      return i < Math.floor(listing.seller.rating) ? (
+                        i + 0.5 === Math.floor(listing.sellerRating) + 0.5 &&
+                        !Number.isInteger(listing.sellerRating);
+                      return i < Math.floor(listing.sellerRating) ? (
                         <FaStar key={i} className="w-4 h-4 text-yellow-400" />
                       ) : hasHalfStar ? (
                         <div key={i} className="relative">
@@ -216,9 +258,9 @@ export default async function ListingPage({
                     })}
                   </div>
                   <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                    {listing.seller.rating}
+                    {listing.sellerRating}
                   </span>
-                  {listing.seller.verified && (
+                  {listing.sellerVerified && (
                     <Badge
                       variant="secondary"
                       className="ml-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
@@ -371,12 +413,12 @@ export default async function ListingPage({
                 <div className="relative h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
                   {/* Placeholder for seller image */}
                   <div className="absolute inset-0 flex items-center justify-center text-gray-500 dark:text-gray-400 text-xl font-bold">
-                    {listing.seller.name.charAt(0)}
+                    {listing.sellerUsername.charAt(0)}
                   </div>
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                    {listing.seller.name}
+                    {listing.sellerUsername}
                   </h3>
                   <div className="flex items-center">
                     <div className="flex items-center">
@@ -384,9 +426,9 @@ export default async function ListingPage({
                         <FaStar
                           key={i}
                           className={`w-4 h-4 ${
-                            i < Math.floor(listing.seller.rating)
+                            i < Math.floor(listing.sellerRating)
                               ? "text-yellow-400"
-                              : i < listing.seller.rating
+                              : i < listing.sellerRating
                               ? "text-yellow-400"
                               : "text-gray-300 dark:text-gray-600"
                           }`}
@@ -394,9 +436,9 @@ export default async function ListingPage({
                       ))}
                     </div>
                     <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                      {listing.seller.rating}
+                      {listing.sellerRating}
                     </span>
-                    {listing.seller.verified && (
+                    {listing.sellerVerified && (
                       <Badge
                         variant="secondary"
                         className="ml-2 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"

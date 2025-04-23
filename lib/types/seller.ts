@@ -1,7 +1,8 @@
-export interface FetchedSeller {
-    name: string;
-    rating: number;
-    verified: boolean;
-    description: string;
-    location: string;
-}
+export interface Seller {
+    id: string
+    name: string
+    rating: string | number
+    verified: boolean
+    bio: string
+    createdAt: string
+  }

@@ -27,9 +27,19 @@ export const categories: {
 ];
 
 export const findCategory = (id: string) => {
-  return categories.find(
-    (category) =>
-      category.id ===
-      id.toLocaleLowerCase().replace("&", "-").replaceAll(" ", "")
-  );
-};
+  return (
+    categories.find(
+      category =>
+        category.id ===
+        id.toLocaleLowerCase().replace('&', '-').replaceAll(' ', ''),
+    ) || categories[0]
+  )
+}
+
+export const cleanCategory = (category: string) => {
+  return category
+    .toLocaleLowerCase()
+    .replace('&', '-')
+    .replaceAll(' ', '')
+    .replaceAll('!', '')
+}

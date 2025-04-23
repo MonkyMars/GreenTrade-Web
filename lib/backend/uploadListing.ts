@@ -1,27 +1,49 @@
-import axios from "axios";
-import { UploadListing } from "../types/main";
+import { UploadListing } from '@/lib/types/main'
+import api from '@/lib/backend/api/axiosConfig'
 
-export const uploadListing = async (listing: UploadListing) => {   
-    try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-            throw new Error("Authentication required. Please log in.");
-        }
-
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL_PROTECTED}/listings`, {
-            method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify(listing),
-        });
-
-        if (!response.data.success) throw new Error("Failed to upload listing");
-
-        return await response.data.data; // Should return { listing_id: string, ...otherData }
-    } catch (error) {
-        console.error(error);
-        throw error; // Re-throw the error to be handled by the caller
+export const uploadListing = async (listing: UploadListing) => {
+  try {
+    const token = localStorage.getItem('accessToken')
+    if (!token) {
+      throw new Error('Authentication required. Please log in.')
     }
-};
+
+    // Format the data to match the backend's expected structure
+    const formattedListing = {
+      title: listing.title,
+      description: listing.description,
+      category: listing.category,
+      condition: listing.condition,
+      location: listing.location,
+      price: listing.price,
+      negotiable: listing.negotiable,
+      ecoScore: listing.ecoScore,
+      ecoAttributes: listing.ecoAttributes,
+      imageUrl: {
+        urls: listing.imageUrl,
+      },
+
+      seller_id: listing.sellerId,
+    }
+
+    const response = await api.post('/api/listings', formattedListing, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    // Check if the response has the expected format
+    if (!response.data || !response.data.success) {
+      throw new Error(
+        'Failed to upload listing: Server returned unsuccessful response',
+        response.data.message,
+      )
+    }
+
+    return response.data.data
+  } catch (error) {
+    console.error('Upload listing error:', error)
+    throw error
+  }
+}
