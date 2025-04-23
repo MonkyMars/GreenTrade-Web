@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { User } from "@/lib/types/user";
+import api from "../backend/api/axiosConfig";
 
 interface AuthContextType {
   user: User | null;
@@ -41,8 +42,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         
         // Fetch user data
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL_PROTECTED}/auth/me`
+        const response = await api.get(
+          `/api/auth/me`
         );
         
         // Check if response.data has user object directly or nested in data property
@@ -76,8 +77,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(true);
       console.log('Attempting login for:', email);
       
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/auth/login`,
+      const response = await api.post(
+        `/auth/login`,
         {
           email,
           password,
@@ -108,8 +109,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Fetch user details
       try {
-        const userResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL_PROTECTED}/auth/user/${userId}`
+        const userResponse = await api.get(
+          `/api/auth/user/${userId}`
         );
         
         if (userResponse.data.success && userResponse.data.data && userResponse.data.data.user) {
@@ -158,8 +159,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   ) => {
     try {
       setLoading(true);
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/auth/register`,
+      const response = await api.post(
+        `/auth/register`,
         {
           name,
           email,
@@ -168,8 +169,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       );
 
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Registration failed");
+      }
+
       // After registration, log the user in
       await login(email, password);
+
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("userId");
+
     } catch (error) {
       console.error("Registration failed:", error);
       throw error;
@@ -180,8 +190,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Logout function
   const logout = () => {
-    console.log('Logging out user');
-    
     // First clear local storage
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");

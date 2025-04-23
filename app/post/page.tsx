@@ -44,7 +44,6 @@ const PostListingPage = () => {
     category: "",
     condition: "",
     price: "",
-    location: "",
     ecoAttributes: [] as string[],
     negotiable: false,
   });
@@ -54,6 +53,7 @@ const PostListingPage = () => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [ecoScore, setEcoScore] = useState<number>(0);
 
   // Condition options
   const conditions: {
@@ -106,17 +106,16 @@ const PostListingPage = () => {
 
   // Handle eco-attribute toggles
   const toggleEcoAttribute = (attribute: string) => {
-    if (formData.ecoAttributes.includes(attribute)) {
-      setFormData({
-        ...formData,
-        ecoAttributes: formData.ecoAttributes.filter((a) => a !== attribute),
-      });
-    } else {
-      setFormData({
-        ...formData,
-        ecoAttributes: [...formData.ecoAttributes, attribute],
-      });
-    }
+    const updatedAttributes = formData.ecoAttributes.includes(attribute)
+      ? formData.ecoAttributes.filter((a) => a !== attribute)
+      : [...formData.ecoAttributes, attribute];
+    
+    setFormData({
+      ...formData,
+      ecoAttributes: updatedAttributes,
+    });
+    
+    setEcoScore(calculateEcoScore(updatedAttributes));
   };
 
   // Mock image upload function
@@ -191,9 +190,7 @@ const PostListingPage = () => {
       errors.price = "Please enter a valid price";
     }
 
-    if (!formData.location.trim()) {
-      errors.location = "Location is required";
-    }
+    // location is fetched from the user object. no need to validate it here
 
     if (images.length === 0) {
       errors.images = "Please add at least one image";
@@ -234,18 +231,13 @@ const PostListingPage = () => {
         description: formData.description,
         category: formData.category,
         condition: formData.condition,
-        location: formData.location || user.location, // Use user's location as fallback
+        location: user.location,
         price: parseFloat(formData.price),
         negotiable: formData.negotiable,
         ecoAttributes: formData.ecoAttributes,
         ecoScore: calculateEcoScore(formData.ecoAttributes),
         imageUrl: imageUrls,
-        seller: {
-          id: user.id, // Convert string ID to number if needed by the API
-          name: user.name,
-          rating: user.ecoScore || 0, // Use ecoScore as rating or default to 0
-          verified: true,
-        },
+        sellerId: user.id,
       };
 
       const uploadResponse = await uploadListing(listing);
@@ -521,10 +513,10 @@ const PostListingPage = () => {
                   >
                     Price (€) <span className="text-red-500">*</span>
                   </label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="mt-1 relative rounded-md shadow-sm">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <span className="text-gray-500 dark:text-gray-400 sm:text-sm">
-                        €
+                      €
                       </span>
                     </div>
                     <input
@@ -532,17 +524,26 @@ const PostListingPage = () => {
                       name="price"
                       id="price"
                       value={formData.price}
-                      onChange={handleChange}
-                      className={`pl-6 block w-full px-4 py-3 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out focus:ring-0 focus:border-transparent focus:outline-none
-											${
-                        formErrors.price
-                          ? "border-2 border-red-300 focus:ring-1 focus:ring-green-400"
-                          : "border border-gray-300 dark:border-gray-600 hover:border-green-300"
+                      onChange={(e) => {
+                      const value = e.target.value;
+                      // Only allow numbers and up to 2 decimal places
+                      if (value === '' || /^\d+(\.\d{0,2})?$/.test(value)) {
+                        setFormData({
+                        ...formData,
+                        price: value
+                        });
                       }
-											dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
+                      }}
+                      className={`pl-6 block w-full px-4 py-3 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out focus:ring-0 focus:border-transparent focus:outline-none
+                                ${
+                      formErrors.price
+                        ? "border-2 border-red-300 focus:ring-1 focus:ring-green-400"
+                        : "border border-gray-300 dark:border-gray-600 hover:border-green-300"
+                      }
+                                dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
                       placeholder="0.00"
                     />
-                  </div>
+                    </div>
                   {formErrors.price && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                       {formErrors.price}
@@ -588,7 +589,8 @@ const PostListingPage = () => {
                       type="text"
                       name="location"
                       id="location"
-                      value={formData.location}
+                      value={user?.location}
+                      disabled
                       onChange={handleChange}
                       placeholder="e.g., Berlin, Germany"
                       className={`pl-8 block w-full px-4 py-3 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out focus:ring-0 focus:border-transparent focus:outline-none
@@ -717,17 +719,26 @@ const PostListingPage = () => {
                     </div>
                   ))}
                 </div>
-                <div className="mt-6 bg-green-50 dark:bg-green-900/30 border-l-4 border-green-400 p-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <FaLeaf className="h-5 w-5 text-green-400" />
+                <div className="mt-6 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                  <div className="flex items-center">
+                  <div className="flex-shrink-0 mr-4">
+                    <div className="relative">
+                    <div className="h-16 w-16 rounded-full bg-gradient-to-r from-green-400 to-green-600 flex items-center justify-center text-white font-bold text-xl shadow-md">
+                      {ecoScore}/5
                     </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-green-700 dark:text-green-300">
-                        Items with eco-friendly attributes are more likely to be
-                        promoted in search results and featured on the homepage!
-                      </p>
+                    <FaLeaf className="absolute -top-1 -right-1 h-5 w-5 text-green-500 bg-white dark:bg-green-900 rounded-full p-0.5" />
                     </div>
+                  </div>
+                  <div>
+                    <h3 className="text-md font-semibold text-green-800 dark:text-green-300">Eco-friendly Score</h3>
+                    <p className="text-sm text-green-700 dark:text-green-400">
+                    Items with higher eco-friendly scores are more likely to be
+                    promoted in search results and featured on the homepage!
+                    </p>
+                    <p className="text-xs mt-1 text-green-600 dark:text-green-500">
+                    Add more eco attributes to increase your score.
+                    </p>
+                  </div>
                   </div>
                 </div>
               </div>

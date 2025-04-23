@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation";
 import { FaLeaf, FaUser, FaEnvelope, FaLock, FaGoogle } from "react-icons/fa";
 import { z } from "zod";
 import { Button } from "../components/UI/button";
-import { Register } from "@/lib/backend/auth/register";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
+  location: z.string().min(0, "Location must be at least 2 characters"),
   password: z.string()
     .min(8, "Password must be at least 8 characters")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
@@ -29,10 +30,12 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
+  const { register } = useAuth()
   const router = useRouter();
   const [formData, setFormData] = useState<RegisterFormData>({
     name: "",
     email: "",
+    location: "",
     password: "",
     passwordConfirm: "",
     acceptTerms: false,
@@ -100,17 +103,7 @@ export default function RegisterPage() {
     
     try {
       // Call your registration API
-      const response = await Register(formData);
-      
-      if (response.status === 400) {
-        setRegisterError("Invalid registration data. Please check your details and try again.");
-        return;
-      }
-      
-      if (response.status === 500) {
-        setRegisterError("Server error. Please try again later. This email may already be registered.");
-        return;
-      }
+      await register(formData.email, formData.password, formData.name, formData.location);
 
       // Registration successful - Redirect to dashboard.
       router.push("/account?registered=true");

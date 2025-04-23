@@ -17,26 +17,27 @@ export interface Listing {
     };
 }
 
-export interface UploadListing {
-    title: string;
-    description: string;
-    price: number;
-    location: string;
-    category: string;
-    condition: string;
-    ecoAttributes: string[];
-    ecoScore: number;
-    negotiable: boolean;
-    imageUrl: string[];
-    seller: {
-        id: string;
-        name: string;
-        rating: number;
-        verified: boolean;
-    }
-}
-
-export interface FetchedListing extends UploadListing {
-    id: number;
-    created_at: string;
-}
+export type UploadListing = {
+    title: string
+    description: string
+    category: string
+    condition: string
+    location: string
+    price: number
+    negotiable: boolean
+    ecoScore: number
+    ecoAttributes: string[]
+    imageUrl: string[]
+  
+    sellerId: string
+  }
+  
+  export interface FetchedListing extends UploadListing {
+    id: string
+    createdAt: string
+    sellerUsername: string
+    sellerBio: string
+    sellerCreatedAt: string
+    sellerRating: number
+    sellerVerified: boolean
+  }
