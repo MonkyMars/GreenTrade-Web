@@ -7,6 +7,7 @@ import { FaLeaf, FaEnvelope, FaLock, FaGoogle } from "react-icons/fa";
 import { z } from "zod";
 import { Button } from "../components/UI/button";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { AppError } from '@/lib/errorUtils';
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -80,29 +81,35 @@ const Login = () => {
       router.push(path);
       
     } catch (error) {
-      console.error("Login error:", error);
+      // Convert to AppError if not already
+      const appError = error instanceof AppError 
+        ? error 
+        : AppError.from(error, 'Login');
       
-      // Handle the error from the API
-      if (typeof error === 'string') {
-        setLoginError(error);
-      } else if (error && typeof error === 'object') {
-        // Check if it's an axios error with response data
-        if ('response' in error && 
-            error.response && 
-            typeof error.response === 'object' && 
-            'data' in error.response && 
-            error.response.data && 
-            typeof error.response.data === 'object' &&
-            'message' in error.response.data) {
-          setLoginError(error.response.data.message as string);
-        } else if ('message' in error && typeof error.message === 'string') {
-          setLoginError(error.message);
-        } else {
-          setLoginError("Invalid email or password. Please try again.");
-        }
+      // Log in development
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("Login error:", appError);
       } else {
-        setLoginError("An unexpected error occurred. Please try again.");
+        // In production, this would use a service like Sentry
+        // Example: Sentry.captureException(appError);
       }
+      
+      // Create a user-friendly error message
+      let errorMessage: string;
+      
+      if (appError.code === 'INVALID_CREDENTIALS' || appError.status === 401) {
+        errorMessage = "Invalid email or password. Please try again.";
+      } else if (appError.code === 'ACCOUNT_LOCKED') {
+        errorMessage = "Your account has been locked. Please contact support.";
+      } else if (appError.code === 'RATE_LIMITED') {
+        errorMessage = "Too many login attempts. Please try again later.";
+      } else if (appError.message) {
+        errorMessage = appError.message;
+      } else {
+        errorMessage = "An unexpected error occurred. Please try again.";
+      }
+      
+      setLoginError(errorMessage);
     } finally {
       setIsLoading(false);
     }

@@ -11,6 +11,8 @@ import axios from "axios";
 import { User } from "../types/user";
 import api from "../backend/api/axiosConfig";
 import { getUser } from "@/lib/backend/auth/user";
+import { toast } from "react-hot-toast";
+import { AppError, handleError, retryOperation } from "@/lib/errorUtils";
 
 interface AuthContextType {
   user: User | null;
@@ -46,7 +48,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const refreshTokens = useCallback(async (): Promise<boolean> => {
     // Prevent concurrent refresh attempts
     if (refreshInProgress.current) {
-      console.log("Token refresh already in progress, skipping...");
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("Token refresh already in progress, skipping...");
+      }
       return false;
     }
 
@@ -55,17 +59,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const timeSinceLastRefresh = now - lastRefreshTime.current;
     if (lastRefreshTime.current > 0 && timeSinceLastRefresh < 5000) {
       // Increased to 5 seconds
-      console.log(
-        `Rate limiting refresh (${timeSinceLastRefresh}ms since last attempt)`
-      );
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(
+          `Rate limiting refresh (${timeSinceLastRefresh}ms since last attempt)`
+        );
+      }
       return false;
     }
     lastRefreshTime.current = now;
 
     // Check max attempts
     if (refreshAttempts.current >= maxRefreshAttempts) {
-      console.error(
-        `Maximum refresh attempts (${maxRefreshAttempts}) reached. Logging out.`
+      handleError(
+        new AppError(`Maximum refresh attempts (${maxRefreshAttempts}) reached`, {
+          code: 'MAX_REFRESH_ATTEMPTS'
+        }),
+        "Authentication"
       );
       await logout();
       return false;
@@ -78,13 +87,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const refreshToken = localStorage.getItem("refreshToken");
 
       if (!refreshToken) {
-        throw new Error("No refresh token found");
+        throw new AppError("No refresh token found", { code: 'TOKEN_MISSING' });
       }
 
-      console.log(
-        "Attempting to refresh token with:",
-        refreshToken.substring(0, 10) + "..."
-      );
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(
+          "Attempting to refresh token with:",
+          refreshToken.substring(0, 10) + "..."
+        );
+      }
 
       // Match the backend's expected format exactly
       const response = await api.post(
@@ -100,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       } = response.data.data;
 
       if (!accessToken || !newRefreshToken) {
-        throw new Error("Invalid refresh token response");
+        throw new AppError("Invalid refresh token response", { code: 'INVALID_TOKEN_RESPONSE' });
       }
 
       // Store the new tokens
@@ -115,13 +126,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // before the next request uses it
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      console.log("Token refresh successful");
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("Token refresh successful");
+      }
       // Reset attempt counter on success
       refreshAttempts.current = 0;
 
       return true;
     } catch (error) {
-      console.error("Token refresh failed:", error);
+      // Use our properly typed handleError helper
+      handleError(error, "Token refresh failed");
 
       // Progressive backoff on failures
       await new Promise((resolve) =>
@@ -130,7 +144,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Only clear auth state after max attempts
       if (refreshAttempts.current >= maxRefreshAttempts) {
-        console.log("Max refresh attempts reached, logging out");
+        if (process.env.NODE_ENV !== 'production') {
+          console.log("Max refresh attempts reached, logging out");
+        }
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("userId");
@@ -138,6 +154,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         delete api.defaults.headers.common["Authorization"];
         setUser(null);
+        
+        // Notify user of session expiration
+        toast.error("Your session has expired. Please log in again.");
       }
 
       return false;
@@ -162,14 +181,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           originalRequest._retry = true;
 
           try {
-            console.log("401 error detected, attempting token refresh");
+            if (process.env.NODE_ENV !== 'production') {
+              console.log("401 error detected, attempting token refresh");
+            }
             const refreshSuccess = await refreshTokens();
             if (refreshSuccess) {
               // Retry the original request with new token
               // Get the latest token to ensure we're using the most recent one
               const token = localStorage.getItem("accessToken");
               if (!token) {
-                throw new Error("Failed to get new access token after refresh");
+                throw new AppError("Failed to get new access token after refresh", {
+                  code: 'TOKEN_REFRESH_FAILED'
+                });
               }
 
               // Use the fresh token for the retried request
@@ -181,10 +204,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               // Return the retried request
               return api(originalRequest);
             } else {
-              console.log("Token refresh failed, rejecting original request");
+              if (process.env.NODE_ENV !== 'production') {
+                console.log("Token refresh failed, rejecting original request");
+              }
             }
           } catch (refreshError) {
-            console.error("Error during token refresh:", refreshError);
+            handleError(refreshError, "Authentication refresh");
           }
         }
 
@@ -231,19 +256,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         // Fetch user data
         const userId = localStorage.getItem("userId");
         if (!userId) {
-          throw new Error("User ID not found");
+          throw new AppError("User ID not found", { code: 'USER_ID_MISSING' });
         }
 
-        const response = await api.get(`/api/auth/user/${userId}`);
+        try {
+          // Use retry operation for API call
+          const response = await retryOperation(
+            () => api.get(`/api/auth/user/${userId}`),
+            {
+              maxRetries: 3,
+              delayMs: 1000,
+              context: "User authentication"
+            }
+          );
 
-        if (!response.data.success) {
-          throw new Error("Failed to fetch user data");
+          if (!response.data.success) {
+            throw new AppError("Failed to fetch user data", { code: 'USER_FETCH_FAILED' });
+          }
+
+          setUser(response.data.data.user);
+        } catch (apiError) {
+          // If retries fail, handle it gracefully
+          handleError(apiError, "Authentication validation");
+          throw apiError; // Rethrow to trigger the catch block below
         }
-
-        setUser(response.data.data.user);
       } catch (error) {
-        console.error("Auth validation error:", error);
         // Clear tokens on authentication error
+        if (process.env.NODE_ENV !== 'production') {
+          console.error("Authentication error:", error);
+        }
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("userId");
@@ -261,20 +302,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     // Don't set global loading state to true here
     // This allows the login component to control its own loading state
     try {
-      console.log("Attempting login for:", email);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("Attempting login for:", email);
+      }
 
-      const response = await api.post(`/auth/login`, {
-        email,
-        password,
-      });
+      // Use retry operation for API call
+      const response = await retryOperation(
+        () => api.post(`/auth/login`, { email, password }),
+        {
+          maxRetries: 2, // Fewer retries for login to avoid lockouts
+          delayMs: 800,
+          context: "Login attempt"
+        }
+      );
 
       // Check if the response has an error message
       if (!response.data.success) {
-        throw new Error(response.data.message || "Login failed");
+        throw new AppError(response.data.message || "Login failed", { code: 'LOGIN_FAILED' });
       }
 
       if (!response.data || !response.data.data) {
-        throw new Error("Invalid login response format");
+        throw new AppError("Invalid login response format", { code: 'INVALID_RESPONSE_FORMAT' });
       }
 
       // Check response format based on your API
@@ -282,7 +330,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         response.data.data;
 
       if (!accessToken) {
-        throw new Error("Missing authentication token");
+        throw new AppError("Missing authentication token", { code: 'TOKEN_MISSING' });
       }
 
       // Store tokens
@@ -305,42 +353,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const user = await getUser(userId);
 
       if (!user) {
-        throw new Error("User not found");
+        throw new AppError("User not found", { code: 'USER_NOT_FOUND' });
       }
 
       // Update user state - this will trigger navigation due to authentication state change
       setUser(user);
+      
+      // Show success message
+      toast.success("Login successful!");
     } catch (error) {
-      console.error("Login failed:", error);
-
-      // Clean up any partial auth state
+      // Handle error and clean up any partial auth state
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("userId");
       localStorage.removeItem("tokenExpiration");
 
-      // Handle common errors and expose appropriate messages
+      // Handle common errors and expose appropriate messages for user login experience
+      let errorMessage = "Login failed. Please try again.";
+      
       if (axios.isAxiosError(error)) {
         if (error.response) {
           // Server responded with an error status code
           if (error.response.status === 401) {
-            throw new Error("Invalid credentials");
+            errorMessage = "Invalid email or password. Please try again.";
           } else if (error.response.data && error.response.data.message) {
-            throw new Error(error.response.data.message);
+            errorMessage = error.response.data.message;
+          } else if (error.response.status >= 500) {
+            errorMessage = "Server error. Please try again later.";
           }
         } else if (error.request) {
           // No response received
-          throw new Error("Network error. Please check your connection.");
+          errorMessage = "Network error. Please check your connection.";
         }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
-
-      // For other kinds of errors, pass them along
-      if (error instanceof Error) {
-        throw error;
+      
+      // Log in development, use proper error tracking in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("Login failed:", error);
+      } else {
+        // In production, this would use a service like Sentry
+        // Example: Sentry.captureException(error);
       }
-
-      // Default error
-      throw new Error("Login failed. Please try again.");
+      
+      // Display error to user via toast
+      toast.error(errorMessage);
+      
+      // Rethrow for component handling with standardized message
+      throw new Error(errorMessage);
     }
   };
 
@@ -353,22 +414,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   ) => {
     try {
       setLoading(true);
-      const response = await api.post(`/auth/register`, {
-        name,
-        email,
-        password,
-        location,
-      });
+      
+      // Use retry operation for API call
+      const response = await retryOperation(
+        () => api.post(`/auth/register`, {
+          name,
+          email,
+          password,
+          location,
+        }),
+        {
+          maxRetries: 2, // Fewer retries for registration
+          delayMs: 800,
+          context: "Account registration"
+        }
+      );
 
       if (!response.data.success) {
-        throw new Error(response.data.message || "Registration failed");
+        throw new AppError(response.data.message || "Registration failed", { code: 'REGISTRATION_FAILED' });
       }
 
       const { accessToken, refreshToken, userId, expiresIn } =
         response.data.data;
 
       if (!accessToken) {
-        throw new Error("Missing authentication token");
+        throw new AppError("Missing authentication token", { code: 'TOKEN_MISSING' });
       }
 
       // Store tokens
@@ -391,16 +461,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const user = await getUser(userId);
 
       if (!user) {
-        throw new Error("User not found");
+        throw new AppError("User not found", { code: 'USER_NOT_FOUND' });
       }
 
       setUser(user);
+      
+      // Show success message
+      toast.success("Registration successful! Welcome to GreenTrade.");
     } catch (error) {
-      console.error("Registration failed:", error);
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.message || "Registration failed");
+      // Handle common registration errors
+      let errorMessage = "Registration failed. Please try again.";
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          if (error.response.status === 409) {
+            errorMessage = "Email already exists. Please use a different email address.";
+          } else if (error.response.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.response.status >= 500) {
+            errorMessage = "Server error. Please try again later.";
+          }
+        } else if (error.request) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
-      throw new Error("Network error. Please try again.");
+      
+      // Log in development, use proper error tracking in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("Registration failed:", error);
+      } else {
+        // In production, this would use a service like Sentry
+        // Example: Sentry.captureException(error);
+      }
+      
+      // Display error to user via toast
+      toast.error(errorMessage);
+      
+      // Rethrow for component handling
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -408,7 +508,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Logout function
   const logout = async () => {
-    console.log("Logging out user");
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("Logging out user");
+    }
 
     try {
       // Reset refresh attempts and tracking
@@ -427,8 +529,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Clear user state
       setUser(null);
+      
+      // Notify user of successful logout
+      toast.success("You have been successfully logged out.");
     } catch (error) {
-      console.error("Logout error:", error);
+      // For logout, even if there's an error, we still want to clear local state
+      // so a failed logout doesn't leave the user in a broken authentication state
+      setUser(null);
+      
+      // Log the error but don't display to user since we're still clearing their session
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("Logout error:", error);
+      } else {
+        // In production, this would use a service like Sentry
+        // Example: Sentry.captureException(error);
+      }
     }
   };
 
@@ -437,18 +552,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const userId = localStorage.getItem("userId");
       if (!userId) {
-        throw new Error("User ID not found");
+        throw new AppError("User ID not found", { code: 'USER_ID_MISSING' });
       }
 
-      const response = await api.get(`/api/auth/user/${userId}`);
+      // Use retry operation for API call
+      const response = await retryOperation(
+        () => api.get(`/api/auth/user/${userId}`),
+        {
+          maxRetries: 3,
+          delayMs: 800,
+          context: "User profile refresh"
+        }
+      );
 
       if (!response.data.success) {
-        throw new Error("Failed to fetch user data");
+        throw new AppError("Failed to fetch user data", { code: 'USER_FETCH_FAILED' });
       }
 
       setUser(response.data.data.user);
     } catch (error) {
-      console.error("Reload error:", error);
+      // Handle error with our helper
+      handleError(error, "Profile reload");
     } finally {
       setLoading(false);
     }

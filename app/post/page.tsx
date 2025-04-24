@@ -36,6 +36,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AppError, retryOperation } from '@/lib/errorUtils';
+import { toast } from 'react-hot-toast';
 
 // Define Zod schema for form validation
 const listingSchema = z.object({
@@ -197,16 +199,34 @@ const PostListingPage = () => {
       return;
     }
 
+    // Show loading toast
+    const loadingToast = toast.loading('Creating your listing...');
+
     try {
       // Check if user is available
       if (!user || !user.id) {
-        throw new Error("You must be logged in to post a listing");
+        throw new AppError('You must be logged in to post a listing', {
+          code: 'AUTH_REQUIRED',
+          status: 401,
+          context: 'Post Listing'
+        });
       }
 
-      const imageUrls = await uploadImage(images, formData.title);
+      // Use retryOperation for image upload with proper error handling
+      const imageUrls = await retryOperation(
+        () => uploadImage(images, formData.title),
+        {
+          context: "Image Upload",
+          maxRetries: 2,
+          showToastOnRetry: true
+        }
+      );
 
       if (!imageUrls) {
-        throw new Error("Failed to upload images");
+        throw new AppError('Failed to upload images', {
+          code: 'IMAGE_UPLOAD_FAILED',
+          context: 'Post Listing'
+        });
       }
 
       const listing: UploadListing = {
@@ -223,35 +243,82 @@ const PostListingPage = () => {
         sellerId: user.id,
       };
 
-      const uploadResponse = await uploadListing(listing);
+      // Use retryOperation for listing upload with proper error handling
+      const uploadResponse = await retryOperation(
+        () => uploadListing(listing),
+        {
+          context: "Upload Listing",
+          maxRetries: 1,
+          showToastOnRetry: true
+        }
+      );
+
       if (!uploadResponse) {
-        throw new Error("Failed to post listing");
+        throw new AppError('Failed to post listing', {
+          code: 'LISTING_UPLOAD_FAILED',
+          context: 'Post Listing'
+        });
       }
 
+      // Dismiss loading toast and show success
+      toast.dismiss(loadingToast);
+      toast.success('Listing posted successfully!');
       setSuccessMessage("Listing posted successfully!");
+      
+      // Reset form data on success
+      setFormData({
+        title: "",
+        description: "",
+        category: "",
+        condition: "",
+        price: "",
+        ecoAttributes: [],
+        negotiable: false,
+        location: user?.location,
+      });
+      setImages([]);
+      setImageFiles([]);
+      setEcoScore(0);
+      
     } catch (error) {
-      console.error("Post listing error:", error);
-      if (error instanceof Error) {
-        // Handle specific error scenarios
-        if (
-          error.message.includes("Authentication required") ||
-          error.message.includes("must be logged in")
-        ) {
-          setErrorMessage(
-            "Authentication required. Please ensure you are logged in."
-          );
-        } else if (
-          error.message.includes("401") ||
-          error.message.includes("Unauthorized")
-        ) {
-          setErrorMessage("Your session has expired. Please log in again.");
-        } else {
-          setErrorMessage(`Failed to post listing: ${error.message}`);
-        }
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+      
+      // Convert to AppError if not already
+      const appError = error instanceof AppError 
+        ? error 
+        : AppError.from(error, 'Post Listing');
+      
+      // Log in development, use proper error tracking in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("Post listing error:", appError);
       } else {
-        setErrorMessage(
-          "An unexpected error occurred. Please try again later."
-        );
+        // In production, this would use a service like Sentry
+        // Example: Sentry.captureException(appError);
+      }
+      
+      // Set appropriate user-friendly error message based on error code/type
+      if (appError.code === 'AUTH_REQUIRED' || appError.status === 401) {
+        setErrorMessage("Authentication required. Please ensure you are logged in.");
+        toast.error("Authentication required");
+      } else if (appError.code === 'IMAGE_UPLOAD_FAILED') {
+        setErrorMessage("Failed to upload images. Please try again with different images or check your connection.");
+        toast.error("Image upload failed");
+      } else if (appError.code === 'LISTING_UPLOAD_FAILED') {
+        setErrorMessage("Failed to post your listing. Please try again.");
+        toast.error("Listing upload failed");
+      } else if (appError.validationErrors && Object.keys(appError.validationErrors).length > 0) {
+        const validationMessages = Object.values(appError.validationErrors)
+          .flat()
+          .join(', ');
+        setErrorMessage(`Validation error: ${validationMessages}`);
+        toast.error("Please check your listing information");
+      } else if (appError.message) {
+        setErrorMessage(`Failed to post listing: ${appError.message}`);
+        toast.error(appError.message);
+      } else {
+        setErrorMessage("An unexpected error occurred. Please try again later.");
+        toast.error("Something went wrong");
       }
     } finally {
       window.scrollTo({ top: 0, behavior: "smooth" });

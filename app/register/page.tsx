@@ -109,8 +109,25 @@ export default function RegisterPage() {
       router.push("/account?registered=true");
       
     } catch (error) {
-      console.error("Registration error:", error);
-      setRegisterError(error as string || "An unexpected error occurred. Please try again.");
+      // Convert error to a strongly-typed AppError if possible
+      let errorMessage = "An unexpected error occurred. Please try again.";
+      
+      // Extract meaningful error message if available
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      // Log in development, use proper error tracking in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("Registration error:", error);
+      } else {
+        // In production, this would use a service like Sentry
+        // Example: Sentry.captureException(error);
+      }
+      
+      setRegisterError(errorMessage);
     } finally {
       setIsLoading(false);
     }

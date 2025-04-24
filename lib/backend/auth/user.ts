@@ -1,20 +1,66 @@
 import api from '../api/axiosConfig'
 import { User } from '@/lib/types/user'
+import { toast } from 'react-hot-toast'
+import { AppError, retryOperation } from '@/lib/errorUtils'
 
+/**
+ * Get user data with improved error handling and retries
+ */
 export const getUser = async (uuid: string) => {
   try {
-    const response = await api.get(`/api/auth/user/${uuid}`)
+    // Use our type-safe retry utility
+    const response = await retryOperation(
+      () => api.get(`/api/auth/user/${uuid}`),
+      {
+        context: "Fetching user data",
+        maxRetries: 3
+      }
+    )
+    
     if (!response.data || !response.data.data || !response.data.data.user) {
-      throw new Error('Invalid user data received')
+      throw new AppError('Invalid user data received', {
+        code: 'INVALID_RESPONSE',
+        status: response.status
+      })
     }
+    
     const user = response.data.data.user
     return user
   } catch (error) {
-    console.error('Error fetching user data:', error)
-    throw error
+    // Convert to AppError if not already
+    const appError = error instanceof AppError 
+      ? error 
+      : AppError.from(error, 'Fetching user data');
+    
+    // Log in development, use proper error tracking in production
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Error fetching user data:', appError);
+    }
+    
+    // Only show toast in production if not already shown by retry operation
+    if (process.env.NODE_ENV === 'production' && !appError.context?.includes('Fetching user data')) {
+      // Create user-friendly message based on error
+      let errorMessage = 'Failed to fetch user data. Please try again.';
+      
+      if (appError.status === 404) {
+        errorMessage = 'User not found.';
+      } else if (appError.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (appError.message) {
+        errorMessage = appError.message;
+      }
+      
+      toast.error(errorMessage);
+    }
+    
+    // Rethrow for component handling
+    throw appError;
   }
 }
 
+/**
+ * Update user data with improved error handling and retries
+ */
 export const updateUser = async (
   uuid: string,
   userData: {
@@ -23,20 +69,84 @@ export const updateUser = async (
     bio?: string
   },
 ) => {
+  // Show loading state
+  let loadingToast: string | undefined
+  if (process.env.NODE_ENV === 'production') {
+    loadingToast = toast.loading('Updating profile...')
+  }
+  
   try {
-    const response = await api.put(`/api/auth/user/${uuid}`, userData)
+    // Use our type-safe retry utility
+    const response = await retryOperation(
+      () => api.put(`/api/auth/user/${uuid}`, userData),
+      {
+        context: "Updating user profile",
+        maxRetries: 3,
+        showToastOnRetry: false // We have our own loading toast
+      }
+    )
 
     if (!response.data.success) {
-      throw new Error('Failed to update user data')
+      throw new AppError(response.data.message || 'Failed to update user data', {
+        code: 'UPDATE_FAILED',
+        status: response.status
+      })
     }
 
     if (!response.data.data) {
-      throw new Error('Invalid user data received')
+      throw new AppError('Invalid user data received', {
+        code: 'INVALID_RESPONSE',
+        status: response.status
+      })
     }
+    
     const user = response.data.data as User
+    
+    // Dismiss loading toast and show success message
+    if (process.env.NODE_ENV === 'production') {
+      if (loadingToast) toast.dismiss(loadingToast)
+      toast.success('Profile updated successfully')
+    }
+    
     return user
   } catch (error) {
-    console.error('Error updating user data:', error)
-    throw error as Error
+    // Dismiss loading toast
+    if (loadingToast && process.env.NODE_ENV === 'production') {
+      toast.dismiss(loadingToast)
+    }
+    
+    // Convert to AppError if not already
+    const appError = error instanceof AppError 
+      ? error 
+      : AppError.from(error, 'Updating user profile');
+    
+    // Log in development, use proper error tracking in production
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Error updating user data:', appError);
+    } else {
+      // In production, use proper error tracking
+      // Example: Sentry.captureException(appError)
+    }
+    
+    // Only show toast in production if not already shown by retry operation
+    if (process.env.NODE_ENV === 'production' && !appError.context?.includes('Updating user profile')) {
+      // Create user-friendly message based on error
+      let errorMessage = 'Failed to update profile. Please try again.';
+      
+      if (appError.status === 404) {
+        errorMessage = 'User not found.';
+      } else if (appError.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (appError.validationErrors) {
+        errorMessage = 'Some fields contain invalid data. Please check and try again.';
+      } else if (appError.message) {
+        errorMessage = appError.message;
+      }
+      
+      toast.error(errorMessage);
+    }
+    
+    // Rethrow for component handling
+    throw appError;
   }
 }

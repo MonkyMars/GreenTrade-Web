@@ -16,6 +16,8 @@ import { FetchedListing } from "@/lib/types/main";
 import { getSellerListings } from "@/lib/backend/getListings";
 import ListingCard from "@/app/components/UI/ListingCard";
 import api from "@/lib/backend/api/axiosConfig";
+import { toast } from "react-hot-toast";
+import { AppError, retryOperation } from '@/lib/errorUtils';
 
 export default function SellerPage() {
   const router = useRouter();
@@ -25,18 +27,36 @@ export default function SellerPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [messageOpen, setMessageOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     const fetchSellerData = async() => {
       setIsLoading(true);
+      
+      // Show loading toast for better UX
+      const loadingToast = toast.loading('Loading seller profile...');
+      
       try {
-        // Fetch seller information
-        const response = await api.get(`/api/sellers/${params.id}`);
+        // Fetch seller information with retry logic and proper error typing
+        const response = await retryOperation(
+          () => api.get(`/api/sellers/${params.id}`),
+          {
+            context: "Fetching seller profile",
+            maxRetries: 3,
+            showToastOnRetry: false // We have our own loading toast
+          }
+        );
+        
         if (!response.data || !response.data.success) {
-          throw new Error('Failed to fetch seller');
+          throw new AppError(response.data?.message || 'Failed to fetch seller', {
+            code: 'FETCH_FAILED',
+            status: response.status
+          });
         }
 
-        console.log(response.data.data);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(response.data.data);
+        }
 
         const sellerObject: Seller = {
           id: response.data.data.id,
@@ -49,11 +69,40 @@ export default function SellerPage() {
 
         setSeller(sellerObject);
 
-        // Fetch seller's listings
+        // Fetch seller's listings - getSellerListings already has retry and error handling
         const sellerListings = await getSellerListings(params.id as string);
         setListings(sellerListings as FetchedListing[]);
+        
+        // Dismiss the loading toast
+        toast.dismiss(loadingToast);
       } catch (error) {
-        console.error("Error fetching seller data:", error);
+        // Dismiss the loading toast
+        toast.dismiss(loadingToast);
+        
+        // Convert to AppError if not already
+        const appError = error instanceof AppError 
+          ? error 
+          : AppError.from(error, 'Fetching seller profile');
+        
+        // Handle error properly with user feedback
+        let errorMessage = 'Failed to load seller profile. Please try again.';
+        
+        if (appError.status === 404) {
+          errorMessage = 'Seller not found.';
+        } else if (appError.message) {
+          errorMessage = appError.message;
+        }
+        
+        // Show error to user 
+        toast.error(errorMessage);
+        
+        // Log in development, use proper error tracking in production
+        if (process.env.NODE_ENV !== 'production') {
+          console.error("Error fetching seller data:", appError);
+        } else {
+          // In production, this would use a service like Sentry
+          // Example: Sentry.captureException(appError);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -66,15 +115,72 @@ export default function SellerPage() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!message.trim()) {
+      toast.error("Please enter a message");
+      return;
+    }
+    
+    // Prevent double-submission
+    if (sendingMessage) return;
+    
+    setSendingMessage(true);
+    const loadingToast = toast.loading('Sending message...');
+    
     // This would integrate with your messaging system
     try {
-      // Example: await api.post('/messages', { sellerId: seller?.id, message });
-      alert("Message sent successfully!");
+      // Example API call with retry logic and proper error typing
+      await retryOperation(
+        () => api.post('/messages', { 
+          sellerId: seller?.id, 
+          message 
+        }),
+        {
+          context: "Sending message",
+          maxRetries: 3,
+          showToastOnRetry: false // We have our own loading toast
+        }
+      );
+      
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+      
+      // Show success message
+      toast.success("Message sent successfully!");
+      
+      // Reset form
       setMessage("");
       setMessageOpen(false);
     } catch (error) {
-      console.error("Error sending message:", error);
-      alert("Failed to send message. Please try again.");
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+      
+      // Convert to AppError if not already
+      const appError = error instanceof AppError 
+        ? error 
+        : AppError.from(error, 'Sending message');
+      
+      // Handle error properly with user feedback
+      let errorMessage = 'Failed to send message. Please try again.';
+      
+      if (appError.status === 401) {
+        errorMessage = 'Please log in to send messages.';
+      } else if (appError.message) {
+        errorMessage = appError.message;
+      }
+      
+      // Show error to user
+      toast.error(errorMessage);
+      
+      // Log in development, use proper error tracking in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("Error sending message:", appError);
+      } else {
+        // In production, this would use a service like Sentry
+        // Example: Sentry.captureException(appError);
+      }
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -141,11 +247,16 @@ export default function SellerPage() {
               )}
             </div>
             
-            <div className="flex items-center mb-4">
-              <div className="flex items-center text-yellow-400 mr-2">
-                <FaStar className="h-5 w-5" />
+            <div className="space-y-1 mb-4">
+              <div className="flex items-center mr-2">
+                {[...Array(5)].map((_, index) => (
+                  <FaStar 
+                    key={index} 
+                    className={`h-4 w-4 ${index < Math.floor(seller.rating) ? "text-yellow-400" : "text-gray-300"}`} 
+                  />
+                ))}
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
-                  {seller.rating}
+                  {seller.rating.toFixed(1)}
                 </span>
               </div>
               <div className="flex items-center text-gray-500 dark:text-gray-400">

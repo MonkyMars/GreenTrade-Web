@@ -25,6 +25,8 @@ import { useEffect, useState } from "react";
 import api from "@/lib/backend/api/axiosConfig";
 import { getListings } from "@/lib/backend/getListings";
 import { useRouter } from "next/navigation";
+import { AppError, retryOperation } from '@/lib/errorUtils';
+import { toast } from 'react-hot-toast';
 
 export default function ListingPage() {
   const router = useRouter();
@@ -38,29 +40,60 @@ export default function ListingPage() {
       category: string
     ): Promise<FetchedListing[]> => {
       try {
-        console.log("Fetching similar listings");
+        if (process.env.NODE_ENV !== 'production') {
+          console.log("Fetching similar listings");
+        }
 
         if (!category) {
           return [];
         }
 
-        const response = await api.get(`/listings/category/${category}`);
+        // Use our retry operation utility with proper error typing
+        const response = await retryOperation(
+          () => api.get(`/listings/category/${category}`),
+          {
+            context: "Fetching similar listings",
+            maxRetries: 2,
+            showToastOnRetry: false // Don't show toast for these retries
+          }
+        );
 
         if (!response.data.success) {
-          console.log(response);
+          if (process.env.NODE_ENV !== 'production') {
+            console.log(response);
+          }
           return [];
         }
 
         return response.data.data;
       } catch (error) {
-        console.error("Error fetching similar listings:", error);
+        // Convert to AppError if not already
+        const appError = error instanceof AppError 
+          ? error 
+          : AppError.from(error, 'Fetching similar listings');
+        
+        // Log in development, use proper error tracking in production
+        if (process.env.NODE_ENV !== 'production') {
+          console.error("Error fetching similar listings:", appError);
+        } else {
+          // In production, this would use a service like Sentry
+          // Example: Sentry.captureException(appError);
+        }
+        
+        // We don't show toasts for similar listings errors to avoid UI clutter
+        // This is a non-critical feature, so we fail gracefully
         return [];
       }
     };
 
     const fetchData = async () => {
       setIsLoading(true);
+      // Show loading toast in production
+      const loadingToast = process.env.NODE_ENV === 'production' ? 
+        toast.loading('Loading listing details...') : undefined;
+      
       try {
+        // getListings already implements our error handling
         const listingData = (await getListings(
           params.id as string
         )) as FetchedListing;
@@ -97,8 +130,31 @@ export default function ListingPage() {
 
           setSimilarListings(validListings);
         }
+        
+        // Dismiss loading toast if it exists
+        if (loadingToast) {
+          toast.dismiss(loadingToast);
+        }
       } catch (error) {
-        console.error("Error fetching listing:", error);
+        // Dismiss loading toast if it exists
+        if (loadingToast) {
+          toast.dismiss(loadingToast);
+        }
+        
+        // Convert to AppError if not already
+        const appError = error instanceof AppError 
+          ? error 
+          : AppError.from(error, 'Fetching listing details');
+        
+        // Log in development, use proper error tracking in production
+        if (process.env.NODE_ENV !== 'production') {
+          console.error("Error fetching listing:", appError);
+        } else {
+          // In production, this would use a service like Sentry
+          // Example: Sentry.captureException(appError);
+        }
+        
+        // We don't need to show a toast here as getListings already handles error messages
       } finally {
         setIsLoading(false);
       }
