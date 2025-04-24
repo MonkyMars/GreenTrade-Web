@@ -19,13 +19,15 @@ import {
   TabsTrigger,
 } from "@/app/components/UI/tabs";
 import { FetchedListing } from "@/lib/types/main";
-import { SimilairCard, SimilairCardSkeleton } from "./similairCard";
+import { SimilairCard } from "./similairCard";
 import { findCategory } from "@/lib/functions/categories";
 import { useEffect, useState } from "react";
 import api from "@/lib/backend/api/axiosConfig";
 import { getListings } from "@/lib/backend/getListings";
+import { useRouter } from "next/navigation";
 
 export default function ListingPage() {
+  const router = useRouter();
   const [listing, setListing] = useState<FetchedListing | null>(null);
   const [similarListings, setSimilarListings] = useState<FetchedListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,9 +44,7 @@ export default function ListingPage() {
           return [];
         }
 
-        const response = await api.get(
-          `/listings/category/${category}`
-        );
+        const response = await api.get(`/listings/category/${category}`);
 
         if (!response.data.success) {
           console.log(response);
@@ -61,40 +61,41 @@ export default function ListingPage() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const listingData = await getListings(params.id as string) as FetchedListing;
+        const listingData = (await getListings(
+          params.id as string
+        )) as FetchedListing;
         setListing(listingData);
 
         // Fetch similar listings after we have the listing data
         if (listingData && listingData.category) {
           const similarItems = await fetchSimilarListings(listingData.category);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const all = similarItems as any[]
+          const all = similarItems as any[];
 
-      const validListings: FetchedListing[] = all.map(listing => {
-        return {
-          id: listing.id,
-          title: listing.title,
-          description: listing.description,
-          category: listing.category,
-          condition: listing.condition,
-          location: listing.location,
-          price: listing.price,
-          negotiable: listing.negotiable,
-          ecoScore: listing.ecoScore,
-          ecoAttributes: listing.ecoAttributes,
-          imageUrl: listing.imageUrl,
-          createdAt: listing.created_at,
-          sellerId: listing.seller_id,
-          sellerCreatedAt: listing.seller_created_at,
-          sellerUsername: listing.seller_username,
-          sellerBio: listing.seller_bio,
-          sellerRating: listing.seller_rating,
-          sellerVerified: listing.seller_verified,
-        }
-      })
+          const validListings: FetchedListing[] = all.map((listing) => {
+            return {
+              id: listing.id,
+              title: listing.title,
+              description: listing.description,
+              category: listing.category,
+              condition: listing.condition,
+              location: listing.location,
+              price: listing.price,
+              negotiable: listing.negotiable,
+              ecoScore: listing.ecoScore,
+              ecoAttributes: listing.ecoAttributes,
+              imageUrl: listing.imageUrl,
+              createdAt: listing.created_at,
+              sellerId: listing.seller_id,
+              sellerCreatedAt: listing.seller_created_at,
+              sellerUsername: listing.seller_username,
+              sellerBio: listing.seller_bio,
+              sellerRating: listing.seller_rating,
+              sellerVerified: listing.seller_verified,
+            };
+          });
 
-      setSimilarListings(validListings);
-
+          setSimilarListings(validListings);
         }
       } catch (error) {
         console.error("Error fetching listing:", error);
@@ -132,9 +133,9 @@ export default function ListingPage() {
     category = { icon: FaLeaf, name: "Eco", id: "green" };
   }
   // Format the creation date to show how long ago it was posted
-  const timeAgo = listing.createdAt 
+  const timeAgo = listing.createdAt
     ? formatDistanceToNow(listing.createdAt, { addSuffix: true })
-    : 'Recently';
+    : "Recently";
 
   return (
     <main className="mx-auto px-4 py-8 max-w-7xl">
@@ -187,7 +188,7 @@ export default function ListingPage() {
 
                 {/* Image thumbnails */}
                 <div className="mt-4">
-                  <TabsList className="flex justify-start overflow-x-auto space-x-2 py-1 px-0 h-auto bg-gray-100! dark:bg-slate-800 tabslist">
+                  <TabsList className="flex justify-start overflow-x-auto space-x-2 py-1 px-0 h-auto bg-gray-100 dark:bg-slate-800 tabslist">
                     {listing.imageUrl.map((img: string, index: number) => (
                       <TabsTrigger
                         key={index}
@@ -258,7 +259,7 @@ export default function ListingPage() {
                     })}
                   </div>
                   <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                    {listing.sellerRating}
+                    {listing.sellerRating.toFixed(1)}
                   </span>
                   {listing.sellerVerified && (
                     <Badge
@@ -272,7 +273,9 @@ export default function ListingPage() {
                 </div>
 
                 <div className="mt-4 space-y-2">
-                  <Button className="w-full">Message Seller</Button>
+                  <Button variant="default" className="w-full">
+                    Message Seller
+                  </Button>
                   <Button variant="outline" className="w-full">
                     View Profile
                   </Button>
@@ -410,9 +413,9 @@ export default function ListingPage() {
                 Seller Information
               </h3>
               <div className="flex items-center space-x-4">
-                <div className="relative h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                <div className="relative h-12 w-12 rounded-full bg-primary-500 dark:bg-green-600/60 overflow-hidden">
                   {/* Placeholder for seller image */}
-                  <div className="absolute inset-0 flex items-center justify-center text-gray-500 dark:text-gray-400 text-xl font-bold">
+                  <div className="absolute inset-0 flex items-center justify-center text-green-500 dark:text-green-400 text-xl font-bold">
                     {listing.sellerUsername.charAt(0)}
                   </div>
                 </div>
@@ -436,7 +439,7 @@ export default function ListingPage() {
                       ))}
                     </div>
                     <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                      {listing.sellerRating}
+                      {listing.sellerRating.toFixed(1)}
                     </span>
                     {listing.sellerVerified && (
                       <Badge
@@ -450,7 +453,13 @@ export default function ListingPage() {
                   </div>
 
                   <div className="mt-4 space-y-2">
-                    <Button variant="outline" className="w-full">
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() =>
+                        router.replace(`/sellers/${listing.sellerId}`)
+                      }
+                    >
                       View Profile
                     </Button>
                   </div>
@@ -462,18 +471,26 @@ export default function ListingPage() {
       </div>
 
       {/* Related listings section - Optional */}
-      <div className="mt-16 dark:bg-gray-900 bg-gray-100 w-full p-8 rounded-lg">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-          Similar Listings
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {similarListings.length
-            ? similarListings.map((listing: FetchedListing) => (
+      {similarListings.length > 0 ? (
+        <div className="mt-16 dark:bg-gray-900 bg-gray-100 w-full p-8 rounded-lg">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+            Similar Listings
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {similarListings.length ? (
+              similarListings.map((listing: FetchedListing) => (
                 <SimilairCard key={listing.id} listing={listing} />
               ))
-            : [...Array(4)].map((_, i) => <SimilairCardSkeleton key={i} />)}
+            ) : (
+              <div>
+                <p className="text-gray-800 dark:text-gray-300">
+                  No similair listings found
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      ) : null}
     </main>
   );
 }

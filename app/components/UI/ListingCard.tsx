@@ -18,9 +18,10 @@ import { formatDistanceToNow } from 'date-fns';
 interface ListingCardProps {
   listing: FetchedListing;
   viewMode: "grid" | "list";
+  className?: string;
 }
 
-const ListingCard: React.FC<ListingCardProps> = ({ listing, viewMode }) => {
+const ListingCard: React.FC<ListingCardProps> = ({ listing, viewMode, className }) => {
   let category = findCategory(listing.category);
   if (!category) {
     category = { id: "all", icon: TbFolder, name: "Unknown" };
@@ -29,7 +30,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, viewMode }) => {
   if (viewMode === "grid") {
     return (
       <div
-        className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1"
+        className={`bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${className}`}
       >
         <div className="relative h-52 group">
           {listing.imageUrl && listing.imageUrl.length > 0 ? (
@@ -107,7 +108,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, viewMode }) => {
               variant="outline"
               size="sm"
               className="flex items-center justify-center"
-              asChild
+              
             >
               <Link href={`/sellers/${listing.sellerId}`}>
                 <span className="flex items-center gap-1">
@@ -120,7 +121,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, viewMode }) => {
               variant="default"
               size="sm"
               className="flex items-center justify-center bg-green-600 hover:bg-green-700"
-              asChild
+              
             >
               <Link href={`/listings/${listing.id}`}>
                 <span className="flex items-center text-white gap-1">
