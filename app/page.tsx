@@ -14,12 +14,9 @@ export default function Home() {
     []
   );
 
- 
-
   useEffect(() => {
     const fetchFeaturedListings = async () => {
       const data = (await getListings()) as FetchedListing[];
-
       setFeaturedListings(data.slice(0, 4));
     };
     fetchFeaturedListings();
@@ -204,59 +201,61 @@ export default function Home() {
       </section>
 
       {/* Featured listings */}
-      <section className="py-16 bg-white dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-              Featured Listings
-            </h2>
-            <Link
-              href="/browse"
-              className="text-green-600 dark:text-green-400 font-medium hover:text-green-700 dark:hover:text-green-300 inline-flex items-center"
-            >
-              View All <FiArrowRight className="ml-2" />
-            </Link>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featuredListings.map((listing) => (
-              <div
-                key={listing.id}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+      {featuredListings.length > 0 ? (
+        <section className="py-16 bg-white dark:bg-gray-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+                Featured Listings
+              </h2>
+              <Link
+                href="/browse"
+                className="text-green-600 dark:text-green-400 font-medium hover:text-green-700 dark:hover:text-green-300 inline-flex items-center"
               >
-                <div className="relative h-48">
-                  <Image
-                    src={listing.imageUrl[0]}
-                    alt={listing.title}
-                    fill
-                    style={{ objectFit: "cover" }}
-                  />
-                  <div className="absolute top-2 right-2 bg-green-600 text-white text-sm font-medium px-2 py-1 rounded-md flex items-center">
-                    <FaLeaf className="mr-1" /> {listing.ecoScore}
+                View All <FiArrowRight className="ml-2" />
+              </Link>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {featuredListings.map((listing) => (
+                <div
+                  key={listing.id}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                >
+                  <div className="relative h-48">
+                    <Image
+                      src={listing.imageUrl[0]}
+                      alt={listing.title}
+                      fill
+                      style={{ objectFit: "cover" }}
+                    />
+                    <div className="absolute top-2 right-2 bg-green-600 text-white text-sm font-medium px-2 py-1 rounded-md flex items-center">
+                      <FaLeaf className="mr-1" /> {listing.ecoScore}
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">
+                      {listing.title}
+                    </h3>
+                    <p className="text-green-600 dark:text-green-400 font-bold mb-2">
+                      {listing.price}
+                    </p>
+                    <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm">
+                      <FaMapMarkedAlt className="mr-1" /> {listing.location}
+                    </div>
+                    <Link
+                      href={`/listing/${listing.id}`}
+                      className="mt-4 w-full block text-center bg-gray-100 dark:bg-gray-700 hover:bg-green-100 dark:hover:bg-green-900 text-gray-800 dark:text-white py-2 rounded-md transition-colors"
+                    >
+                      View Details
+                    </Link>
                   </div>
                 </div>
-                <div className="p-5">
-                  <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">
-                    {listing.title}
-                  </h3>
-                  <p className="text-green-600 dark:text-green-400 font-bold mb-2">
-                    {listing.price}
-                  </p>
-                  <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm">
-                    <FaMapMarkedAlt className="mr-1" /> {listing.location}
-                  </div>
-                  <Link
-                    href={`/listing/${listing.id}`}
-                    className="mt-4 w-full block text-center bg-gray-100 dark:bg-gray-700 hover:bg-green-100 dark:hover:bg-green-900 text-gray-800 dark:text-white py-2 rounded-md transition-colors"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       {/* Impact section */}
       <section className="py-16 bg-gradient-to-br from-green-600 to-green-800 text-white">

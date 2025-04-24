@@ -1,3 +1,5 @@
+import { FetchedListing } from "../types/main"
+
 const ecoAttributeWeights: { [key: string]: number } = {
     'Second-hand': 1.2,
     Refurbished: 1.2,
@@ -27,3 +29,7 @@ const ecoAttributeWeights: { [key: string]: number } = {
     return Math.round(ecoScore * 10) / 10
   }
   
+  export const calculateAverageEcoScore = (listings: FetchedListing[]) => {
+    const sum = listings.reduce((total, listing) => total + listing.ecoScore, 0);
+    return (sum / listings.length).toFixed(1);
+};

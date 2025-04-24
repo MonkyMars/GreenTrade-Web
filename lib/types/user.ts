@@ -3,7 +3,6 @@ export interface User {
     name: string;
     email: string;
     location: string;
-    isSeller: boolean;
     profileUrl: string;
     createdAt: string;
     updatedAt: string;

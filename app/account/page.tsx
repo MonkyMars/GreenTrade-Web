@@ -8,7 +8,6 @@ import {
   FaStore,
   FaShieldAlt,
   FaTrash,
-  FaEdit,
   FaKey,
   FaSignOutAlt,
   FaCheck,
@@ -26,6 +25,10 @@ import { User } from "@/lib/types/user";
 import ProtectedRoute from "../components/UI/ProtectedRoute";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import Link from "next/link";
+import { getSellerListings } from "@/lib/backend/getListings";
+import { FetchedListing } from "@/lib/types/main";
+import ListingCard from "../components/UI/ListingCard";
+import { calculateAverageEcoScore } from "@/lib/functions/calculateEcoScore";
 
 interface ActiveTab{
   activeTab: "profile" | "seller" | "security" | "delete";
@@ -39,7 +42,6 @@ export default function AccountPage() {
     name: "",
     email: "",
     location: "",
-    isSeller: false,
     profileUrl: "",
     updatedAt: "",
     createdAt: "",
@@ -47,7 +49,8 @@ export default function AccountPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab["activeTab"]>("profile");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState("");
-
+  const [userListings, setUserListings] = useState<FetchedListing[]>([]);
+  
   useEffect(() => {
     if (!authLoading) {
       if (authUser) {
@@ -57,7 +60,6 @@ export default function AccountPage() {
           name: authUser.name || "",
           email: authUser.email || "",
           location: authUser.location || "",
-          isSeller: authUser.isSeller || false,
           profileUrl: authUser.profileUrl || "",
           updatedAt: authUser.updatedAt || "",
           createdAt: authUser.createdAt || "",
@@ -73,40 +75,7 @@ export default function AccountPage() {
   }, [authUser, authLoading, isAuthenticated]);
 
   const handleLogout = async () => {
-    logout();
-  };
-
-  const handleBecomeSeller = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/user/seller`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to become a seller");
-      }
-
-      // Update user data
-      const updatedUser = { ...user, isSeller: true };
-      setUser(updatedUser);
-
-      setUpdateSuccess(
-        "You are now a seller! You can start listing your eco-friendly products."
-      );
-
-      setTimeout(() => {
-        setUpdateSuccess("");
-      }, 3000);
-    } catch (error) {
-      console.error("Error becoming seller:", error);
-    }
+    logout(); // need to improve logout handling with a 
   };
 
   const handleDeleteAccount = async () => {
@@ -130,6 +99,50 @@ export default function AccountPage() {
       router.push("/?deleted=true");
     } catch (error) {
       console.error("Error deleting account:", error);
+    }
+  };
+
+  useEffect(() => {
+      const fetchUserlisings = async() => {
+    try {
+      const data = await getSellerListings(user.id);
+      setUserListings(data)
+    } catch(error) {
+      console.error("Error fetching user listings:", error);
+    }
+  }
+
+    if (user.id) {
+      fetchUserlisings();
+    }
+  }, [user])
+
+
+  const handleUdateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/user/update`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update user data");
+      }
+
+      setUpdateSuccess("User data updated successfully!");
+    } catch (error) {
+      console.error("Error updating user data:", error);
     }
   };
 
@@ -162,7 +175,7 @@ export default function AccountPage() {
                 {user?.email}
               </p>
 
-              {user?.isSeller && (
+              {userListings.length > 0 && (
                 <Badge className="mb-4 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                   <FaStore className="mr-1 h-3 w-3" />
                   Seller
@@ -177,15 +190,6 @@ export default function AccountPage() {
                 >
                   <FaUser className="mr-2 left-2 relative h-4 w-4" />
                   Profile
-                  <p></p>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full mb-2 relative justify-between"
-                  onClick={() => setActiveTab("seller")}
-                >
-                  <FaStore className="mr-2 left-2 relative h-4 w-4" />
-                  Seller Settings
                   <p></p>
                 </Button>
                 <Button
@@ -241,7 +245,7 @@ export default function AccountPage() {
                   Eco Score
                 </span>
                 <span className="font-medium text-green-600">
-                  {user?.ecoScore || 0}/5
+                  {calculateAverageEcoScore(userListings) || 0}/5
                 </span>
               </div>
             </div>
@@ -269,7 +273,7 @@ export default function AccountPage() {
                 Profile Information
               </h2>
 
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={handleUdateUser}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label
@@ -356,7 +360,7 @@ export default function AccountPage() {
                   ></textarea>
                 </div>
 
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Profile Image
                   </label>
@@ -380,121 +384,12 @@ export default function AccountPage() {
                       Change Image
                     </Button>
                   </div>
-                </div>
+                </div> */}
 
                 <div className="flex justify-end">
                   <Button type="submit">Save Changes</Button>
                 </div>
               </form>
-            </div>
-          )}
-
-          {activeTab === "seller" && (
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6 mb-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-                <FaStore className="mr-2 h-5 w-5 text-green-600" />
-                Seller Settings
-              </h2>
-
-              {user?.isSeller ? (
-                <div className="space-y-6">
-                  <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
-                    <div className="flex items-center mb-4">
-                      <FaCheck className="h-5 w-5 text-green-600 mr-2" />
-                      <h3 className="text-md font-medium text-gray-900 dark:text-white">
-                        You are a verified seller
-                      </h3>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      You can create listings and sell your eco-friendly
-                      products on GreenTrade. Access your seller dashboard to
-                      manage your listings.
-                    </p>
-                    <Button>Go to Seller Dashboard</Button>
-                  </div>
-
-                  <div>
-                    <h3 className="text-md font-medium text-gray-900 dark:text-white mb-4">
-                      Seller Information
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label
-                          htmlFor="businessName"
-                          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                        >
-                          Business Name
-                        </label>
-                        <input
-                          type="text"
-                          id="businessName"
-                          name="businessName"
-                          // defaultValue={user?.businessName || ""}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-white"
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="taxId"
-                          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                        >
-                          Tax ID / VAT Number
-                        </label>
-                        <input
-                          type="text"
-                          id="taxId"
-                          name="taxId"
-                          // defaultValue={user?.taxId || ""}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-white"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mt-6">
-                      <label
-                        htmlFor="sellerBio"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      >
-                        Seller Bio / About Your Business
-                      </label>
-                      <textarea
-                        id="sellerBio"
-                        name="sellerBio"
-                        rows={4}
-                        // defaultValue={user?.sellerBio || ""}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-white"
-                      ></textarea>
-                    </div>
-
-                    <div className="flex justify-end mt-6">
-                      <Button type="submit">Update Seller Information</Button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-                    <h3 className="text-md font-medium text-gray-900 dark:text-white mb-2">
-                      Become a Seller on GreenTrade
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      Start selling your eco-friendly products to our community
-                      of environmentally conscious buyers. Becoming a seller is
-                      free and only takes a few minutes.
-                    </p>
-                    <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 mb-4 space-y-1">
-                      <li>Access to seller dashboard</li>
-                      <li>Create and manage your listings</li>
-                      <li>Connect with eco-conscious buyers</li>
-                      <li>Promote sustainable products</li>
-                    </ul>
-                    <Button onClick={handleBecomeSeller}>
-                      Become a Seller
-                    </Button>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -667,13 +562,12 @@ export default function AccountPage() {
                 </TabsList>
 
                 <TabsContent value="listings" className="pt-4">
-                  {false ? ( // TODO: Check if user has listings
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {userListings.length > 0 ? ( 
+                    <div className="space-y-4">
                       {/* Listing cards would go here */}
-                      <div className="text-gray-600 dark:text-gray-400">
-                        No listings found. Start selling by creating a new
-                        listing!
-                      </div>
+                      {userListings.map((listing, index) => (
+                        <ListingCard listing={listing} key={index} viewMode="list"/>
+                      ))}
                     </div>
                   ) : (
                     <div className="text-center py-6">
