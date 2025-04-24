@@ -35,6 +35,7 @@ export const uploadImage = async (
     const response = await api.post('/api/upload/listing_image', formData, {
       headers: {
         Authorization: `Bearer ${token}`,
+      }
     })
 
     console.log('Image upload response:', response.data)
