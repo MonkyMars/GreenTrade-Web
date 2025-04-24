@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { FaLeaf, FaEnvelope, FaLock, FaGoogle } from "react-icons/fa";
@@ -16,7 +16,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+const Login = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
@@ -256,3 +256,13 @@ export default function LoginPage() {
     </div>
   );
 }
+
+const LoginPage = () => {
+  return(
+    <Suspense>
+      <Login />
+    </Suspense>
+  )
+};
+
+export default LoginPage;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -22,7 +22,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "../components/UI/button";
 import { formatDistanceToNow } from 'date-fns'
 
-const BrowsePage = () => {
+const BrowserComponent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -317,21 +317,6 @@ const BrowsePage = () => {
                           <div className="w-full h-full bg-gray-200 dark:bg-gray-700" />
                         )}
                         <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-200" />
-                        {/* <button
-                          onClick={() => toggleFavorite(listing.id)}
-                          aria-label={
-                            listing.isFavorite
-                              ? "Remove from favorites"
-                              : "Add to favorites"
-                          }
-                          className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 rounded-full hover:bg-opacity-100 dark:hover:bg-opacity-100 transition-all duration-200"
-                        >
-                          {listing.isFavorite ? (
-                            <FaHeart className="h-5 w-5 text-red-500" />
-                          ) : (
-                            <FaRegHeart className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                          )}
-                        </button> */}
                         <div className="absolute bottom-2 left-2 bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 px-2 py-1 rounded text-sm font-medium flex items-center">
                           <FaLeaf className="h-4 w-4 text-green-500 mr-1" />
                           <span className="font-bold">{listing.ecoScore}</span>
@@ -367,46 +352,34 @@ const BrowsePage = () => {
                           </div>
                         </div>
                         <div className="mt-3 pt-3 border-t border-gray-300/60 dark:border-gray-700 flex items-center justify-between"></div>
-                        {listing.seller ? (
-                          <>
-                            <div className="flex items-center text-sm">
-                              {listing.seller.verified && (
-                                <span className="mr-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded-full flex items-center">
-                                  ✓
-                                </span>
-                              )}
-                              <Link title="View seller profile" href={`/${listing.seller.id}`} className="text-green-600 dark:text-green-200 hover:text-green-600 dark:hover:text-green-400">
-                                {listing.seller.name}
-                              </Link>
-                              <div className="ml-2 flex items-center">
-                                <FaStar className="h-3 w-3 text-yellow-400" />
-                                <span className="text-xs ml-1">
-                                  {listing.seller.rating}
-                                </span>
-                              </div>
-                            </div>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {formatDistanceToNow(new Date(listing.created_at), {
-                                addSuffix: true,
-                              })}
+                        <div className="flex items-center text-sm">
+                          {listing.sellerVerified && (
+                            <span className="mr-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded-full flex items-center">
+                              ✓
                             </span>
-                          </>
-                        ) : (
-                          <>
-                            <div className="flex items-center text-sm">
-                              <span className="text-gray-600 dark:text-gray-300">
-                                Unknown Seller: Please Try Again.
-                              </span>
-                            </div>
-                          </>
-                        )}
+                          )}
+                          <Link title="View seller profile" href={`/sellers/${listing.sellerId}`} className="text-green-600 dark:text-green-200 hover:text-green-600 dark:hover:text-green-400">
+                            {listing.sellerUsername}
+                          </Link>
+                          <div className="ml-2 flex items-center">
+                            <FaStar className="h-3 w-3 text-yellow-400" />
+                            <span className="text-xs ml-1">
+                              {listing.sellerRating}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatDistanceToNow(new Date(listing.createdAt), {
+                            addSuffix: true,
+                          })}
+                        </span>
                         <div className="mt-3 grid grid-cols-2 gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             className="flex items-center justify-center"
                           >
-                            <Link href={`/sellers/${listing.seller.id}`}>
+                            <Link href={`/sellers/${listing.sellerId}`}>
                               <span className="flex items-center gap-1">
                                 <FaUser />
                                 View Seller
@@ -435,7 +408,7 @@ const BrowsePage = () => {
               <div className="space-y-4">
                 {listings.map((listing, index) => {
                   let category = findCategory(
-                    listing.category.toLocaleLowerCase()
+                    listing.category
                   );
                   if (!category)
                     category = { id: "all", icon: TbFolder, name: "Unknown" };
@@ -463,7 +436,7 @@ const BrowsePage = () => {
                           <div className="flex justify-between items-start">
                             <div>
                               <Link
-                                href={`/listing/${listing.id}`}
+                                href={`/listings/${listing.id}`}
                                 className="block"
                               >
                                 <h3 className="text-lg font-medium text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-green-400">
@@ -493,7 +466,7 @@ const BrowsePage = () => {
                               </span>
                               <span className="mx-2 text-gray-400">•</span>
                               <span className="text-gray-500 dark:text-gray-400">
-                                {formatDistanceToNow(new Date(listing.created_at), {
+                                {formatDistanceToNow(new Date(listing.createdAt), {
                                   addSuffix: true,
                                 })}
                               </span>
@@ -508,24 +481,24 @@ const BrowsePage = () => {
 
                             <div className="flex items-center justify-between mt-4">
                               <div className="flex items-center">
-                                {listing.seller.verified && (
+                                {listing.sellerVerified && (
                                   <span className="mr-1.5 px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded-full flex items-center">
                                     ✓
                                   </span>
                                 )}
                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                  {listing.seller.name}
+                                  {listing.sellerUsername}
                                 </span>
                                 <div className="ml-2 flex items-center">
                                   <FaStar className="h-3.5 w-3.5 text-yellow-400" />
                                   <span className="text-xs text-gray-600 dark:text-gray-400 ml-1 font-medium">
-                                    {listing.seller.rating}
+                                    {listing.sellerRating}
                                   </span>
                                 </div>
                               </div>
 
                               <Link
-                                href={`/listing/${listing.id}`}
+                                href={`/listings/${listing.id}`}
                                 className="inline-flex items-center text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm font-medium transition-colors"
                               >
                                 View Details
@@ -601,5 +574,13 @@ const BrowsePage = () => {
     </main>
   );
 };
+
+const BrowsePage = () => {
+  return (
+    <Suspense>
+      <BrowserComponent />
+    </Suspense>
+  )
+}
 
 export default BrowsePage;

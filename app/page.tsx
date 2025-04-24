@@ -1,54 +1,29 @@
+"use client";
+import { getListings } from "@/lib/backend/getListings";
+import { FetchedListing } from "@/lib/types/main";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { BiUser } from "react-icons/bi";
 import { FaLeaf, FaMapMarkedAlt, FaHandshake, FaRecycle } from "react-icons/fa";
 import { FiSearch, FiArrowRight } from "react-icons/fi";
-import { TbShirt, TbDeviceLaptop, TbCar, TbHome, TbDiamond, TbBooks } from "react-icons/tb";
+import { categories } from "@/lib/functions/categories";
 
 export default function Home() {
-  const categories: { name: string; icon: React.ElementType, href: string}[] = [
-    { name: "Home & Garden", icon: TbHome, href: "/category/home-garden" },
-    { name: "Fashion", icon: TbShirt, href: "/category/fashion" },
-    { name: "Electronics", icon: TbDeviceLaptop, href: "/category/electronics" },
-    { name: "Vehicles", icon: TbCar, href: "/category/vehicles" },
-    { name: "Books", icon: TbBooks, href: "/category/books" },
-    { name: "Jewerly", icon: TbDiamond, href: "/category/jewerly" },
-  ];
+  const [featuredListings, setFeaturedListings] = useState<FetchedListing[]>(
+    []
+  );
 
-  const featuredListings = [
-    {
-      id: 1,
-      title: "Handmade Wooden Furniture",
-      price: "€120",
-      location: "Berlin, Germany",
-      image: "/test.jpg",
-      ecoScore: 4.8,
-    },
-    {
-      id: 2,
-      title: "Solar-Powered Charger",
-      price: "€45",
-      location: "Madrid, Spain",
-      image: "/test.jpg",
-      ecoScore: 5.0,
-    },
-    {
-      id: 3,
-      title: "Sustainable Fashion Bundle",
-      price: "€75",
-      location: "Paris, France",
-      image: "/test.jpg",
-      ecoScore: 4.5,
-    },
-    {
-      id: 4,
-      title: "Refurbished Laptop",
-      price: "€350",
-      location: "Amsterdam, Netherlands",
-      image: "/test.jpg",
-      ecoScore: 4.2,
-    },
-  ];
+ 
+
+  useEffect(() => {
+    const fetchFeaturedListings = async () => {
+      const data = (await getListings()) as FetchedListing[];
+
+      setFeaturedListings(data.slice(0, 4));
+    };
+    fetchFeaturedListings();
+  }, []);
 
   return (
     <main>
@@ -61,7 +36,9 @@ export default function Home() {
                 Trade Sustainably Across Europe
               </h1>
               <p className="text-xl md:text-2xl mb-8 text-green-50 max-w-3xl">
-                Join our community of eco-conscious traders giving items a second life. Buy, sell, and swap locally to reduce waste and create a greener Europe.
+                Join our community of eco-conscious traders giving items a
+                second life. Buy, sell, and swap locally to reduce waste and
+                create a greener Europe.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
@@ -81,7 +58,7 @@ export default function Home() {
 
             <div className="hidden lg:block lg:col-span-5 mt-12 lg:mt-0">
               <div className="relative h-96 rounded-xl overflow-hidden shadow-2xl transform rotate-1">
-                <FaLeaf className="w-full h-full text-green-500 p-8"/>
+                <FaLeaf className="w-full h-full text-green-500 p-8" />
               </div>
             </div>
           </div>
@@ -130,7 +107,7 @@ export default function Home() {
             {categories.map((category) => (
               <Link
                 key={category.name}
-                href={category.href}
+                href={`/browse?category=${category.id}`}
                 className="bg-gray-50 dark:bg-gray-800 p-6 rounded-xl hover:shadow-md transition-shadow flex flex-col items-center text-center group"
               >
                 <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
@@ -161,7 +138,9 @@ export default function Home() {
             {/* Step 1 */}
             <div className="bg-white dark:bg-gray-700 p-8 rounded-xl shadow-md">
               <div className="w-14 h-14 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-6">
-                <span className="text-2xl font-bold text-green-600 dark:text-green-400">1</span>
+                <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  1
+                </span>
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 Create an Account
@@ -169,7 +148,10 @@ export default function Home() {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Sign up for free and build your eco-conscious trader profile.
               </p>
-              <Link href="/register" className="text-green-600 dark:text-green-400 font-medium inline-flex items-center">
+              <Link
+                href="/register"
+                className="text-green-600 dark:text-green-400 font-medium inline-flex items-center"
+              >
                 Get Started <FiArrowRight className="ml-2" />
               </Link>
             </div>
@@ -177,15 +159,21 @@ export default function Home() {
             {/* Step 2 */}
             <div className="bg-white dark:bg-gray-700 p-8 rounded-xl shadow-md">
               <div className="w-14 h-14 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-6">
-                <span className="text-2xl font-bold text-green-600 dark:text-green-400">2</span>
+                <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  2
+                </span>
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 Browse or Post Items
               </h3>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Find sustainable goods or list your own items to give them a second life.
+                Find sustainable goods or list your own items to give them a
+                second life.
               </p>
-              <Link href="/browse" className="text-green-600 dark:text-green-400 font-medium inline-flex items-center">
+              <Link
+                href="/browse"
+                className="text-green-600 dark:text-green-400 font-medium inline-flex items-center"
+              >
                 Browse Listings <FiArrowRight className="ml-2" />
               </Link>
             </div>
@@ -193,15 +181,21 @@ export default function Home() {
             {/* Step 3 */}
             <div className="bg-white dark:bg-gray-700 p-8 rounded-xl shadow-md">
               <div className="w-14 h-14 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-6">
-                <span className="text-2xl font-bold text-green-600 dark:text-green-400">3</span>
+                <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  3
+                </span>
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 Connect and Trade
               </h3>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Message securely, arrange meetups, and complete your sustainable trade.
+                Message securely, arrange meetups, and complete your sustainable
+                trade.
               </p>
-              <Link href="/how-it-works" className="text-green-600 dark:text-green-400 font-medium inline-flex items-center">
+              <Link
+                href="/how-it-works"
+                className="text-green-600 dark:text-green-400 font-medium inline-flex items-center"
+              >
                 Learn More <FiArrowRight className="ml-2" />
               </Link>
             </div>
@@ -216,8 +210,8 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
               Featured Listings
             </h2>
-            <Link 
-              href="/browse" 
+            <Link
+              href="/browse"
               className="text-green-600 dark:text-green-400 font-medium hover:text-green-700 dark:hover:text-green-300 inline-flex items-center"
             >
               View All <FiArrowRight className="ml-2" />
@@ -226,10 +220,13 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {featuredListings.map((listing) => (
-              <div key={listing.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div
+                key={listing.id}
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+              >
                 <div className="relative h-48">
                   <Image
-                    src={listing.image}
+                    src={listing.imageUrl[0]}
                     alt={listing.title}
                     fill
                     style={{ objectFit: "cover" }}
@@ -281,7 +278,7 @@ export default function Home() {
               <p className="text-4xl font-bold mb-2">120K+</p>
               <p className="text-xl">Items Reused</p>
             </div>
-            
+
             <div className="bg-green-200/20 bg-opacity-10 p-8 rounded-xl text-center">
               <div className="inline-block p-4 bg-white text-green-500 bg-opacity-20 rounded-full mb-4">
                 <FaLeaf className="h-10 w-10" />
@@ -289,7 +286,7 @@ export default function Home() {
               <p className="text-4xl font-bold mb-2">2.4K</p>
               <p className="text-xl">Tons of CO₂ Saved</p>
             </div>
-            
+
             <div className="bg-green-200/20 bg-opacity-10 p-8 rounded-xl text-center">
               <div className="inline-block p-4 bg-white text-green-500 bg-opacity-20 rounded-full mb-4">
                 <FaHandshake className="h-10 w-10" />
@@ -318,15 +315,21 @@ export default function Home() {
             <div className="bg-gray-50 dark:bg-gray-800 p-8 rounded-xl relative">
               <div className="relative z-10">
                 <p className="text-gray-700 dark:text-gray-300 mb-6">
-                  I&apos;ve sold and bought several items on GreenTrade. The community here truly cares about sustainability, and I&apos;ve met wonderful people while reducing waste!
+                  I&apos;ve sold and bought several items on GreenTrade. The
+                  community here truly cares about sustainability, and I&apos;ve
+                  met wonderful people while reducing waste!
                 </p>
                 <div className="flex items-center">
                   <div className="h-14 w-14 rounded-full overflow-hidden mr-4 flex items-center justify-center bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400">
-                    <BiUser className="h-6 w-6"/>
+                    <BiUser className="h-6 w-6" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">Elise Dupont</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Brussels, Belgium</p>
+                    <h4 className="font-medium text-gray-900 dark:text-white">
+                      Elise Dupont
+                    </h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Brussels, Belgium
+                    </p>
                   </div>
                 </div>
               </div>
@@ -336,15 +339,21 @@ export default function Home() {
             <div className="bg-gray-50 dark:bg-gray-800 p-8 rounded-xl relative">
               <div className="relative z-10">
                 <p className="text-gray-700 dark:text-gray-300 mb-6">
-                  As someone who repairs electronics, I find the platform perfect for sourcing parts and rehoming my refurbished devices. The map feature makes local trades so easy!
+                  As someone who repairs electronics, I find the platform
+                  perfect for sourcing parts and rehoming my refurbished
+                  devices. The map feature makes local trades so easy!
                 </p>
                 <div className="flex items-center">
-                <div className="h-14 w-14 rounded-full overflow-hidden mr-4 flex items-center justify-center bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400">
-                    <BiUser className="h-6 w-6"/>
+                  <div className="h-14 w-14 rounded-full overflow-hidden mr-4 flex items-center justify-center bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400">
+                    <BiUser className="h-6 w-6" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">Marco Bianchi</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Milan, Italy</p>
+                    <h4 className="font-medium text-gray-900 dark:text-white">
+                      Marco Bianchi
+                    </h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Milan, Italy
+                    </p>
                   </div>
                 </div>
               </div>
@@ -354,15 +363,21 @@ export default function Home() {
             <div className="bg-gray-50 dark:bg-gray-800 p-8 rounded-xl relative">
               <div className="relative z-10">
                 <p className="text-gray-700 dark:text-gray-300 mb-6">
-                  I&apos;ve furnished my entire apartment with second-hand finds from GreenTrade. Not only did I save money, but I found unique pieces with character and reduced my carbon footprint!
+                  I&apos;ve furnished my entire apartment with second-hand finds
+                  from GreenTrade. Not only did I save money, but I found unique
+                  pieces with character and reduced my carbon footprint!
                 </p>
                 <div className="flex items-center">
-                <div className="h-14 w-14 rounded-full overflow-hidden mr-4 flex items-center justify-center bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400">
-                    <BiUser className="h-6 w-6"/>
+                  <div className="h-14 w-14 rounded-full overflow-hidden mr-4 flex items-center justify-center bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400">
+                    <BiUser className="h-6 w-6" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">Sophia Lindgren</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Stockholm, Sweden</p>
+                    <h4 className="font-medium text-gray-900 dark:text-white">
+                      Sophia Lindgren
+                    </h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Stockholm, Sweden
+                    </p>
                   </div>
                 </div>
               </div>
@@ -378,7 +393,8 @@ export default function Home() {
             Ready to Start Your Sustainable Trading Journey?
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-            Join our community today and be part of the circular economy movement across Europe.
+            Join our community today and be part of the circular economy
+            movement across Europe.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link

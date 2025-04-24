@@ -4,6 +4,7 @@ import { useState } from "react";
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { z } from "zod";
 import {
   FaLeaf,
   FaCamera,
@@ -36,9 +37,28 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 
+// Define Zod schema for form validation
+const listingSchema = z.object({
+  title: z.string().min(5, { message: "Title must be at least 5 characters" }).max(100, { message: "Title must be at most 100 characters" }),
+  description: z.string().min(20, { message: "Description must be at least 20 characters" }).max(1000, { message: "Description must be at most 1000 characters" }),
+  category: z.string().refine(value => value !== "" && value !== "Select a category" && value !== "All Categories", {
+    message: "Please select a category"
+  }),
+  condition: z.string().min(1, { message: "Please select the condition" }),
+  price: z.string()
+    .refine(val => val !== "", { message: "Price is required" })
+    .refine(val => !isNaN(Number(val)), { message: "Price must be a number" })
+    .refine(val => Number(val) > 0, { message: "Price must be greater than 0" }),
+  negotiable: z.boolean().default(false),
+  ecoAttributes: z.array(z.string()),
+  location: z.string().optional(),
+});
+
+type ListingFormType = z.infer<typeof listingSchema>;
+
 const PostListingPage = () => {
   const { user } = useAuth();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ListingFormType>({
     title: "",
     description: "",
     category: "",
@@ -46,11 +66,14 @@ const PostListingPage = () => {
     price: "",
     ecoAttributes: [] as string[],
     negotiable: false,
+    location: user?.location,
   });
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<
+  { uri: string; type?: string; name?: string }[]
+>([])
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [formErrors, setFormErrors] = useState<z.ZodIssue[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [ecoScore, setEcoScore] = useState<number>(0);
@@ -95,13 +118,8 @@ const PostListingPage = () => {
       [name]: value,
     });
 
-    // Clear error when field is edited
-    if (formErrors[name]) {
-      setFormErrors({
-        ...formErrors,
-        [name]: "",
-      });
-    }
+    // Clear errors for this field when edited
+    setFormErrors(formErrors.filter(error => error.path[0] !== name));
   };
 
   // Handle eco-attribute toggles
@@ -133,7 +151,7 @@ const PostListingPage = () => {
       if (newImages.length < 5) {
         // Limit to 5 images
         newImageFiles.push(files[i]);
-        newImages.push(URL.createObjectURL(files[i]));
+        newImages.push({ uri: URL.createObjectURL(files[i]) });
       }
     }
 
@@ -147,7 +165,7 @@ const PostListingPage = () => {
     const newImages = [...images];
     const newImageFiles = [...imageFiles];
 
-    URL.revokeObjectURL(newImages[index]);
+    URL.revokeObjectURL(newImages[index].uri);
     newImages.splice(index, 1);
     newImageFiles.splice(index, 1);
 
@@ -157,59 +175,24 @@ const PostListingPage = () => {
 
   // Form validation
   const validateForm = () => {
-    const errors: Record<string, string> = {};
-
-    if (!formData.title.trim()) {
-      errors.title = "Title is required";
-    } else if (formData.title.length < 5) {
-      errors.title = "Title must be at least 5 characters";
+    const result = listingSchema.safeParse(formData);
+    if (!result.success) {
+      setFormErrors(result.error.issues);
+      return false;
     }
-
-    if (!formData.description.trim()) {
-      errors.description = "Description is required";
-    } else if (formData.description.length < 20) {
-      errors.description = "Description must be at least 20 characters";
-    }
-
-    if (
-      !formData.category ||
-      formData.category === "Select a category" ||
-      !categories.find((cat) => cat.name === formData.category) ||
-      formData.category === "All Categories"
-    ) {
-      errors.category = "Please select a category";
-    }
-
-    if (!formData.condition) {
-      errors.condition = "Please select the condition";
-    }
-
-    if (!formData.price.trim()) {
-      errors.price = "Price is required";
-    } else if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-      errors.price = "Please enter a valid price";
-    }
-
-    // location is fetched from the user object. no need to validate it here
-
-    if (images.length === 0) {
-      errors.images = "Please add at least one image";
-    }
-
-    return errors;
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Clear messages
-    setFormErrors({});
+    setFormErrors([]);
     setSuccessMessage("");
     setErrorMessage("");
 
-    const errors = validateForm();
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
+    const isValid = validateForm();
+    if (!isValid) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -220,7 +203,7 @@ const PostListingPage = () => {
         throw new Error("You must be logged in to post a listing");
       }
 
-      const imageUrls = await uploadImage(imageFiles, formData.title);
+      const imageUrls = await uploadImage(images, formData.title);
 
       if (!imageUrls) {
         throw new Error("Failed to upload images");
@@ -236,7 +219,7 @@ const PostListingPage = () => {
         negotiable: formData.negotiable,
         ecoAttributes: formData.ecoAttributes,
         ecoScore: calculateEcoScore(formData.ecoAttributes),
-        imageUrl: imageUrls,
+        imageUrl: imageUrls.urls,
         sellerId: user.id,
       };
 
@@ -300,14 +283,14 @@ const PostListingPage = () => {
             </div>
           )}
 
-          {Object.keys(formErrors).length > 0 && (
+          {formErrors.length > 0 && (
             <div className="mb-8 bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-200 px-4 py-3 rounded relative">
               <p className="font-medium">
                 Please correct the following errors:
               </p>
               <ul className="mt-2 list-disc pl-5">
-                {Object.values(formErrors).map((error, index) => (
-                  <li key={index}>{error}</li>
+                {formErrors.map((error, index) => (
+                  <li key={index}>{error.message}</li>
                 ))}
               </ul>
             </div>
@@ -342,16 +325,16 @@ const PostListingPage = () => {
                     placeholder="e.g., Handmade Wooden Coffee Table"
                     className={`block w-full px-4 py-3 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out
                             ${
-                              formErrors.title
+                              formErrors.find(error => error.path[0] === "title")
                                 ? "border-2 border-red-300 focus:ring-1 focus:ring-green-400"
                                 : "border border-gray-300 dark:border-gray-600 hover:border-green-300"
                             }
                             focus:ring-0 focus:border-transparent focus:outline-none
                             dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
                   />
-                  {formErrors.title && (
+                  {formErrors.find(error => error.path[0] === "title") && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {formErrors.title}
+                      {formErrors.find(error => error.path[0] === "title")?.message}
                     </p>
                   )}
                 </div>
@@ -368,20 +351,21 @@ const PostListingPage = () => {
                     name="description"
                     id="description"
                     rows={4}
+                    maxLength={1000}
                     value={formData.description}
                     onChange={handleChange}
                     placeholder="Describe your item, including details about its condition, history, and sustainability aspects"
                     className={`block w-full px-4 py-3 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out focus:ring-0 focus:border-transparent focus:outline-none
                     ${
-                      formErrors.description
+                      formErrors.find(error => error.path[0] === "description")
                         ? "border-2 border-red-300 focus:ring-1 focus:ring-green-400"
                         : "border border-gray-300 dark:border-gray-600 hover:border-green-300"
                     }
                     dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
                   />
-                  {formErrors.description && (
+                  {formErrors.find(error => error.path[0] === "description") && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {formErrors.description}
+                      {formErrors.find(error => error.path[0] === "description")?.message}
                     </p>
                   )}
                   <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -402,7 +386,7 @@ const PostListingPage = () => {
                       <SelectTrigger
                         className={`block w-full px-4 py-6 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out
                     ${
-                      formErrors.category
+                      formErrors.find(error => error.path[0] === "category")
                         ? "border-2 border-red-300 focus:ring-2 focus:ring-red-500 focus:border-red-500"
                         : "border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300"
                     }
@@ -440,9 +424,9 @@ const PostListingPage = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  {formErrors.category && (
+                  {formErrors.find(error => error.path[0] === "category") && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {formErrors.category}
+                      {formErrors.find(error => error.path[0] === "category")?.message}
                     </p>
                   )}
                 </div>
@@ -459,7 +443,7 @@ const PostListingPage = () => {
                     <SelectTrigger
                       className={`block w-full px-4 py-6 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out
                     ${
-                      formErrors.condition
+                      formErrors.find(error => error.path[0] === "condition")
                         ? "border-2 border-red-300 focus:ring-2 focus:ring-red-500 focus:border-red-500"
                         : "border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300"
                     }
@@ -488,9 +472,9 @@ const PostListingPage = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  {formErrors.condition && (
+                  {formErrors.find(error => error.path[0] === "condition") && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {formErrors.condition}
+                      {formErrors.find(error => error.path[0] === "condition")?.message}
                     </p>
                   )}
                 </div>
@@ -536,7 +520,7 @@ const PostListingPage = () => {
                       }}
                       className={`pl-6 block w-full px-4 py-3 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out focus:ring-0 focus:border-transparent focus:outline-none
                                 ${
-                      formErrors.price
+                      formErrors.find(error => error.path[0] === "price")
                         ? "border-2 border-red-300 focus:ring-1 focus:ring-green-400"
                         : "border border-gray-300 dark:border-gray-600 hover:border-green-300"
                       }
@@ -544,9 +528,9 @@ const PostListingPage = () => {
                       placeholder="0.00"
                     />
                     </div>
-                  {formErrors.price && (
+                  {formErrors.find(error => error.path[0] === "price") && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {formErrors.price}
+                      {formErrors.find(error => error.path[0] === "price")?.message}
                     </p>
                   )}
                 </div>
@@ -595,16 +579,16 @@ const PostListingPage = () => {
                       placeholder="e.g., Berlin, Germany"
                       className={`pl-8 block w-full px-4 py-3 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out focus:ring-0 focus:border-transparent focus:outline-none
 											${
-                        formErrors.location
+                        formErrors.find(error => error.path[0] === "location")
                           ? "border-2 border-red-300 focus:ring-1 focus:ring-green-400"
                           : "border border-gray-300 dark:border-gray-600 hover:border-green-300"
                       }
 											dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
                     />
                   </div>
-                  {formErrors.location && (
+                  {formErrors.find(error => error.path[0] === "location") && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {formErrors.location}
+                      {formErrors.find(error => error.path[0] === "location")?.message}
                     </p>
                   )}
                   <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -633,7 +617,7 @@ const PostListingPage = () => {
                       className="relative h-32 bg-gray-100 dark:bg-gray-700 rounded-md overflow-hidden"
                     >
                       <Image
-                        src={image}
+                        src={image.uri}
                         alt={`Listing image ${index + 1}`}
                         fill
                         style={{ objectFit: "cover" }}
@@ -675,9 +659,9 @@ const PostListingPage = () => {
                     </div>
                   )}
                 </div>
-                {formErrors.images && (
+                {formErrors.find(error => error.path[0] === "images") && (
                   <p className="text-sm text-red-600 dark:text-red-400">
-                    {formErrors.images}
+                    {formErrors.find(error => error.path[0] === "images")?.message}
                   </p>
                 )}
                 <p className="text-sm text-gray-500 dark:text-gray-400">

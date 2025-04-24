@@ -1,34 +1,83 @@
-import { UploadListing } from "../types/main";
-import axios from "axios";
+import { UploadListing } from '@/lib/types/main'
+import api from '@/lib/backend/api/axiosConfig'
 
-export const uploadImage = async (files: File[], listing_title: UploadListing["title"]) => {
-    const formData = new FormData();
-    formData.append("listing_title", listing_title);
-    
-    files.forEach((file: File) => {
-        formData.append("file", file); // backends expects files to be in "file" field
-    });
-    
-    try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-            throw new Error("Authentication required. Please log in.");
-        }
+export const uploadImage = async (
+  images: { uri: string; type?: string; name?: string }[],
+  listing_title: UploadListing['title'],
+) => {
+  if (!images || images.length === 0) {
+    throw new Error('No images provided')
+  }
 
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL_PROTECTED}/upload/listing_image`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`
-                // Note: Do not set Content-Type header with FormData as browser will set it with boundary
-            },
-            body: formData,
-        });
-
-        if (!response.data.success) throw new Error("Failed to upload image");
-        const data = response.data.data;
-        return await data; // Should return { urls: string[] }
-    } catch (error) {
-        console.error(error);
-        throw error; // Re-throw to be handled by the caller
+  try {
+    const token = localStorage.getItem('accessToken')
+    if (!token) {
+      throw new Error('Authentication required. Please log in.')
     }
-};
+
+    // Create a single FormData object for all images
+    const formData = new FormData()
+    formData.append('listing_title', listing_title)
+
+    // The backend expects files with the key "file" (not "file0", "file1", etc.)
+    images.forEach(image => {
+      formData.append('file', {
+        uri: image.uri,
+        type: image.type || 'image/jpeg',
+        name: image.name || `image-${Date.now()}.jpg`,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any)
+    })
+
+    console.log('Uploading images to /api/upload/listing_image')
+
+    // Use the correct endpoint that matches the backend Go code
+    const response = await api.post('/api/upload/listing_image', formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+    })
+
+    console.log('Image upload response:', response.data)
+
+    // Check if the response has the expected format
+    if (!response.data || !response.data.success) {
+      console.error('Unexpected response format:', response.data)
+      throw new Error('Invalid response format from server')
+    }
+
+    // Extract URLs from the response
+    let urls: string[] = []
+
+    // If the response data is empty but success is true, use the original image URIs
+    if (!response.data.data || response.data.data.length === 0) {
+      console.log('No URLs returned from server, using original image URIs')
+      urls = images.map(img => img.uri)
+    }
+    // If we have URLs in the response as an array
+    else if (Array.isArray(response.data.data)) {
+      urls = response.data.data
+    }
+    // If we have a different format with urls property
+    else if (
+      response.data.data.urls &&
+      Array.isArray(response.data.data.urls)
+    ) {
+      urls = response.data.data.urls
+    }
+    // If we have a single URL string
+    else if (typeof response.data.data === 'string') {
+      urls = [response.data.data]
+    } else {
+      console.error('Unexpected response format:', response.data)
+      throw new Error('Invalid response format from server')
+    }
+
+    console.log('Successfully uploaded images, received URLs:', urls)
+
+    // Return the URLs in the format expected by the listing creation
+    return { urls }
+  } catch (error) {
+    console.error('Image upload error:', error)
+    throw error
+  }
+}
