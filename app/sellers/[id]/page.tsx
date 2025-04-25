@@ -383,6 +383,7 @@ export default function SellerPage() {
                   viewMode="grid"
                   className="h-full"
                   key={index}
+                  page="seller"
                 />
               </div>
             ))}

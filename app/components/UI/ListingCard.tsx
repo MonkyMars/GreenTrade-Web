@@ -2,26 +2,26 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {
-  FaLeaf,
-  FaMapMarkedAlt,
-  FaStar,
-  FaUser,
-  FaEye,
-} from "react-icons/fa";
+import { FaLeaf, FaMapMarkedAlt, FaStar, FaUser, FaEye } from "react-icons/fa";
 import { TbFolder } from "react-icons/tb";
 import { FetchedListing } from "@/lib/types/main";
 import { findCategory } from "@/lib/functions/categories"; // Remove Category import
 import { Button } from "./button";
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from "date-fns";
 
 interface ListingCardProps {
   listing: FetchedListing;
   viewMode: "grid" | "list";
   className?: string;
+  page?: string;
 }
 
-const ListingCard: React.FC<ListingCardProps> = ({ listing, viewMode, className }) => {
+const ListingCard: React.FC<ListingCardProps> = ({
+  listing,
+  viewMode,
+  className,
+  page,
+}) => {
   let category = findCategory(listing.category);
   if (!category) {
     category = { id: "all", icon: TbFolder, name: "Unknown" };
@@ -53,10 +53,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, viewMode, className 
           </div>
         </div>
         <div className="p-4">
-          <Link
-            href={`/listings/${listing.id}`}
-            className="block"
-          >
+          <Link href={`/listings/${listing.id}`} className="block">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-green-400 line-clamp-2">
               {listing.title}
             </h3>
@@ -88,14 +85,16 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, viewMode, className 
                 ✓
               </span>
             )}
-            <Link title="View seller profile" href={`/sellers/${listing.sellerId}`} className="text-green-600 dark:text-green-200 hover:text-green-600 dark:hover:text-green-400">
+            <Link
+              title="View seller profile"
+              href={`/sellers/${listing.sellerId}`}
+              className="text-green-600 dark:text-green-200 hover:text-green-600 dark:hover:text-green-400"
+            >
               {listing.sellerUsername}
             </Link>
             <div className="ml-2 flex items-center">
               <FaStar className="h-3 w-3 text-yellow-400" />
-              <span className="text-xs ml-1">
-                {listing.sellerRating}
-              </span>
+              <span className="text-xs ml-1">{listing.sellerRating}</span>
             </div>
           </div>
           <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -103,42 +102,56 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, viewMode, className 
               addSuffix: true,
             })}
           </span>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center justify-center"
-              
-            >
-              <Link href={`/sellers/${listing.sellerId}`}>
-                <span className="flex items-center gap-1">
-                  <FaUser />
-                  View Seller
-                </span>
-              </Link>
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              className="flex items-center justify-center bg-green-600 hover:bg-green-700"
-              
-            >
-              <Link href={`/listings/${listing.id}`}>
-                <span className="flex items-center text-white gap-1">
-                  <FaEye />
-                  Details
-                </span>
-              </Link>
-            </Button>
-          </div>
+          {page !== "seller" ? (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center justify-center"
+              >
+                <Link href={`/sellers/${listing.sellerId}`}>
+                  <span className="flex items-center gap-1">
+                    <FaUser />
+                    View Seller
+                  </span>
+                </Link>
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                className="flex items-center justify-center bg-green-600 hover:bg-green-700"
+              >
+                <Link href={`/listings/${listing.id}`}>
+                  <span className="flex items-center text-white gap-1">
+                    <FaEye />
+                    Details
+                  </span>
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-3 w-full">
+              <Button
+                variant="default"
+                size="sm"
+                className="flex items-center justify-center bg-green-600 hover:bg-green-700 w-full"
+              >
+                <Link href={`/listings/${listing.id}`}>
+                  <span className="flex items-center text-white gap-1">
+                    <FaEye />
+                    Details
+                  </span>
+                </Link>
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     );
-  } else { // List view
+  } else {
+    // List view
     return (
-      <div
-        className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow"
-      >
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow">
         <div className="flex flex-col sm:flex-row">
           <div className="relative h-48 sm:h-auto sm:w-48 flex-shrink-0">
             {listing.imageUrl && listing.imageUrl.length > 0 ? (
@@ -162,10 +175,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, viewMode, className 
           <div className="p-4 flex-grow">
             <div className="flex justify-between items-start">
               <div>
-                <Link
-                  href={`/listings/${listing.id}`}
-                  className="block"
-                >
+                <Link href={`/listings/${listing.id}`} className="block">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-green-400">
                     {listing.title}
                   </h3>
@@ -179,9 +189,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, viewMode, className 
             <div className="space-y-3 mt-2">
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                 <FaMapMarkedAlt className="mr-2 h-4 w-4 flex-shrink-0 text-gray-500 dark:text-gray-400" />
-                <span className="truncate">
-                  {listing.location}
-                </span>
+                <span className="truncate">{listing.location}</span>
                 <span className="mx-2 text-gray-400">•</span>
                 <span className="text-gray-500 dark:text-gray-400">
                   {formatDistanceToNow(new Date(listing.createdAt), {
@@ -204,9 +212,13 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing, viewMode, className 
                       ✓
                     </span>
                   )}
-                   <Link title="View seller profile" href={`/sellers/${listing.sellerId}`} className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400">
-                      {listing.sellerUsername}
-                    </Link>
+                  <Link
+                    title="View seller profile"
+                    href={`/sellers/${listing.sellerId}`}
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400"
+                  >
+                    {listing.sellerUsername}
+                  </Link>
                   <div className="ml-2 flex items-center">
                     <FaStar className="h-3.5 w-3.5 text-yellow-400" />
                     <span className="text-xs text-gray-600 dark:text-gray-400 ml-1 font-medium">

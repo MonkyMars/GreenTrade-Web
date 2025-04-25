@@ -69,7 +69,7 @@ const ReviewCard = ({ review, className = "" }: ReviewCardProps) => {
                     href={`/sellers/${review.sellerId}`}
                     className="text-sm font-medium text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
                 >
-                    View Seller
+                    View User
                 </Link>
             </div>
         </div>
