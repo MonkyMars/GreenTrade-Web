@@ -22,7 +22,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { User } from "@/lib/types/user";
-import ProtectedRoute from "../../components/ui/ProtectedRoute";
+import ProtectedRoute from "../../components/ProtectedRoute";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import Link from "next/link";
 import { getSellerListings } from "@/lib/backend/listings/getListings";

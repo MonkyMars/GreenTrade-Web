@@ -25,7 +25,7 @@ import { uploadImage } from "@/lib/backend/listings/uploadImage";
 import { uploadListing } from "@/lib/backend/listings/uploadListing";
 import { type UploadListing } from "@/lib/types/main";
 import { calculateEcoScore } from "@/lib/functions/calculateEcoScore";
-import ProtectedRoute from "../../components/ui/ProtectedRoute";
+import ProtectedRoute from "../../components/ProtectedRoute";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { categories } from "@/lib/functions/categories";
 import {
