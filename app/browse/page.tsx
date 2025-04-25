@@ -6,7 +6,7 @@ import {
 } from "react-icons/fa";
 import { FiSearch, FiGrid, FiList, FiChevronDown, FiX } from "react-icons/fi";
 import { FetchedListing } from "../../lib/types/main";
-import { getListings } from "@/lib/backend/getListings";
+import { getListings } from "@/lib/backend/listings/getListings";
 import { categories } from "@/lib/functions/categories"; // Keep categories, remove findCategory
 import { useRouter, useSearchParams } from "next/navigation";
 import ListingCard from "../components/UI/ListingCard"; // Import the new component

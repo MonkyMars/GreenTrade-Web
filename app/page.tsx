@@ -1,5 +1,5 @@
 "use client";
-import { getListings } from "@/lib/backend/getListings";
+import { getListings } from "@/lib/backend/listings/getListings";
 import { FetchedListing } from "@/lib/types/main";
 import Image from "next/image";
 import Link from "next/link";

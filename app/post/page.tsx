@@ -21,8 +21,8 @@ import {
 } from "react-icons/md";
 import { RiCheckboxBlankCircleLine } from "react-icons/ri";
 import { FiX } from "react-icons/fi";
-import { uploadImage } from "@/lib/backend/uploadImage";
-import { uploadListing } from "@/lib/backend/uploadListing";
+import { uploadImage } from "@/lib/backend/listings/uploadImage";
+import { uploadListing } from "@/lib/backend/listings/uploadListing";
 import { type UploadListing } from "@/lib/types/main";
 import { calculateEcoScore } from "@/lib/functions/calculateEcoScore";
 import ProtectedRoute from "../components/UI/ProtectedRoute";

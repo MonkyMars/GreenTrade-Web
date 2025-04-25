@@ -23,7 +23,7 @@ import { SimilairCard } from "./similairCard";
 import { findCategory } from "@/lib/functions/categories";
 import { useEffect, useState } from "react";
 import api from "@/lib/backend/api/axiosConfig";
-import { getListings } from "@/lib/backend/getListings";
+import { getListings } from "@/lib/backend/listings/getListings";
 import { useRouter } from "next/navigation";
 import { AppError, retryOperation } from '@/lib/errorUtils';
 import { toast } from 'react-hot-toast';
