@@ -4,18 +4,18 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { FaStar, FaCheckCircle, FaRegClock, FaEnvelope } from "react-icons/fa";
-import { Button } from "@/app/components/UI/button";
-import { Badge } from "@/app/components/UI/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Seller } from "@/lib/types/seller";
 import { FetchedListing } from "@/lib/types/main";
 import { getSellerListings } from "@/lib/backend/listings/getListings";
-import ListingCard from "@/app/components/UI/ListingCard";
+import ListingCard from "@/components/ui/ListingCard";
 import api from "@/lib/backend/api/axiosConfig";
 import { toast } from "react-hot-toast";
 import { AppError, retryOperation } from "@/lib/errorUtils";
 import { getReviews } from "@/lib/backend/reviews/getReviews";
 import { FetchedReview } from "@/lib/types/review";
-import ReviewCard from "@/app/components/UI/ReviewCard";
+import ReviewCard from "@/components/ui/ReviewCard";
 
 export default function SellerPage() {
   const router = useRouter();

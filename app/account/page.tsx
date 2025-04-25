@@ -13,25 +13,25 @@ import {
   FaCheck,
   FaExclamationTriangle,
 } from "react-icons/fa";
-import { Button } from "@/app/components/UI/button";
-import { Badge } from "@/app/components/UI/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/app/components/UI/tabs";
+} from "@/components/ui/tabs";
 import { User } from "@/lib/types/user";
-import ProtectedRoute from "../components/UI/ProtectedRoute";
+import ProtectedRoute from "../../components/ui/ProtectedRoute";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import Link from "next/link";
 import { getSellerListings } from "@/lib/backend/listings/getListings";
 import { FetchedListing } from "@/lib/types/main";
-import ListingCard from "../components/UI/ListingCard";
+import ListingCard from "../../components/ui/ListingCard";
 import { calculateAverageEcoScore } from "@/lib/functions/calculateEcoScore";
 import { getReviews } from "@/lib/backend/reviews/getReviews";
 import { FetchedReview } from "@/lib/types/review";
-import ReviewCard from "../components/UI/ReviewCard";
+import ReviewCard from "../../components/ui/ReviewCard";
 
 interface ActiveTab {
   activeTab: "profile" | "seller" | "security" | "delete";

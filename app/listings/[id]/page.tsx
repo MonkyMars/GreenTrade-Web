@@ -10,14 +10,14 @@ import {
   FaRegHeart,
 } from "react-icons/fa";
 import { formatDistanceToNow } from "date-fns";
-import { Button } from "@/app/components/UI/button";
-import { Badge } from "@/app/components/UI/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/app/components/UI/tabs";
+} from "@/components/ui/tabs";
 import { FetchedListing } from "@/lib/types/main";
 import { SimilairCard } from "./similairCard";
 import { findCategory } from "@/lib/functions/categories";

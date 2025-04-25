@@ -9,7 +9,7 @@ import { FetchedListing } from "../../lib/types/main";
 import { getListings } from "@/lib/backend/listings/getListings";
 import { categories } from "@/lib/functions/categories"; // Keep categories, remove findCategory
 import { useRouter, useSearchParams } from "next/navigation";
-import ListingCard from "../components/UI/ListingCard"; // Import the new component
+import ListingCard from "../../components/ui/ListingCard"; // Import the new component
 
 const BrowserComponent = () => {
   const router = useRouter();

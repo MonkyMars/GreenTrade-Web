@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { FaLeaf, FaEnvelope, FaLock, FaGoogle } from "react-icons/fa";
 import { z } from "zod";
-import { Button } from "../components/UI/button";
+import { Button } from "../../components/ui/button";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { AppError } from '@/lib/errorUtils';
 
