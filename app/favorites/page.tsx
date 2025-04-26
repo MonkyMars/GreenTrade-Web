@@ -36,8 +36,9 @@ export default function FavoritesPage() {
   }, [user]);
 
   const handleRemoveFavorite = async (listingId: string) => {
+    if (!user) return; // Ensure user is available before toggling favorite
     try {
-      await toggleFavorite(listingId);
+      await toggleFavorite(listingId, user.id, false); // Remove from favorites
       // Remove from local state after successful toggle
       setFavorites((prevFavorites) =>
         prevFavorites.filter((favorite) => favorite.id !== listingId)

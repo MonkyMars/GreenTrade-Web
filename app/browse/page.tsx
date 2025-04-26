@@ -36,12 +36,6 @@ const BrowserComponent = () => {
 
   // Categories for filter
 
-  // Toggle favorite status
-  // const toggleFavorite = (id: number) => {
-  //   // In a real app, this would call an API
-  //   console.log(`Toggle favorite for item ${id}`);
-  // };
-
   const toggleCategory = (id: string) => {
     setSelectedCategory(id);
     router.replace(`/browse?category=${id}`);

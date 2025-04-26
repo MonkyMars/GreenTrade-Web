@@ -2,6 +2,8 @@ import Image from "next/image";
 import { FaMapMarkerAlt, FaRegClock } from "react-icons/fa";
 import { formatDistanceToNow } from "date-fns";
 import { FetchedListing } from "@/lib/types/main";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface SimilairCardProps {
   listing: FetchedListing;
@@ -9,7 +11,7 @@ interface SimilairCardProps {
 
 export const SimilairCard = ({ listing }: SimilairCardProps) => {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3">
       <div className="relative h-48 w-full mb-4">
         <Image
           src={listing.imageUrl[0]}
@@ -44,18 +46,25 @@ export const SimilairCard = ({ listing }: SimilairCardProps) => {
           })}
         </span>
       </div>
+      <div className="mt-4 flex justify-between items-center">
+        <Button className="w-full">
+          <Link href={`/listings/${listing.id}`}>
+            View Listing
+          </Link>
+        </Button>
+      </div>
     </div>
   );
 };
 
 export const SimilairCardSkeleton = () => {
-    return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 animate-pulse">
-        <div className="h-48 w-full mb-4 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-        <div className="h-6 w-3/4 mb-2 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-        <div className="h-4 w-1/2 mb-2 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-        <div className="h-4 w-1/3 mb-2 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-        <div className="h-4 w-1/4 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-        </div>
-    );
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 animate-pulse">
+      <div className="h-48 w-full mb-4 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+      <div className="h-6 w-3/4 mb-2 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+      <div className="h-4 w-1/2 mb-2 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+      <div className="h-4 w-1/3 mb-2 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+      <div className="h-4 w-1/4 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+    </div>
+  );
 };

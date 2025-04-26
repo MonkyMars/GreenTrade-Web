@@ -18,7 +18,7 @@ export const getReviews = async (userId: string): Promise<FetchedReview[]> => {
 
     try {
         const response = await retryOperation(
-            () => api.get<ApiResponse>(`/api/reviews/${userId}`),
+            () => api.get<ApiResponse>(`/reviews/${userId}`),
             {
                 context: "Fetching reviews by user",
                 maxRetries: 3,

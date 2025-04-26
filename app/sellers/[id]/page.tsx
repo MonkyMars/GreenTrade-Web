@@ -38,7 +38,7 @@ export default function SellerPage() {
       try {
         // Fetch seller information with retry logic and proper error typing
         const response = await retryOperation(
-          () => api.get(`/api/sellers/${params.id}`),
+          () => api.get(`/seller/${params.id}`),
           {
             context: "Fetching seller profile",
             maxRetries: 3,
