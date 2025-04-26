@@ -17,7 +17,7 @@ export const getFavorites = async (userId: string): Promise<FetchedListing[]> =>
   try {
     // Use type-safe retry utility
     const response = await retryOperation(
-      () => api.get(`/favorites/${userId}`),
+      () => api.get(`/api/favorites/${userId}`),
       {
         context: "Fetching favorites",
         maxRetries: 3,

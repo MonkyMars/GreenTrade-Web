@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GreenTrade - Sustainable Marketplace
 
-## Getting Started
+GreenTrade is an eco-friendly online marketplace platform designed for environmentally conscious buyers and sellers across the EU. The platform promotes sustainability by highlighting eco-friendly attributes of products and rewarding sustainable practices.
 
-First, run the development server:
+![GreenTrade Logo](public/icon.png)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🌱 Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Eco-Score System**: Products receive scores based on sustainability factors
+- **Sustainable Attributes**: Highlight product qualities like "Biodegradable", "Plastic-free", or "Refurbished"
+- **Category Filtering**: Browse items by eco-friendly categories
+- **Seller Verification**: Trusted seller recognition system
+- **Responsive Design**: Fully mobile-responsive interface
+- **User Authentication**: Secure account management
+- **Favorites System**: Save items for later viewing
+- **Location-Based Listings**: Find sustainable items near you
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Frontend**: Next.js 15+, TypeScript, Tailwind CSS
+- **State Management**: React Context API
+- **Authentication**: Custom JWT authentication
+- **Deployment**: Centralized cloud infrastructure
+- **API Integration**: Axios for API communication
+- **UI Components**: Custom components with shadcn/ui
 
-## Learn More
+## 🚀 Deployment
 
-To learn more about Next.js, take a look at the following resources:
+This application is **not intended for self-hosting** by individual users. GreenTrade is a centralized platform operated by our team to ensure consistent quality, security, and user experience across the EU marketplace.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Accessing GreenTrade
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The official GreenTrade marketplace is available at:
+- Website: https://greentrade.eu
+- Mobile apps: Available on iOS and Android app stores
 
-## Deploy on Vercel
+## 🛡️ Security Considerations
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- All API keys and secrets are managed through secure infrastructure
+- All connections use HTTPS with proper certification
+- Regular security audits and penetration testing
+- Compliance with EU data protection regulations

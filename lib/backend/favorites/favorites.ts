@@ -9,7 +9,7 @@ export const toggleFavorite = async (listingId: string): Promise<boolean> => {
   try {
     // Use type-safe retry utility
     const response = await retryOperation(
-      () => api.post('/favorites/toggle', { listingId }),
+      () => api.post('/api/favorites/toggle', { listingId }),
       {
         context: "Updating favorites",
         maxRetries: 2,

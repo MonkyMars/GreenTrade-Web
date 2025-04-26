@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { getFavorites } from "@/lib/backend/getFavorites";
-import { toggleFavorite } from "@/lib/backend/favorites";
+import { getFavorites } from "@/lib/backend/favorites/getFavorites";
+import { toggleFavorite } from "@/lib/backend/favorites/favorites";
 import { FetchedListing } from "@/lib/types/main";
 import ListingCard from "@/components/ui/ListingCard";
 import { Button } from "@/components/ui/button";
