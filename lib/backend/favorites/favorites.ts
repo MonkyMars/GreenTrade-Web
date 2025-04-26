@@ -5,11 +5,14 @@ import { AppError, retryOperation } from '@/lib/errorUtils'
 /**
  * Toggle a listing as favorite/unfavorite with proper error handling
  */
-export const toggleFavorite = async (listingId: string): Promise<boolean> => {
+export const toggleFavorite = async (listingId: string, userId: string, state: boolean): Promise<boolean> => {
   try {
-    // Use type-safe retry utility
+
+    // Use type-safe retry utility with the appropriate HTTP method
     const response = await retryOperation(
-      () => api.post('/api/favorites/toggle', { listingId }),
+      () => state 
+        ? api.delete(`/api/favorites/${listingId}/${userId}`) 
+        : api.post(`/api/favorites/${listingId}/${userId}`),
       {
         context: "Updating favorites",
         maxRetries: 2,
@@ -26,14 +29,14 @@ export const toggleFavorite = async (listingId: string): Promise<boolean> => {
     }
     
     // Return whether the item is now favorited or not
-    const isFavorited = response.data.data.isFavorited;
+    const isNowFavorited = state ? false : true;
     
     // Show success message
     if (process.env.NODE_ENV === 'production') {
-      toast.success(isFavorited ? 'Added to favorites' : 'Removed from favorites');
+      toast.success(isNowFavorited ? 'Added to favorites' : 'Removed from favorites');
     }
     
-    return isFavorited;
+    return isNowFavorited;
   } catch (error) {
     // Convert to AppError if not already
     const appError = error instanceof AppError 

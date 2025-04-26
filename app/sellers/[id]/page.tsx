@@ -303,7 +303,7 @@ export default function SellerPage() {
                   />
                 ))}
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
-                  {seller.rating.toFixed(1)}
+                  {seller.rating.toFixed(1)} <span className="text-gray-500 dark:text-gray-400">(based on {sellerReviews.length}{" "} review{sellerReviews.length !== 1 ? "s" : ""})</span>
                 </span>
               </div>
               <div className="flex items-center text-gray-500 dark:text-gray-400">

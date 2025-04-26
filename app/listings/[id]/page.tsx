@@ -7,17 +7,13 @@ import {
   FaRegClock,
   FaCheckCircle,
   FaStar,
+  FaHeart,
   FaRegHeart,
 } from "react-icons/fa";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FetchedListing } from "@/lib/types/main";
 import { SimilairCard } from "./similairCard";
 import { findCategory } from "@/lib/functions/categories";
@@ -25,22 +21,25 @@ import { useEffect, useState } from "react";
 import api from "@/lib/backend/api/axiosConfig";
 import { getListings } from "@/lib/backend/listings/getListings";
 import { useRouter } from "next/navigation";
-import { AppError, retryOperation } from '@/lib/errorUtils';
-import { toast } from 'react-hot-toast';
+import { AppError, retryOperation } from "@/lib/errorUtils";
+import { toast } from "react-hot-toast";
+import { toggleFavorite } from "@/lib/backend/favorites/favorites";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 export default function ListingPage() {
   const router = useRouter();
   const [listing, setListing] = useState<FetchedListing | null>(null);
   const [similarListings, setSimilarListings] = useState<FetchedListing[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const params = useParams();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchSimilarListings = async (
       category: string
     ): Promise<FetchedListing[]> => {
       try {
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== "production") {
           console.log("Fetching similar listings");
         }
 
@@ -54,12 +53,12 @@ export default function ListingPage() {
           {
             context: "Fetching similar listings",
             maxRetries: 2,
-            showToastOnRetry: false // Don't show toast for these retries
+            showToastOnRetry: false, // Don't show toast for these retries
           }
         );
 
         if (!response.data.success) {
-          if (process.env.NODE_ENV !== 'production') {
+          if (process.env.NODE_ENV !== "production") {
             console.log(response);
           }
           return [];
@@ -68,18 +67,19 @@ export default function ListingPage() {
         return response.data.data;
       } catch (error) {
         // Convert to AppError if not already
-        const appError = error instanceof AppError 
-          ? error 
-          : AppError.from(error, 'Fetching similar listings');
-        
+        const appError =
+          error instanceof AppError
+            ? error
+            : AppError.from(error, "Fetching similar listings");
+
         // Log in development, use proper error tracking in production
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== "production") {
           console.error("Error fetching similar listings:", appError);
         } else {
           // In production, this would use a service like Sentry
           // Example: Sentry.captureException(appError);
         }
-        
+
         // We don't show toasts for similar listings errors to avoid UI clutter
         // This is a non-critical feature, so we fail gracefully
         return [];
@@ -89,9 +89,11 @@ export default function ListingPage() {
     const fetchData = async () => {
       setIsLoading(true);
       // Show loading toast in production
-      const loadingToast = process.env.NODE_ENV === 'production' ? 
-        toast.loading('Loading listing details...') : undefined;
-      
+      const loadingToast =
+        process.env.NODE_ENV === "production"
+          ? toast.loading("Loading listing details...")
+          : undefined;
+
       try {
         // getListings already implements our error handling
         const listingData = (await getListings(
@@ -130,7 +132,7 @@ export default function ListingPage() {
 
           setSimilarListings(validListings);
         }
-        
+
         // Dismiss loading toast if it exists
         if (loadingToast) {
           toast.dismiss(loadingToast);
@@ -140,20 +142,21 @@ export default function ListingPage() {
         if (loadingToast) {
           toast.dismiss(loadingToast);
         }
-        
+
         // Convert to AppError if not already
-        const appError = error instanceof AppError 
-          ? error 
-          : AppError.from(error, 'Fetching listing details');
-        
+        const appError =
+          error instanceof AppError
+            ? error
+            : AppError.from(error, "Fetching listing details");
+
         // Log in development, use proper error tracking in production
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== "production") {
           console.error("Error fetching listing:", appError);
         } else {
           // In production, this would use a service like Sentry
           // Example: Sentry.captureException(appError);
         }
-        
+
         // We don't need to show a toast here as getListings already handles error messages
       } finally {
         setIsLoading(false);
@@ -162,6 +165,40 @@ export default function ListingPage() {
 
     fetchData();
   }, [params.id]);
+
+  const onFavorite = async () => {
+    if (!listing || !user) return;
+    try {
+      const favorite = await toggleFavorite(
+        listing.id,
+        user.id,
+        listing.isUserFavorite as boolean
+      )
+        setListing((prevListing) => {
+          if (!prevListing) return null;
+          return {
+            ...prevListing,
+            isUserFavorite: favorite,
+          };
+        });
+      
+    } catch (error) {
+      const appError =
+        error instanceof AppError
+          ? error
+          : AppError.from(error, "Toggling favorite status");
+
+      // Log in development, use proper error tracking in production
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Error toggling favorite status:", appError);
+      } else {
+        // In production, this would use a service like Sentry
+        // Example: Sentry.captureException(appError);
+      }
+
+      toast.error("Failed to update favorite status");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -244,7 +281,7 @@ export default function ListingPage() {
 
                 {/* Image thumbnails */}
                 <div className="mt-4">
-                  <TabsList className="flex justify-start overflow-x-auto space-x-2 py-1 px-0 h-auto bg-gray-100 dark:bg-slate-800 tabslist">
+                  <TabsList className="flex justify-start overflow-x-auto space-x-2 py-1 px-0 h-auto bg-gray-100 dark:bg-slate-800">
                     {listing.imageUrl.map((img: string, index: number) => (
                       <TabsTrigger
                         key={index}
@@ -352,8 +389,17 @@ export default function ListingPage() {
                     <category.icon size="24" className="mr-1" />{" "}
                     {listing.category}
                   </Badge>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <FaRegHeart className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={onFavorite}
+                  >
+                    {listing.isUserFavorite ? (
+                      <FaHeart className="h-5 w-5 text-red-500" />
+                    ) : (
+                      <FaRegHeart className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    )}
                   </Button>
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -389,7 +435,7 @@ export default function ListingPage() {
                   <span className="text-sm text-gray-500 dark:text-gray-400">
                     Posted
                   </span>
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-0.5">
                     <FaRegClock className="w-4 h-4 mr-1 text-gray-400 dark:text-gray-500" />
                     <span className="font-medium text-gray-900 dark:text-gray-100">
                       {timeAgo}

@@ -66,10 +66,7 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-button {
-  @apply flex;
-}
+*{
+  @apply box-border;
 
-.tabslist{
-  @apply bg-gray-900;
 }

@@ -40,4 +40,5 @@ export type UploadListing = {
     sellerCreatedAt: string
     sellerRating: number
     sellerVerified: boolean
+    isUserFavorite?: boolean
   }
