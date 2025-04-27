@@ -10,11 +10,13 @@ import {
   TbDeviceGamepad,
 } from "react-icons/tb";
 
-export const categories: {
-  id: string;
+export interface Categories {
+  id: "all" | "home-garden" | "fashion" | "electronics" | "vehicles" | "books" | "jewerly" | "toys-games" | "other";
   icon: React.ElementType;
-  name: string;
-}[] = [
+  name: "All Categories" | "Home & Garden" | "Fashion" | "Electronics" | "Vehicles" | "Books" | "Jewerly" | "Toys & Games" | "Other";
+}
+
+export const categories: Categories[] = [
   { id: "all", icon: TbFolder, name: "All Categories" },
   { id: "home-garden", icon: TbHome, name: "Home & Garden" },
   { id: "fashion", icon: TbShirt, name: "Fashion" },

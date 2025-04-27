@@ -12,7 +12,7 @@ export const toggleFavorite = async (listingId: string, userId: string, state: b
     const response = await retryOperation(
       () => state 
         ? api.delete(`/api/favorites/${listingId}/${userId}`) 
-        : api.post(`/api/favorites/${listingId}/${userId}`),
+        : api.post(`/api/favorites`, { listing_id: listingId, user_id: userId }),
       {
         context: "Updating favorites",
         maxRetries: 2,
@@ -29,7 +29,7 @@ export const toggleFavorite = async (listingId: string, userId: string, state: b
     }
     
     // Return whether the item is now favorited or not
-    const isNowFavorited = state ? false : true;
+    const isNowFavorited = !state;
     
     // Show success message
     if (process.env.NODE_ENV === 'production') {
@@ -61,49 +61,5 @@ export const toggleFavorite = async (listingId: string, userId: string, state: b
     
     // Rethrow with improved message
     throw appError;
-  }
-}
-
-/**
- * Check if a listing is in the user's favorites
- */
-export const checkIsFavorite = async (listingId: string): Promise<boolean> => {
-  try {
-    // Use type-safe retry utility
-    const response = await retryOperation(
-      () => api.get(`/favorites/check/${listingId}`),
-      {
-        context: "Checking favorite status",
-        maxRetries: 2,
-        delayMs: 300,
-        showToastOnRetry: false // No need for toast on this check
-      }
-    )
-    
-    if (!response.data || !response.data.success) {
-      throw new AppError(response.data?.message || 'Failed to check favorite status', {
-        code: 'CHECK_FAILED',
-        status: response.status
-      })
-    }
-    
-    return response.data.data.isFavorited;
-  } catch (error) {
-    // For this function, we'll handle the error more quietly
-    // Convert to AppError if not already
-    const appError = error instanceof AppError 
-      ? error 
-      : AppError.from(error, 'Checking favorite status');
-    
-    // Log in development, use proper error tracking in production
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Error checking favorite status:', appError);
-    } else {
-      // In production, this would use a service like Sentry
-      // Example: Sentry.captureException(appError)
-    }
-    
-    // Return false on error (assume not favorited)
-    return false;
   }
 }

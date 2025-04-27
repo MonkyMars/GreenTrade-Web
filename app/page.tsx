@@ -7,12 +7,17 @@ import { useEffect, useState } from "react";
 import { BiUser } from "react-icons/bi";
 import { FaLeaf, FaMapMarkedAlt, FaHandshake, FaRecycle } from "react-icons/fa";
 import { FiSearch, FiArrowRight } from "react-icons/fi";
-import { categories } from "@/lib/functions/categories";
+import { Categories, categories } from "@/lib/functions/categories";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [featuredListings, setFeaturedListings] = useState<FetchedListing[]>(
     []
   );
+  const [selectedCategory, setSelectedCategory] = useState<Categories["id"]>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const router = useRouter();
 
   useEffect(() => {
     const fetchFeaturedListings = async () => {
@@ -21,6 +26,14 @@ export default function Home() {
     };
     fetchFeaturedListings();
   }, []);
+
+  const handleNavigate = () => {
+    if (searchQuery) {
+      router.push(`/browse?search=${searchQuery}&category=${selectedCategory}`);
+    } else {
+      router.push(`/browse?category=${selectedCategory}`);
+    }
+  };
 
   return (
     <main>
@@ -68,19 +81,29 @@ export default function Home() {
                   type="text"
                   placeholder="What are you looking for?"
                   className="w-full pl-5 pr-3 py-3 text-gray-700 dark:text-gray-200 bg-transparent focus:outline-none"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               <div className="flex-shrink-0 border-l border-gray-200 dark:border-gray-700 pl-4 flex items-center">
-                <select className="py-3 px-2 bg-transparent text-gray-700 dark:text-gray-200 focus:outline-none">
-                  <option>All Categories</option>
-                  <option>Home & Garden</option>
-                  <option>Fashion</option>
-                  <option>Electronics</option>
-                  <option>Vehicles</option>
-                  <option>Services</option>
-                </select>
+                <Select onValueChange={(value: Categories["id"]) => setSelectedCategory(value)} value={selectedCategory}>
+                  <SelectTrigger className="py-3 px-2 bg-transparent text-gray-700 dark:text-gray-200 focus:outline-none border-none">
+                  <span className="text-sm">
+                    {selectedCategory === "all" 
+                    ? "All Categories" 
+                    : categories.find(cat => cat.id === selectedCategory)?.name || "Select Category"}
+                  </span>
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+                  {categories.map((category, index) => (
+                    <SelectItem key={index} value={category.id}>
+                    {category.name}
+                    </SelectItem>
+                  ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <button className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-full flex items-center justify-center transition-colors ml-2">
+              <button className="bg-green-600 hover:bg-green-700 text-white p-3 cursor-pointer rounded-full flex items-center justify-center transition-colors ml-2" onClick={handleNavigate}>
                 <FiSearch className="h-6 w-6" />
               </button>
             </div>

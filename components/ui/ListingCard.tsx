@@ -24,7 +24,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 }) => {
   let category = findCategory(listing.category);
   if (!category) {
-    category = { id: "all", icon: TbFolder, name: "Unknown" };
+    category = { id: "all", icon: TbFolder, name: "All Categories" };
   }
 
   if (viewMode === "grid") {
@@ -160,7 +160,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 alt={listing.title}
                 fill
                 priority
-                sizes="(max-width: 640px) 100vw, 192px" // sm:w-48 is 12rem = 192px
+                sizes="(max-width: 640px) 100vw, 192px"
                 className="object-cover w-full h-full"
                 unoptimized
               />

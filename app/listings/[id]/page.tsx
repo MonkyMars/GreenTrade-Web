@@ -9,6 +9,7 @@ import {
   FaStar,
   FaHeart,
   FaRegHeart,
+  FaFolder,
 } from "react-icons/fa";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import { AppError, retryOperation } from "@/lib/errorUtils";
 import { toast } from "react-hot-toast";
 import { toggleFavorite } from "@/lib/backend/favorites/favorites";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { isFavorite } from "@/lib/backend/favorites/getFavorites";
 
 export default function ListingPage() {
   const router = useRouter();
@@ -166,6 +168,34 @@ export default function ListingPage() {
     fetchData();
   }, [params.id]);
 
+  useEffect(() => {
+    const fetchFavoriteStatus = async () => {
+      if (!listing || !user) return;
+      try {
+        const isFavorited = await isFavorite(
+          listing.id,
+          user.id
+        )
+
+        if (isFavorited) {
+          setListing((prevListing) => {
+            if (!prevListing) return null;
+            return {
+              ...prevListing,
+              isUserFavorite: isFavorited,
+            };
+          });
+        }
+      } catch (error) {
+        // Handle error silently, as this is not critical
+        console.error("Error fetching favorite status:", error);
+      }
+    };
+
+    fetchFavoriteStatus();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listing?.id, user])
+
   const onFavorite = async () => {
     if (!listing || !user) return;
     try {
@@ -223,7 +253,7 @@ export default function ListingPage() {
   let category = findCategory(listingCategory);
 
   if (!category) {
-    category = { icon: FaLeaf, name: "Eco", id: "green" };
+    category = { icon: FaFolder, name: "All Categories", id: "all" };
   }
   // Format the creation date to show how long ago it was posted
   const timeAgo = listing.createdAt

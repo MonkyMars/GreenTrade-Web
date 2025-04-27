@@ -14,7 +14,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 export default function FavoritesPage() {
   const [favorites, setFavorites] = useState<FetchedListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const router = useRouter();
   const { user } = useAuth();
 
@@ -38,7 +38,7 @@ export default function FavoritesPage() {
   const handleRemoveFavorite = async (listingId: string) => {
     if (!user) return; // Ensure user is available before toggling favorite
     try {
-      await toggleFavorite(listingId, user.id, false); // Remove from favorites
+      await toggleFavorite(listingId, user.id, true); // Remove from favorites
       // Remove from local state after successful toggle
       setFavorites((prevFavorites) =>
         prevFavorites.filter((favorite) => favorite.id !== listingId)
@@ -62,17 +62,7 @@ export default function FavoritesPage() {
 
         <div className="flex justify-between items-center mb-6">
           <div className="flex space-x-2">
-            <Button
-              variant={viewMode === "grid" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setViewMode("grid")}
-              className={
-                viewMode === "grid" ? "bg-green-600 hover:bg-green-700" : ""
-              }
-            >
-              <FaThLarge className="mr-2" />
-              Grid
-            </Button>
+            
             <Button
               variant={viewMode === "list" ? "default" : "outline"}
               size="sm"
@@ -83,6 +73,16 @@ export default function FavoritesPage() {
             >
               <FaList className="mr-2" />
               List
+            </Button><Button
+              variant={viewMode === "grid" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("grid")}
+              className={
+                viewMode === "grid" ? "bg-green-600 hover:bg-green-700" : ""
+              }
+            >
+              <FaThLarge className="mr-2" />
+              Grid
             </Button>
           </div>
           <Button
@@ -130,7 +130,7 @@ export default function FavoritesPage() {
                 <ListingCard listing={listing} viewMode={viewMode} />
                 <button
                   onClick={() => handleRemoveFavorite(listing.id)}
-                  className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-800 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-50 dark:hover:bg-red-900"
+                  className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-800 rounded-full cursor-pointer shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-50 dark:hover:bg-red-900"
                   aria-label="Remove from favorites"
                 >
                   <FaHeart className="h-5 w-5 text-red-500" />
