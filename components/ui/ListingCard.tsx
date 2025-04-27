@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FaLeaf, FaMapMarkedAlt, FaStar, FaUser, FaEye } from "react-icons/fa";
+import { FaLeaf, FaMapMarkedAlt, FaStar } from "react-icons/fa";
+import { MdKeyboardArrowRight } from "react-icons/md";
 import { TbFolder } from "react-icons/tb";
 import { FetchedListing } from "@/lib/types/main";
-import { findCategory } from "@/lib/functions/categories"; // Remove Category import
+import { findCategory } from "@/lib/functions/categories";
 import { Button } from "./button";
 import { formatDistanceToNow } from "date-fns";
 
@@ -13,14 +14,12 @@ interface ListingCardProps {
   listing: FetchedListing;
   viewMode: "grid" | "list";
   className?: string;
-  page?: string;
 }
 
 const ListingCard: React.FC<ListingCardProps> = ({
   listing,
   viewMode,
   className,
-  page,
 }) => {
   let category = findCategory(listing.category);
   if (!category) {
@@ -30,7 +29,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
   if (viewMode === "grid") {
     return (
       <div
-        className={`bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${className}`}
+        className={`bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden hover:shadow-lg transition-all duration-200 ${className}`}
       >
         <div className="relative h-52 group">
           {listing.imageUrl && listing.imageUrl.length > 0 ? (
@@ -49,7 +48,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
           <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-200" />
           <div className="absolute bottom-2 left-2 bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 px-2 py-1 rounded text-sm font-medium flex items-center">
             <FaLeaf className="h-4 w-4 text-green-500 mr-1" />
-            <span className="font-bold">{listing.ecoScore}</span>
+            <span className="font-bold">{listing.ecoScore.toFixed(1)}</span>
           </div>
         </div>
         <div className="p-4">
@@ -92,59 +91,34 @@ const ListingCard: React.FC<ListingCardProps> = ({
             >
               {listing.sellerUsername}
             </Link>
-            <div className="ml-2 flex items-center">
+            {Number(listing.sellerRating) !== 0 && <div className="ml-2 flex items-center">
               <FaStar className="h-3 w-3 text-yellow-400" />
               <span className="text-xs ml-1">{listing.sellerRating}</span>
-            </div>
+            </div>}
           </div>
           <span className="text-xs text-gray-500 dark:text-gray-400">
             {formatDistanceToNow(new Date(listing.createdAt), {
               addSuffix: true,
             })}
           </span>
-          {page !== "seller" ? (
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center justify-center"
-              >
-                <Link href={`/sellers/${listing.sellerId}`}>
-                  <span className="flex items-center gap-1">
-                    <FaUser />
-                    View Seller
-                  </span>
-                </Link>
-              </Button>
+
+          <div className="mt-3 w-full">
+            <Link
+              href={`/listings/${listing.id}`}
+              className="block w-full group"
+            >
               <Button
                 variant="default"
                 size="sm"
-                className="flex items-center justify-center bg-green-600 hover:bg-green-700"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium transition-all duration-200 transform hover:scale-[1.02] shadow-sm hover:shadow"
               >
-                <Link href={`/listings/${listing.id}`}>
-                  <span className="flex items-center text-white gap-1">
-                    <FaEye />
-                    Details
-                  </span>
-                </Link>
+                <span className="flex items-center justify-center gap-1">
+                  Details
+                  <MdKeyboardArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-100" />
+                </span>
               </Button>
-            </div>
-          ) : (
-            <div className="mt-3 w-full">
-              <Button
-                variant="default"
-                size="sm"
-                className="flex items-center justify-center bg-green-600 hover:bg-green-700 w-full"
-              >
-                <Link href={`/listings/${listing.id}`}>
-                  <span className="flex items-center text-white gap-1">
-                    <FaEye />
-                    Details
-                  </span>
-                </Link>
-              </Button>
-            </div>
-          )}
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -169,7 +143,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
             )}
             <div className="absolute bottom-2 left-2 bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 px-2 py-1 rounded text-sm font-medium flex items-center">
               <FaLeaf className="h-4 w-4 text-green-500 mr-1" />
-              <span>{listing.ecoScore}</span>
+              <span>{listing.ecoScore.toFixed(1)}</span>
             </div>
           </div>
           <div className="p-4 flex-grow">
@@ -219,12 +193,14 @@ const ListingCard: React.FC<ListingCardProps> = ({
                   >
                     {listing.sellerUsername}
                   </Link>
-                  <div className="ml-2 flex items-center">
-                    <FaStar className="h-3.5 w-3.5 text-yellow-400" />
-                    <span className="text-xs text-gray-600 dark:text-gray-400 ml-1 font-medium">
-                      {listing.sellerRating}
-                    </span>
-                  </div>
+                  {Number(listing.sellerRating) !== 0 && (
+                    <div className="ml-2 flex items-center">
+                      <FaStar className="h-3.5 w-3.5 text-yellow-400" />
+                      <span className="text-xs text-gray-600 dark:text-gray-400 ml-1 font-medium">
+                        {Number(listing.sellerRating).toFixed(1)}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <Link

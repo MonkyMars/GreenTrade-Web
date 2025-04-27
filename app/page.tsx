@@ -8,14 +8,20 @@ import { BiUser } from "react-icons/bi";
 import { FaLeaf, FaMapMarkedAlt, FaHandshake, FaRecycle } from "react-icons/fa";
 import { FiSearch, FiArrowRight } from "react-icons/fi";
 import { Categories, categories } from "@/lib/functions/categories";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [featuredListings, setFeaturedListings] = useState<FetchedListing[]>(
     []
   );
-  const [selectedCategory, setSelectedCategory] = useState<Categories["id"]>("all");
+  const [selectedCategory, setSelectedCategory] =
+    useState<Categories["id"]>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const router = useRouter();
 
@@ -38,7 +44,7 @@ export default function Home() {
   return (
     <main>
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-green-600 to-green-800 text-white">
+      <section className="relative bg-gradient-to-r from-green-600 dark:to-green-800 to-green-500 text-white">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 lg:py-40">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-center">
             <div className="lg:col-span-7">
@@ -80,24 +86,33 @@ export default function Home() {
                 />
               </div>
               <div className="flex-shrink-0 border-l border-gray-200 dark:border-gray-700 pl-4 flex items-center">
-                <Select onValueChange={(value: Categories["id"]) => setSelectedCategory(value)} value={selectedCategory}>
+                <Select
+                  onValueChange={(value: Categories["id"]) =>
+                    setSelectedCategory(value)
+                  }
+                  value={selectedCategory}
+                >
                   <SelectTrigger className="py-3 px-2 bg-transparent text-gray-700 dark:text-gray-200 focus:outline-none border-none! outline-none!">
-                  <span className="text-sm">
-                    {selectedCategory === "all" 
-                    ? "All Categories" 
-                    : categories.find(cat => cat.id === selectedCategory)?.name || "Select Category"}
-                  </span>
+                    <span className="text-sm">
+                      {selectedCategory === "all"
+                        ? "All Categories"
+                        : categories.find((cat) => cat.id === selectedCategory)
+                            ?.name || "Select Category"}
+                    </span>
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border-none mt-3">
-                  {categories.map((category, index) => (
-                    <SelectItem key={index} value={category.id}>
-                    {category.name}
-                    </SelectItem>
-                  ))}
+                    {categories.map((category, index) => (
+                      <SelectItem key={index} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-              <button className="bg-green-600 hover:bg-green-700 text-white p-3 cursor-pointer rounded-full flex items-center justify-center transition-colors ml-2" onClick={handleNavigate}>
+              <button
+                className="bg-green-600 hover:bg-green-700 text-white p-3 cursor-pointer rounded-full flex items-center justify-center transition-colors ml-2"
+                onClick={handleNavigate}
+              >
                 <FiSearch className="h-6 w-6" />
               </button>
             </div>
@@ -247,7 +262,7 @@ export default function Home() {
                       style={{ objectFit: "cover" }}
                     />
                     <div className="absolute top-2 right-2 bg-green-600 text-white text-sm font-medium px-2 py-1 rounded-md flex items-center">
-                      <FaLeaf className="mr-1" /> {listing.ecoScore}
+                      <FaLeaf className="mr-1" /> {listing.ecoScore.toFixed(1)}
                     </div>
                   </div>
                   <div className="p-5">
@@ -255,7 +270,7 @@ export default function Home() {
                       {listing.title}
                     </h3>
                     <p className="text-green-600 dark:text-green-400 font-bold mb-2">
-                      {listing.price}
+                      €{listing.price}
                     </p>
                     <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm">
                       <FaMapMarkedAlt className="mr-1" /> {listing.location}
