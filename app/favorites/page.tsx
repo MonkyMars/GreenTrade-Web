@@ -8,7 +8,7 @@ import { toggleFavorite } from "@/lib/backend/favorites/favorites";
 import { FetchedListing } from "@/lib/types/main";
 import ListingCard from "@/components/ui/ListingCard";
 import { Button } from "@/components/ui/button";
-import { FaHeart, FaList, FaThLarge } from "react-icons/fa";
+import { FaArrowRight, FaHeart, FaList, FaThLarge } from "react-icons/fa";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
 export default function FavoritesPage() {
@@ -52,10 +52,10 @@ export default function FavoritesPage() {
     <ProtectedRoute>
       <div className="container mx-auto px-4 py-22">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-white">
             My Favorites
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-gray-200">
             Listings you&apos;ve saved for later
           </p>
         </div>
@@ -86,11 +86,13 @@ export default function FavoritesPage() {
             </Button>
           </div>
           <Button
-            variant="outline"
+            variant="ghost"
+            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
             size="sm"
             onClick={() => router.push("/browse")}
           >
             Browse more listings
+            <FaArrowRight className="ml-2 group-hover:translate-x-0.5 transition-transform duration-100" />
           </Button>
         </div>
 

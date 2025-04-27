@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { FaLeaf, FaHandshake, } from 'react-icons/fa';
 import { IoEarthOutline } from 'react-icons/io5';
 
@@ -38,7 +39,7 @@ export default function About() {
             <div className="mt-10 lg:mt-0">
               <div className="relative h-96 rounded-xl overflow-hidden shadow-xl">
                 <Image 
-                  src="/images/about-us-story.jpg" 
+                  src="/images/handshake_background.webp" 
                   alt="GreenTrade team collaboration" 
                   fill
                   style={{ objectFit: 'cover' }}
@@ -123,73 +124,38 @@ export default function About() {
             
             {/* Step 1 */}
             <div className="relative md:grid md:grid-cols-2 md:gap-8 mb-12 md:mb-24">
-              <div className="md:text-right md:pr-12">
-                <div className="hidden md:block absolute right-0 top-0 transform translate-x-1/2 w-12 h-12 rounded-full border-4 border-green-500 bg-white dark:bg-gray-800"></div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                  Create your account
+              <div className="md:text-right md:pr-12 bg-accent p-2 py-4 rounded-lg">
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  1. Create your account
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300">
+                <p className="text-gray-200">
                   Sign up with your email or social media account and set up your sustainable trader profile in minutes.
                 </p>
-              </div>
-              <div className="mt-6 md:mt-0 md:pl-12">
-                <div className="rounded-lg overflow-hidden shadow-lg">
-                  <Image 
-                    src="/images/step-1-signup.jpg" 
-                    alt="Creating an account" 
-                    width={500}
-                    height={300}
-                    className="w-full h-auto"
-                  />
-                </div>
               </div>
             </div>
             
             {/* Step 2 */}
             <div className="relative md:grid md:grid-cols-2 md:gap-8 mb-12 md:mb-24">
-              <div className="md:order-2 md:text-left md:pl-12">
-                <div className="hidden md:block absolute left-0 top-0 transform -translate-x-1/2 w-12 h-12 rounded-full border-4 border-green-500 bg-white dark:bg-gray-800"></div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                  List your items
+              <div className="md:order-2 md:text-left md:pl-12 bg-accent p-2 py-4 rounded-lg">
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  2. List your items
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300">
+                <p className="text-gray-200">
                   Upload photos and descriptions of your sustainable goods, set your price or trade preferences, and highlight their eco-friendly qualities.
                 </p>
               </div>
-              <div className="mt-6 md:mt-0 md:order-1 md:pr-12">
-                <div className="rounded-lg overflow-hidden shadow-lg">
-                  <Image 
-                    src="/images/step-2-listing.jpg" 
-                    alt="Listing items" 
-                    width={500}
-                    height={300}
-                    className="w-full h-auto"
-                  />
-                </div>
-              </div>
+              <div className="mt-6 md:mt-0 md:order-1 md:pr-12"/> {/* div for positioning */}
             </div>
             
             {/* Step 3 */}
             <div className="relative md:grid md:grid-cols-2 md:gap-8">
-              <div className="md:text-right md:pr-12">
-                <div className="hidden md:block absolute right-0 top-0 transform translate-x-1/2 w-12 h-12 rounded-full border-4 border-green-500 bg-white dark:bg-gray-800"></div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                  Connect and trade
+              <div className="md:text-right md:pr-12 bg-accent p-2 py-4 rounded-lg">
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  3. Connect and trade
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300">
+                <p className="text-gray-200">
                   Message other users, arrange meetups using our integrated map feature, and complete your sustainable trades with confidence.
                 </p>
-              </div>
-              <div className="mt-6 md:mt-0 md:pl-12">
-                <div className="rounded-lg overflow-hidden shadow-lg">
-                  <Image 
-                    src="/images/step-3-connect.jpg" 
-                    alt="Connecting and trading" 
-                    width={500}
-                    height={300}
-                    className="w-full h-auto"
-                  />
-                </div>
               </div>
             </div>
           </div>
@@ -227,110 +193,6 @@ export default function About() {
             <div className="bg-green-700 bg-opacity-50 p-8 rounded-xl text-center">
               <p className="text-4xl md:text-5xl font-bold mb-2">4.8<span className="text-2xl">/5</span></p>
               <p className="text-xl text-green-100">User Rating</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Team section */}
-      <section className="py-16 md:py-24 bg-white dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-              Meet Our Team
-            </h2>
-            <p className="mt-4 text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              The passionate people behind GreenTrade
-            </p>
-          </div>
-          
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Team member 1 */}
-            <div className="text-center">
-              <div className="mb-4 relative w-48 h-48 mx-auto rounded-full overflow-hidden">
-                <Image 
-                  src="/images/team-1.jpg" 
-                  alt="Team member" 
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  className="rounded-full"
-                />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Sofia Müller
-              </h3>
-              <p className="text-green-600 dark:text-green-400 mb-2">
-                Co-Founder & CEO
-              </p>
-              <p className="text-gray-600 dark:text-gray-400">
-                Environmental activist and serial entrepreneur
-              </p>
-            </div>
-            
-            {/* Team member 2 */}
-            <div className="text-center">
-              <div className="mb-4 relative w-48 h-48 mx-auto rounded-full overflow-hidden">
-                <Image 
-                  src="/images/team-2.jpg" 
-                  alt="Team member" 
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  className="rounded-full"
-                />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Markus Van Hout
-              </h3>
-              <p className="text-green-600 dark:text-green-400 mb-2">
-                Co-Founder & CTO
-              </p>
-              <p className="text-gray-600 dark:text-gray-400">
-                Tech innovator with focus on sustainable solutions
-              </p>
-            </div>
-            
-            {/* Team member 3 */}
-            <div className="text-center">
-              <div className="mb-4 relative w-48 h-48 mx-auto rounded-full overflow-hidden">
-                <Image 
-                  src="/images/team-3.jpg" 
-                  alt="Team member" 
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  className="rounded-full"
-                />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Elena Rossi
-              </h3>
-              <p className="text-green-600 dark:text-green-400 mb-2">
-                Head of Community
-              </p>
-              <p className="text-gray-600 dark:text-gray-400">
-                Community building expert and circular economy advocate
-              </p>
-            </div>
-            
-            {/* Team member 4 */}
-            <div className="text-center">
-              <div className="mb-4 relative w-48 h-48 mx-auto rounded-full overflow-hidden">
-                <Image 
-                  src="/images/team-4.jpg" 
-                  alt="Team member" 
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  className="rounded-full"
-                />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Pierre Dubois
-              </h3>
-              <p className="text-green-600 dark:text-green-400 mb-2">
-                Head of Sustainability
-              </p>
-              <p className="text-gray-600 dark:text-gray-400">
-                Environmental scientist and policy advisor
-              </p>
             </div>
           </div>
         </div>
@@ -375,7 +237,7 @@ export default function About() {
                 Is there a fee for using GreenTrade?
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Basic listings are completely free. We have optional premium features for power users and a small commission on commercial sales. Our mission is to make sustainable trading accessible to everyone.
+                No, GreenTrade is completely free to use! We believe in making sustainable trading accessible to everyone.
               </p>
             </div>
             
@@ -402,18 +264,18 @@ export default function About() {
             Join thousands of Europeans who are making a positive impact through mindful trading.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <a 
+            <Link
               href="/register" 
               className="px-8 py-4 bg-white text-green-600 font-semibold rounded-full shadow-lg hover:bg-green-50 transition-colors"
             >
               Join GreenTrade
-            </a>
-            <a 
-              href="/contact" 
+            </Link>
+            <Link 
+              href="/browse" 
               className="px-8 py-4 bg-green-700 text-white font-semibold rounded-full shadow-lg hover:bg-green-800 transition-colors"
             >
-              Contact Us
-            </a>
+              Browse Listings
+            </Link>
           </div>
         </div>
       </section>

@@ -31,7 +31,7 @@ export default function Home() {
     if (searchQuery) {
       router.push(`/browse?search=${searchQuery}&category=${selectedCategory}`);
     } else {
-      router.push(`/browse?category=${selectedCategory}`);
+      router.push(`/browse?category=${selectedCategory}&category=all`);
     }
   };
 
@@ -65,12 +65,6 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-
-            <div className="hidden lg:block lg:col-span-5 mt-12 lg:mt-0">
-              <div className="relative h-96 rounded-xl overflow-hidden shadow-2xl transform rotate-1">
-                <FaLeaf className="w-full h-full text-green-500 p-8" />
-              </div>
-            </div>
           </div>
 
           {/* Search bar */}
@@ -87,14 +81,14 @@ export default function Home() {
               </div>
               <div className="flex-shrink-0 border-l border-gray-200 dark:border-gray-700 pl-4 flex items-center">
                 <Select onValueChange={(value: Categories["id"]) => setSelectedCategory(value)} value={selectedCategory}>
-                  <SelectTrigger className="py-3 px-2 bg-transparent text-gray-700 dark:text-gray-200 focus:outline-none border-none">
+                  <SelectTrigger className="py-3 px-2 bg-transparent text-gray-700 dark:text-gray-200 focus:outline-none border-none! outline-none!">
                   <span className="text-sm">
                     {selectedCategory === "all" 
                     ? "All Categories" 
                     : categories.find(cat => cat.id === selectedCategory)?.name || "Select Category"}
                   </span>
                   </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+                  <SelectContent className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border-none mt-3">
                   {categories.map((category, index) => (
                     <SelectItem key={index} value={category.id}>
                     {category.name}
