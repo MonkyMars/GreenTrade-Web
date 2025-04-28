@@ -329,6 +329,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const { accessToken, refreshToken, userId, expiresIn } =
         response.data.data;
 
+      console.log(accessToken)
+
       if (!accessToken) {
         throw new AppError("Missing authentication token", { code: 'TOKEN_MISSING' });
       }

@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-export const BASE_URL = 'http://192.168.2.26:8080'
+export const BASE_URL = 'https://greentradeeu.up.railway.app'
 // https://greentradeeu.up.railway.app
 // http://192.168.178.10:8080
 // http://192.168.2.26:8080

@@ -103,7 +103,7 @@ export default function RegisterPage() {
     
     try {
       // Call your registration API
-      await register(formData.email, formData.password, formData.name, formData.location);
+      await register(formData.name, formData.email, formData.password, formData.location);
 
       // Registration successful - Redirect to dashboard.
       router.push("/account?registered=true");

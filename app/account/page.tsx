@@ -15,12 +15,7 @@ import {
 } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User } from "@/lib/types/user";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -32,6 +27,7 @@ import { calculateAverageEcoScore } from "@/lib/functions/calculateEcoScore";
 import { getReviews } from "@/lib/backend/reviews/getReviews";
 import { FetchedReview } from "@/lib/types/review";
 import ReviewCard from "../../components/ui/ReviewCard";
+import api from "@/lib/backend/api/axiosConfig";
 
 interface ActiveTab {
   activeTab: "profile" | "seller" | "security" | "delete";
@@ -117,7 +113,9 @@ export default function AccountPage() {
     const fetchUserlisings = async () => {
       try {
         const data = await getSellerListings(user.id);
-        setUserListings(data);
+        if (data.length > 0) {
+          setUserListings(data);
+        }
       } catch (error) {
         console.error("Error fetching user listings:", error);
       }
@@ -126,7 +124,9 @@ export default function AccountPage() {
     const fetchUserReviews = async () => {
       try {
         const data = await getReviews(user.id);
-        setUserReviews(data);
+        if (data.length > 0) {
+          setUserReviews(data);
+        }
       } catch (error) {
         console.error("Error fetching user reviews:", error);
       }
@@ -144,19 +144,16 @@ export default function AccountPage() {
     const data = Object.fromEntries(formData.entries());
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/user/update`,
-        {
-          method: "PUT",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        }
-      );
+      const response = await api.patch(`/user/update`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-      if (!response.ok) {
+      if (!response.data.success) {
         throw new Error("Failed to update user data");
       }
 
@@ -266,14 +263,16 @@ export default function AccountPage() {
                     {userListings.length || 0}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Eco Score
-                  </span>
-                  <span className="font-medium text-green-600">
-                    {calculateAverageEcoScore(userListings) || 0}/5
-                  </span>
-                </div>
+                {userListings.length > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Eco Score
+                    </span>
+                    <span className="font-medium text-green-600">
+                      {calculateAverageEcoScore(userListings) || 0}/5
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -84,7 +84,7 @@ export const getListings = async (
         }
       )
       
-      if (!response.data || !response.data.success) {
+      if (!response.data.success) {
         throw new AppError(response.data?.message || 'Failed to fetch listings', {
           code: 'FETCH_FAILED',
           status: response.status
@@ -118,9 +118,7 @@ export const getListings = async (
       })
 
       if (validListings.length === 0) {
-        // This may not be an error - could just be no listings yet
         if (process.env.NODE_ENV === 'production') {
-          // Use toast.custom instead of toast.info which doesn't exist
           toast.custom((t) => (
             <div className="bg-white p-4 rounded shadow-md">
               <p className="text-gray-700">No listings found.</p>
