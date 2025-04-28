@@ -15,6 +15,7 @@ export type UploadListing = {
 export interface FetchedListing extends UploadListing {
   id: string;
   createdAt: string;
+  location: string;
   sellerUsername: string;
   sellerBio: string;
   sellerCreatedAt: string;
