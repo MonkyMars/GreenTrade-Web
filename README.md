@@ -20,9 +20,9 @@ GreenTrade is an eco-friendly online marketplace platform designed for environme
 - **Frontend**: Next.js 15+, TypeScript, Tailwind CSS
 - **State Management**: React Context API
 - **Authentication**: Custom JWT authentication
-- **Deployment**: Centralized cloud infrastructure
+- **Deployment**: Vercel +, GitHub
 - **API Integration**: Axios for API communication
-- **UI Components**: Custom components with shadcn/ui
+- **UI Components**: Custom components
 
 ## 🚀 Deployment
 
@@ -31,7 +31,7 @@ This application is **not intended for self-hosting** by individual users. Green
 ### Accessing GreenTrade
 
 The official GreenTrade marketplace is available at:
-- Website: https://greentrade.eu
+- Website: https://greentradeeu.vercel.app
 - Mobile apps: Available on iOS and Android app stores
 
 ## 🛡️ Security Considerations
