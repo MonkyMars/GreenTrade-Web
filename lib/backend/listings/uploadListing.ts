@@ -20,7 +20,6 @@ export const uploadListing = async (listing: UploadListing) => {
       description: listing.description,
       category: listing.category,
       condition: listing.condition,
-      location: listing.location,
       price: listing.price,
       negotiable: listing.negotiable,
       ecoScore: listing.ecoScore,

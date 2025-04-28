@@ -53,7 +53,6 @@ const listingSchema = z.object({
     .refine(val => Number(val) > 0, { message: "Price must be greater than 0" }),
   negotiable: z.boolean().default(false),
   ecoAttributes: z.array(z.string()),
-  location: z.string().optional(),
 });
 
 type ListingFormType = z.infer<typeof listingSchema>;
@@ -68,7 +67,6 @@ const PostListingPage = () => {
     price: "",
     ecoAttributes: [] as string[],
     negotiable: false,
-    location: user?.location,
   });
   const [images, setImages] = useState<
   { uri: string; type?: string; name?: string }[]
@@ -234,7 +232,6 @@ const PostListingPage = () => {
         description: formData.description,
         category: formData.category,
         condition: formData.condition,
-        location: user.location,
         price: parseFloat(formData.price),
         negotiable: formData.negotiable,
         ecoAttributes: formData.ecoAttributes,
@@ -274,7 +271,6 @@ const PostListingPage = () => {
         price: "",
         ecoAttributes: [],
         negotiable: false,
-        location: user?.location,
       });
       setImages([]);
       setImageFiles([]);

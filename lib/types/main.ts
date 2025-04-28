@@ -1,28 +1,8 @@
-export interface Listing {
-  id: number;
-  title: string;
-  description: string;
-  image: string;
-  price: string;
-  ecoScore: number;
-  location: string;
-  category: string;
-  date: string;
-  condition: string;
-  isFavorite: boolean;
-  seller: {
-    name: string;
-    rating: number;
-    verified: boolean;
-  };
-}
-
 export type UploadListing = {
   title: string;
   description: string;
   category: string;
   condition: string;
-  location: string;
   price: number;
   negotiable: boolean;
   ecoScore: number;
