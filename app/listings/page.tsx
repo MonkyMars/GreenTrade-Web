@@ -1,9 +1,10 @@
 "use client";
-
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import BrowsePage from "../browse/page";
-export default function ListingPage() {
+import { NextPage } from "next";
+
+const ListingPage: NextPage = () => {
   const router = useRouter();
   useEffect(() => {
     router.replace("/browse")
@@ -11,3 +12,5 @@ export default function ListingPage() {
 
   return (<BrowsePage/>);
 }
+
+export default ListingPage;

@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Button } from "../../components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { NextPage } from "next";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -29,7 +30,7 @@ const registerSchema = z.object({
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-export default function RegisterPage() {
+const RegisterPage: NextPage = () => {
   const { register } = useAuth()
   const router = useRouter();
   const [formData, setFormData] = useState<RegisterFormData>({
@@ -139,7 +140,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4 py-22 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 dark:bg-slate-800 p-8 rounded-xl shadow-xl">
         <div className="text-center">
           <Link href="/" className="inline-block">
@@ -385,3 +386,4 @@ export default function RegisterPage() {
   );
 }
 
+export default RegisterPage;

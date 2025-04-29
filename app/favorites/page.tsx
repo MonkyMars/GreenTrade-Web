@@ -10,8 +10,9 @@ import ListingCard from "@/components/ui/ListingCard";
 import { Button } from "@/components/ui/button";
 import { FaArrowRight, FaHeart, FaList, FaThLarge } from "react-icons/fa";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { NextPage } from "next";
 
-export default function FavoritesPage() {
+const FavoritesPage: NextPage = () => {
   const [favorites, setFavorites] = useState<FetchedListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
@@ -145,3 +146,5 @@ export default function FavoritesPage() {
     </ProtectedRoute>
   );
 }
+
+export default FavoritesPage;

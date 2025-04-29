@@ -11,7 +11,7 @@ import {
 } from "react-icons/tb";
 
 export interface Categories {
-  id: "all" | "home-garden" | "fashion" | "electronics" | "vehicles" | "books" | "jewerly" | "toys-games" | "other";
+  id: "all" | "home-garden" | "fashion" | "electronics" | "vehicles" | "books" | "jewerly" | "toys-games" | "other"
   icon: React.ElementType;
   name: "All Categories" | "Home & Garden" | "Fashion" | "Electronics" | "Vehicles" | "Books" | "Jewerly" | "Toys & Games" | "Other";
 }

@@ -1,9 +1,10 @@
+import { NextPage } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FaLeaf, FaHandshake, } from 'react-icons/fa';
 import { IoEarthOutline } from 'react-icons/io5';
 
-export default function About() {
+const About: NextPage = () => {
   return (
     <main className="pt-16">
       {/* Hero section */}
@@ -282,3 +283,5 @@ export default function About() {
     </main>
   );
 }
+
+export default About;

@@ -11,10 +11,11 @@ import { Categories, categories } from "@/lib/functions/categories";
 import { useRouter, useSearchParams } from "next/navigation";
 import ListingCard from "../../components/ui/ListingCard";
 import { FilterOptions, filterListings, extractCountry } from "./filtering";
+import { NextPage } from "next";
 
 const ITEMS_PER_PAGE: number = 50; // Define items per page
 
-const BrowserComponent = () => {
+const BrowserComponent: NextPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");

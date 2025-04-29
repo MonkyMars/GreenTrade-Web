@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { FaLeaf, FaHome, FaSearch, FaArrowLeft } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { NextPage } from 'next';
 
-export default function NotFound() {
+const NotFound: NextPage = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
       <motion.div 
@@ -50,3 +51,5 @@ export default function NotFound() {
     </div>
   );
 }
+
+export default NotFound;

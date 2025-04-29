@@ -1,8 +1,10 @@
+import { Condition } from "../functions/conditions";
+
 export type UploadListing = {
   title: string;
   description: string;
   category: string;
-  condition: string;
+  condition: Condition["name"];
   price: number;
   negotiable: boolean;
   ecoScore: number;

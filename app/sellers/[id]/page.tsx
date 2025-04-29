@@ -16,8 +16,9 @@ import { AppError, retryOperation } from "@/lib/errorUtils";
 import { getReviews } from "@/lib/backend/reviews/getReviews";
 import { FetchedReview } from "@/lib/types/review";
 import ReviewCard from "@/components/ui/ReviewCard";
+import { NextPage } from "next";
 
-export default function SellerPage() {
+const SellerPage: NextPage = () => {
   const router = useRouter();
   const params = useParams();
   const [seller, setSeller] = useState<Seller | null>(null);
@@ -421,3 +422,5 @@ export default function SellerPage() {
     </div>
   );
 }
+
+export default SellerPage;

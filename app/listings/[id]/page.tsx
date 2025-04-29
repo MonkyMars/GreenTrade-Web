@@ -27,6 +27,7 @@ import { toast } from "react-hot-toast";
 import { toggleFavorite } from "@/lib/backend/favorites/favorites";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { isFavorite } from "@/lib/backend/favorites/getFavorites";
+import { findCondition } from "@/lib/functions/conditions";
 
 export default function ListingPage() {
   const router = useRouter();
@@ -255,6 +256,9 @@ export default function ListingPage() {
   if (!category) {
     category = { icon: FaFolder, name: "All Categories", id: "all" };
   }
+
+  const condition = findCondition(listing.condition);
+
   // Format the creation date to show how long ago it was posted
   const timeAgo = listing.createdAt
     ? formatDistanceToNow(listing.createdAt, { addSuffix: true })
@@ -457,9 +461,10 @@ export default function ListingPage() {
                   <span className="text-sm text-gray-500 dark:text-gray-400">
                     Condition
                   </span>
-                  <span className="font-medium text-gray-900 dark:text-gray-100">
-                    {listing.condition}
-                  </span>
+                  <div className="flex items-center gap-0.5">
+                    <condition.icon size={22} className="w-4 h-4 mr-1 text-gray-400 dark:text-gray-500"/>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{condition.name}</span>
+                  </div>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm text-gray-500 dark:text-gray-400">

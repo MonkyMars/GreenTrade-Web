@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Button } from "../../components/ui/button";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { AppError } from '@/lib/errorUtils';
+import { NextPage } from "next";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -17,7 +18,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-const Login = () => {
+const Login: NextPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();

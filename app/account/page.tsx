@@ -28,12 +28,13 @@ import { getReviews } from "@/lib/backend/reviews/getReviews";
 import { FetchedReview } from "@/lib/types/review";
 import ReviewCard from "@/components/ui/ReviewCard";
 import api from "@/lib/backend/api/axiosConfig";
+import { NextPage } from "next";
 
 interface ActiveTab {
   activeTab: "profile" | "seller" | "security" | "delete";
 }
 
-export default function AccountPage() {
+const AccountPage: NextPage = () => {
   const router = useRouter();
   const {
     user: authUser,
@@ -87,15 +88,11 @@ export default function AccountPage() {
 
   const handleDeleteAccount = async () => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/user/delete`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
+      const response = await api.delete(
+        `/user/delete`,
       );
 
-      if (!response.ok) {
+      if (!response.data.success) {
         throw new Error("Failed to delete account");
       }
 
@@ -663,3 +660,5 @@ export default function AccountPage() {
     </ProtectedRoute>
   );
 }
+
+export default AccountPage;

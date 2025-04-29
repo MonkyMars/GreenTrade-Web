@@ -15,8 +15,9 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
+import { NextPage } from "next";
 
-export default function Home() {
+const Home: NextPage = () => {
   const [featuredListings, setFeaturedListings] = useState<FetchedListing[]>(
     []
   );
@@ -446,3 +447,5 @@ export default function Home() {
     </main>
   );
 }
+
+export default Home;
