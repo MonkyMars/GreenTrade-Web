@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import ListingCard from "../../components/ui/ListingCard";
 import { FilterOptions, filterListings, extractCountry } from "./filtering";
 import { NextPage } from "next";
+import { Button } from "@/components/ui/button";
 
 const ITEMS_PER_PAGE: number = 50; // Define items per page
 
@@ -114,6 +115,7 @@ const BrowserComponent: NextPage = () => {
       params.append("sortBy", filters.sortBy);
     
     // Use replace instead of push to avoid polluting browser history on filter changes
+    console.log(params)
     router.replace(`/browse?${params.toString()}`, { scroll: false });
   };
 
@@ -430,7 +432,7 @@ const BrowserComponent: NextPage = () => {
                   <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Categories</h3>
                   <div className="space-y-1">
                     {categories.map((category) => (
-                      <button key={category.id + '-desktop'} onClick={() => toggleCategory(category.name)} className={`flex w-full items-center py-2 px-3 rounded-md transition-colors ${filters.category === category.name ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300" : "hover:bg-gray-50 dark:hover:bg-gray-700/30 text-gray-700 dark:text-gray-300"}`}>
+                      <button key={category.id + '-desktop'} onClick={() => toggleCategory(category.name)} className={`flex cursor-pointer w-full items-center py-2 px-3 rounded-md transition-colors ${filters.category === category.name ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300" : "hover:bg-gray-50 dark:hover:bg-gray-700/30 text-gray-700 dark:text-gray-300"}`}>
                         <category.icon className={`flex-shrink-0 h-5 w-5 mr-3 ${filters.category === category.name ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`} />
                         <span className="text-sm font-medium">{category.name}</span>
                         {filters.category === category.name && <svg className="ml-auto h-4 w-4 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
@@ -477,12 +479,32 @@ const BrowserComponent: NextPage = () => {
                   </select>
                 </div>
                 {/* Apply Button for Desktop */} 
-                <button 
+                <Button 
                   onClick={applyFilters}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  className="w-full"
+                  variant={"default"}
                 >
                   Apply Filters
-                </button>
+                </Button>
+                <Button
+                  onClick={() => {
+                    setFilters({
+                      category: "All Categories",
+                      search: "",
+                      country: "all",
+                      minPrice: undefined,
+                      maxPrice: undefined,
+                      minEcoScore: undefined,
+                      condition: "all",
+                      sortBy: "newest"
+                    });
+                    applyFilters();
+                  }}
+                  className="w-full hover:bg-gray-200! hover:text-primary"
+                  variant={"outline"}
+                >
+                  Clear Filters
+                </Button>
               </div>
             </div>
           </aside>

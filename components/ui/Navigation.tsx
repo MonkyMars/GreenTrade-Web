@@ -133,7 +133,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
               <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                 {categories.map((category) => (
                   <Link
-                    href={`/browse?category=${category.id}`}
+                    href={`/browse?category=${category.name}`}
                     key={category.name}
                     className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-gray-700 hover:text-green-500"
                   >
@@ -220,7 +220,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
                 {categories.map((category) => (
                   <Link
                     key={category.name}
-                    href={`/browse?category=${category.id}`}
+                    href={`/browse?category=${category.name}`}
                     className="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-gray-800 rounded-md"
                     onClick={() => setIsOpen(false)}
                   >

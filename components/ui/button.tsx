@@ -13,7 +13,7 @@ const buttonVariants = cva(
         
         outline: "border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 hover:border-gray-400 active:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800/50 dark:hover:border-gray-500 dark:active:bg-gray-800",
         
-        secondary: "bg-gray-100 text-gray-800 border border-gray-200 hover:bg-gray-200 active:bg-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700 dark:active:bg-gray-600",
+        secondary: "px-8 py-6 bg-white text-green-700 font-semibold hover:bg-green-50 transition-colors text-center",
         
         ghost: "bg-transparent text-gray-700 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-50 dark:active:bg-gray-700",
         

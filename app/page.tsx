@@ -16,13 +16,14 @@ import {
 } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
 import { NextPage } from "next";
+import { Button } from "@/components/ui/button";
 
 const Home: NextPage = () => {
   const [featuredListings, setFeaturedListings] = useState<FetchedListing[]>(
     []
   );
   const [selectedCategory, setSelectedCategory] =
-    useState<Categories["id"]>("all");
+    useState<Categories["name"]>("All Categories");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const router = useRouter();
 
@@ -34,11 +35,16 @@ const Home: NextPage = () => {
     fetchFeaturedListings();
   }, []);
 
+  const encodeQueryParam = (value: string) => {
+    return encodeURIComponent(value).replace(/%20/g, '+');
+  }
+
   const handleNavigate = () => {
+    console.log(selectedCategory)
     if (searchQuery) {
-      router.push(`/browse?search=${searchQuery}&category=${selectedCategory}`);
+      router.push(`/browse?search=${searchQuery}&category=${encodeQueryParam(selectedCategory)}`);
     } else {
-      router.push(`/browse?category=${selectedCategory}&category=all`);
+      router.push(`/browse?category=${encodeQueryParam(selectedCategory)}`);
     }
   };
 
@@ -59,7 +65,7 @@ const Home: NextPage = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
-                  href="/register"
+                  href={"/register"}
                   className="px-8 py-3 bg-white text-green-700 font-semibold rounded-full hover:bg-green-50 transition-colors text-center"
                 >
                   Join Now
@@ -74,50 +80,49 @@ const Home: NextPage = () => {
             </div>
           </div>
 
-          {/* Search bar */}
-          <div className="mt-12 max-w-3xl mx-auto lg:max-w-none lg:mx-0">
-            <div className="bg-white dark:bg-gray-800 p-2 rounded-full shadow-lg flex">
-              <div className="flex-grow">
-                <input
-                  type="text"
-                  placeholder="What are you looking for?"
-                  className="w-full pl-5 pr-3 py-3 text-gray-700 dark:text-gray-200 bg-transparent focus:outline-none"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+            {/* Search bar */}
+            <div className="mt-12 max-w-3xl mx-auto lg:max-w-none lg:mx-0">
+              <div className="bg-white dark:bg-gray-800 p-2 rounded-lg md:rounded-full shadow-lg flex flex-col md:flex-row">
+                <div className="flex-grow border-b dark:border-gray-700 md:border-b-0 md:border-r md:rounded-l-full">
+                  <input
+                    type="text"
+                    placeholder="What are you looking for?"
+                    className="w-full pl-5 pr-3 py-3 text-gray-700 dark:text-gray-200 bg-transparent focus:outline-none"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <div className="flex justify-between items-center mt-1 md:mt-0 md:border-l md:border-gray-200 md:dark:border-gray-700 md:pl-4 py-1">
+                  <div className="flex-grow md:flex-grow-0">
+                    <Select
+                      onValueChange={(value: Categories["name"]) =>
+                        setSelectedCategory(value)
+                      }
+                      value={selectedCategory}
+                    >
+                      <SelectTrigger className="py-2 px-2 bg-transparent text-gray-700 dark:text-gray-200 focus:outline-none border-none! outline-none! w-full">
+                        <span className="text-sm truncate max-w-[120px] md:max-w-none">
+                          {selectedCategory}
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border-none mt-3">
+                        {categories.map((category, index) => (
+                          <SelectItem key={index} value={category.name}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    className="bg-green-600 hover:bg-green-700 text-white p-2 cursor-pointer rounded-full flex items-center justify-center transition-colors ml-2"
+                    onClick={handleNavigate}
+                  >
+                    <FiSearch className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex-shrink-0 border-l border-gray-200 dark:border-gray-700 pl-4 flex items-center">
-                <Select
-                  onValueChange={(value: Categories["id"]) =>
-                    setSelectedCategory(value)
-                  }
-                  value={selectedCategory}
-                >
-                  <SelectTrigger className="py-3 px-2 bg-transparent text-gray-700 dark:text-gray-200 focus:outline-none border-none! outline-none!">
-                    <span className="text-sm">
-                      {selectedCategory === "all"
-                        ? "All Categories"
-                        : categories.find((cat) => cat.id === selectedCategory)
-                            ?.name || "Select Category"}
-                    </span>
-                  </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border-none mt-3">
-                    {categories.map((category, index) => (
-                      <SelectItem key={index} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <button
-                className="bg-green-600 hover:bg-green-700 text-white p-3 cursor-pointer rounded-full flex items-center justify-center transition-colors ml-2"
-                onClick={handleNavigate}
-              >
-                <FiSearch className="h-6 w-6" />
-              </button>
             </div>
-          </div>
         </div>
       </section>
 
@@ -133,7 +138,7 @@ const Home: NextPage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {categories.map((category) => (
               <Link
                 key={category.name}
