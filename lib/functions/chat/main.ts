@@ -1,6 +1,5 @@
 import api from '@/lib/backend/api/axiosConfig';
 import { ChatMessage, Conversation } from '@/lib/types/chat';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Determines if the current user is the buyer in a conversation
@@ -113,7 +112,21 @@ export async function fetchMessages(
   try {
     const response = await api.get(`/api/chat/messages/${conversationId}`);
     
-    const messages = response.data;
+    const messages: ChatMessage[] = response.data.data.map((message: {
+      id: string;
+      conversation_id: string;
+      sender_id: string;
+      content: string;
+      created_at: string;
+    }) => {
+      return {
+        id: message.id,
+        conversationId: message.conversation_id,
+        senderId: message.sender_id,
+        text: message.content,
+        timestamp: new Date(message.created_at),
+      };
+    });
     setMessages(messages);
     
     if (setError) {
@@ -129,85 +142,6 @@ export async function fetchMessages(
     return undefined;
   } finally {
     setLoadingMessages(false);
-  }
-}
-
-/**
- * Sends a text message to the conversation
- */
-export async function handleSendMessage(
-  text: string,
-  conversationId: string | null,
-  userId: string,
-  setSendingMessage: React.Dispatch<React.SetStateAction<boolean>>,
-  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
-  setConversations: React.Dispatch<React.SetStateAction<Conversation[]>>,
-  setError?: React.Dispatch<React.SetStateAction<string | null>>
-): Promise<boolean> {
-  if (!conversationId) {
-    if (setError) setError('No active conversation selected.');
-    return false;
-  }
-  
-  if (!text.trim()) return false;
-  
-  setSendingMessage(true);
-  
-  // Create optimistic message
-  const tempMessage: ChatMessage = {
-    id: uuidv4(), // Temporary ID
-    conversationId,
-    senderId: userId,
-    text: text.trim(),
-    timestamp: new Date()
-  };
-  
-  // Update UI optimistically
-  setMessages(prev => [...prev, tempMessage]);
-  
-  try {
-    // Send message to server
-    const response = await api.post(`/api/chat/conversation/${conversationId}/messages`, {
-      content: text.trim(),
-      sender_id: userId
-    });
-    
-    // Update last message in conversations list
-    setConversations(prevConversations => 
-      prevConversations.map(conv => 
-        conv.id === conversationId
-          ? {
-              ...conv,
-              lastMessage: {
-                text: text.trim(),
-                timestamp: new Date()
-              }
-            }
-          : conv
-      )
-    );
-    
-    // Replace optimistic message with real one from server if needed
-    const serverMessage = response.data;
-    if (serverMessage && serverMessage.id !== tempMessage.id) {
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === tempMessage.id ? serverMessage : msg
-        )
-      );
-    }
-    
-    if (setError) setError(null);
-    return true;
-  } catch (error) {
-    console.error('Error sending message:', error);
-    if (setError) setError('Failed to send message. Please try again.');
-    
-    // Remove optimistic message on failure
-    setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
-    return false;
-  } finally {
-    setSendingMessage(false);
   }
 }
 

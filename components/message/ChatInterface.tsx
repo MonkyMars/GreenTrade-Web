@@ -45,11 +45,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   if (!conversation) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-        <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300">
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center bg-background dark:bg-gray-900">
+        <h2 className="text-2xl font-semibold text-primary dark:text-accent">
           Select a conversation
         </h2>
-        <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-md">
+        <p className="text-muted dark:text-gray-400 mt-3 max-w-md">
           Choose a conversation from the list to start messaging
         </p>
       </div>
@@ -63,13 +63,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   return (
     <div className="flex flex-col h-full">
       {/* Chat header */}
-      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 shrink-0">
+      <div className="px-6 py-4 border-b border-border dark:border-gray-700 shrink-0 bg-card-bg dark:bg-gray-800">
         <div className="flex items-center">
           <div>
-            <h3 className="font-medium text-lg text-gray-900 dark:text-gray-100">
+            <h3 className="font-semibold text-xl text-primary dark:text-accent">
               {otherPersonName}
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-muted dark:text-gray-400">
               {conversation.listingName}
             </p>
           </div>
@@ -77,17 +77,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </div>
 
       {/* Messages */}
-      <div className="flex-grow overflow-y-auto p-4 space-y-2">
+      <div className="flex-grow overflow-y-auto p-6 space-y-4 bg-white dark:bg-gray-900">
         {isLoading ? (
-          <div className="flex justify-center py-10">
-            <div className="animate-pulse text-gray-500 dark:text-gray-400">
+          <div className="flex justify-center py-12">
+            <div className="animate-pulse text-muted dark:text-gray-400">
               Loading messages...
             </div>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-center">
-            <p className="text-gray-500 dark:text-gray-400">No messages yet</p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
+            <p className="text-muted dark:text-gray-400">No messages yet</p>
+            <p className="text-sm text-muted-foreground dark:text-gray-500 mt-2">
               Send a message to start the conversation
             </p>
           </div>
@@ -107,26 +107,26 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       <form 
         onSubmit={handleSendMessage}
         className={cn(
-          "p-3 border-t border-gray-200 dark:border-gray-700 shrink-0",
-          "bg-white dark:bg-gray-900"
+          "p-4 border-t border-border dark:border-gray-700 shrink-0",
+          "bg-card-bg dark:bg-gray-800"
         )}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Input
             ref={inputRef}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-grow"
+            className="flex-grow shadow-sm focus-visible:ring-primary/50"
             disabled={isLoading}
           />
           <Button 
             type="submit" 
             disabled={!newMessage.trim() || isLoading}
-            size="icon"
+            className="bg-primary hover:bg-primary-hover text-white"
           >
-            <FiSend className="h-4 w-4" />
-            <span className="sr-only">Send message</span>
+            <FiSend className="h-4 w-4 mr-2" />
+            <span>Send</span>
           </Button>
         </div>
       </form>

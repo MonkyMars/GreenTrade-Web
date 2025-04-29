@@ -18,23 +18,23 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
   return (
     <div
       className={cn(
-        'flex mb-4',
-        isOwn ? 'justify-end' : 'justify-start'
+        'flex mb-4 max-w-[90%]',
+        isOwn ? 'justify-end self-end' : 'justify-start self-start'
       )}
     >
       <div
         className={cn(
-          'max-w-[70%] rounded-lg p-3 shadow-sm',
+          'rounded-2xl p-4',
           isOwn 
-            ? 'bg-green-600 text-white rounded-br-none' 
-            : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none'
+            ? 'bg-primary text-white rounded-br-none' 
+            : 'bg-background dark:bg-gray-800 text-foreground dark:text-gray-100 rounded-bl-none border border-border dark:border-gray-700'
         )}
       >
         <p className="whitespace-pre-wrap break-words">{message.text}</p>
         <p 
           className={cn(
-            'text-xs mt-1',
-            isOwn ? 'text-green-100' : 'text-gray-500 dark:text-gray-400'
+            'text-xs mt-2 text-right',
+            isOwn ? 'text-white/70' : 'text-muted dark:text-gray-400'
           )}
         >
           {timeAgo}

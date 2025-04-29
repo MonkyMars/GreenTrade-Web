@@ -11,10 +11,10 @@ import { useWebSocketChat } from "@/lib/services/useWebSocketChat";
 import {
   fetchConversations,
   fetchMessages,
-  handleSendMessage as sendChatMessage,
   handleNewMessage,
   updateConversationLastMessage
 } from "@/lib/functions/chat/main";
+import { sendMessage } from "@/lib/functions/chat/sendMessage";
 
 const MessagesPage = () => {
   const { user } = useAuth();
@@ -47,7 +47,7 @@ const MessagesPage = () => {
   };
 
   // Use WebSocket hook
-  const { sendMessage } = useWebSocketChat({
+  const { sendMessage: sendWebSocketMessage } = useWebSocketChat({
     conversationId: activeConversationId,
     userId: user?.id || null,
     onMessage: onNewMessage,
@@ -73,26 +73,22 @@ const MessagesPage = () => {
   const handleSendMessage = async (text: string) => {
     if (!user?.id || !activeConversationId) return;
     
-    await sendChatMessage(
-      text,
-      activeConversationId,
-      user.id,
-      setIsSending,
-      setMessages,
-      setConversations,
-      setError
-    );
-    
-    // Also try to send via WebSocket for real-time updates
-    const messageData = {
-      type: 'message',
-      content: text,
-      conversation_id: activeConversationId,
-      sender_id: user.id,
-      created_at: new Date().toISOString()
-    };
-    
-    sendMessage(JSON.stringify(messageData));
+    setIsSending(true);
+    try {
+      // Send message using HTTP endpoint
+      const newMessage = await sendMessage(activeConversationId, user.id, text);
+      
+      // Update UI with the new message
+      if (newMessage) {
+        handleNewMessage(newMessage, setMessages);
+        updateConversationLastMessage(newMessage, setConversations);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setError('Failed to send message. Please try again.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   // Get the active conversation object
@@ -112,17 +108,17 @@ const MessagesPage = () => {
 
   return (
     <ProtectedRoute>
-      <div className="container mx-auto py-22 px-4 max-w-7xl">
+      <div className="min-h-screen flex flex-col bg-background">
         {/* Error message banner if present */}
         {error && (
-          <div className="bg-red-500 text-white p-3 mb-4 rounded-md shadow-sm">
+          <div className="bg-error text-white p-3 mb-2 mx-4 mt-4 rounded-md shadow-sm">
             <p className="text-sm font-medium">{error}</p>
           </div>
         )}
         
-        <div className="flex flex-col md:flex-row h-[calc(100vh-12rem)] border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
+        <div className="flex flex-col md:flex-row h-[calc(100vh-4rem)] overflow-hidden">
           {/* Conversation list sidebar */}
-          <div className="w-full md:w-1/3 border-r border-gray-200 dark:border-gray-700">
+          <div className="w-full md:w-1/3 lg:w-1/4 border-r border-border dark:border-gray-700 bg-card-bg dark:bg-gray-800">
             <ConversationList
               conversations={conversations}
               activeConversationId={activeConversationId}
@@ -132,7 +128,7 @@ const MessagesPage = () => {
           </div>
           
           {/* Chat interface */}
-          <div className="w-full md:w-2/3">
+          <div className="w-full md:w-2/3 lg:w-3/4 bg-white dark:bg-gray-900">
             <ChatInterface
               conversation={activeConversation}
               messages={messages}
