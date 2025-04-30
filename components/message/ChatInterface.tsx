@@ -3,7 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MessageBubble } from './MessageBubble';
 import { ChatMessage, Conversation } from '@/lib/types/chat';
-import { FiSend, FiPaperclip, FiSmile } from 'react-icons/fi';
+import { FiSend, FiPaperclip, FiSmile, FiTag, FiShoppingCart } from 'react-icons/fi';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { Badge } from '../ui/badge';
+import Link from 'next/link';
 
 interface ChatInterfaceProps {
 	conversation: Conversation | null;
@@ -23,6 +26,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 	const [newMessage, setNewMessage] = useState('');
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const { user } = useAuth();
 
 	const handleSendMessage = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -55,8 +59,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 				) < 10 * 60 * 1000
 			) {
 				// Add to the existing group
+				const allFilled = Object.values(message).every(val => val !== undefined && val !== null);
+				if (!allFilled) return; // Skip empty messages
 				groups[groups.length - 1].messages.push(message);
 			} else {
+				const allFilled = Object.values(message).every(val => val !== undefined && val !== null);
+				if (!allFilled) return; // Skip empty messages
 				// Create a new group
 				groups.push({
 					senderName,
@@ -102,6 +110,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 		? conversation.sellerName
 		: conversation.buyerName;
 
+	const userStatus = userId === conversation.buyerId ? "Seller" : "Buyer";
+
 	return (
 		<div className="flex flex-col h-full">
 			{/* Chat header */}
@@ -111,12 +121,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 						{otherPersonName.charAt(0).toUpperCase()}
 					</div>
 					<div>
-						<h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
-							{otherPersonName}
-						</h3>
-						<p className="text-sm text-gray-500 dark:text-gray-400">
+						<div className='flex items-center'>
+							<h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
+								{otherPersonName}
+							</h3>
+							{/* Get opposites because it's for the other person*/}
+							<Badge variant={"success"} className="ml-2">
+								{userStatus === "Seller" ? <FiTag className='mr-1' /> : <FiShoppingCart className='mr-1' />}
+								{userStatus}
+							</Badge>
+						</div>
+						<Link href={`/listings/${conversation.listingId}`} className="flex text-sm text-accent hover:underline">
 							{conversation.listingName}
-						</p>
+						</Link>
 					</div>
 				</div>
 			</div>
@@ -124,7 +141,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 			{/* Messages */}
 			<div
 				ref={messagesEndRef}
-				className="flex-grow overflow-y-auto bg-white dark:bg-gray-900 pb-4"
+				className="flex-grow overflow-y-auto bg-white dark:bg-black/[0.08] pb-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-gray-700 dark:hover:[&::-webkit-scrollbar-thumb]:bg-gray-800 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
 			>
 				{isLoading ? (
 					<div className="flex justify-center items-center h-full">
@@ -147,15 +164,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 					</div>
 				) : (
 					<div className="space-y-3 pt-4">
-						{groupedMessages.map((group, groupIndex) => (
+						{groupedMessages.filter(Boolean).map((group, groupIndex) => (
 							<div key={`${group.senderId}-${groupIndex}`} className="message-group">
-								{group.messages.map((message, messageIndex) => (
+								{group.messages.filter(Boolean).map((message, messageIndex) => (
 									<MessageBubble
 										key={message.id}
 										message={message}
 										isOwn={group.isOwn}
 										showSender={messageIndex === 0}
 										senderName={group.senderName}
+										userName={user?.name || 'Anonymous'}
 									/>
 								))}
 							</div>
@@ -174,9 +192,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 					<div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl pl-4 pr-2 py-2">
 						<button
 							type="button"
-							className="text-gray-500 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400 p-1"
+							className="text-gray-500 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400 p-1 cursor-pointer"
 							aria-label="Add file"
-							disabled={isLoading}
+							disabled={isLoading || newMessage.trim() !== ''}
 						>
 							<FiPaperclip className="h-5 w-5" />
 						</button>
@@ -186,7 +204,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 							value={newMessage}
 							onChange={(e) => setNewMessage(e.target.value)}
 							placeholder="Type a message..."
-							className="flex-grow border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-3"
+							className="flex-grow shadow-none border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-3"
 							disabled={isLoading}
 						/>
 
@@ -203,7 +221,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 							<Button
 								type="submit"
 								disabled={!newMessage.trim() || isLoading}
-								className="bg-accent hover:bg-accent-hover text-white rounded-xl h-9 w-9 p-0 flex items-center justify-center ml-1"
+								className="bg-accent hover:bg-accent-hover text-white rounded-xl h-9 w-9 p-0 flex items-center justify-center ml-1 cursor-pointer"
 								aria-label="Send message"
 							>
 								<FiSend className="h-4 w-4" />

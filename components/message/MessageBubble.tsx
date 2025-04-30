@@ -9,6 +9,7 @@ interface MessageBubbleProps {
 	showSender?: boolean;
 	senderName?: string;
 	ref?: React.RefObject<HTMLDivElement | null> | null;
+	userName: string;
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
@@ -17,6 +18,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 	showSender = false,
 	senderName = isOwn ? 'You' : 'User',
 	ref,
+	userName,
 }) => {
 	const timestamp = typeof message.timestamp === 'string'
 		? new Date(message.timestamp)
@@ -24,30 +26,30 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
 	const timeFormatted = format(timestamp, 'h:mm a');
 
+	const sender = isOwn ? userName : senderName;
+
 	return (
 		<div
 			ref={ref}
-			className={cn(
-				'group flex items-start px-4 py-0.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors',
-				isOwn ? 'justify-start' : 'justify-start'
-			)}
+			className={
+				'group flex items-start px-4 py-0.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors justfy-start'
+			}
 		>
-			{!isOwn && showSender && (
-				<div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 flex-shrink-0 mr-3">
-					{senderName.charAt(0).toUpperCase()}
+			{showSender && (
+				<div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 flex-shrink-0 mr-3", isOwn ? "bg-green-300 dark:bg-accent/50" : "bg-green-100 dark:bg-green-900/30")}>
+					{sender.charAt(0).toUpperCase()}
 				</div>
 			)}
 
-			{!isOwn && !showSender && (
-				<div className="w-10 h-10 opacity-0 flex-shrink-0 mr-3">
+			{!showSender && (
+				<div className={cn("w-10 h-10 opacity-0 rounded-full flex items-center justify-center flex-shrink-0 mr-3", isOwn ? "bg-green-300 dark:bg-accent/50" : "bg-green-100 dark:bg-green-900/30")}>
 					{/* Spacer to maintain alignment */}
 				</div>
 			)}
 
-			<div className={cn(
-				'flex flex-col max-w-[85%]',
-				isOwn ? 'items-start' : 'items-start'
-			)}>
+			<div className={
+				'flex flex-col max-w-[85%] items-start'
+			}>
 				{showSender && (
 					<div className="flex items-center mb-1">
 						<span className={cn(
@@ -65,17 +67,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 				<div className={cn(
 					'rounded-lg py-2 px-3',
 					isOwn
-						? 'bg-primary/10 dark:bg-primary/20 text-gray-800 dark:text-gray-100'
-						: 'bg-background dark:bg-gray-700 text-gray-800 dark:text-gray-100'
+						? 'bg-green-400/50 dark:bg-accent/[0.8] text-gray-800 dark:text-gray-100'
+						: 'bg-accent/10 dark:bg-accent/20 text-gray-800 dark:text-gray-100'
 				)}>
 					<p className="whitespace-pre-wrap break-words text-sm">{message.text}</p>
 				</div>
 
-				{!showSender && (
+				{/* {!showSender && (
 					<span className="text-xs text-gray-400 dark:text-gray-500 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
 						{timeFormatted}
 					</span>
-				)}
+				)} */}
 			</div>
 		</div>
 	);
