@@ -2,6 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/functions/cn';
 import { Conversation } from '@/lib/types/chat';
 import { formatDistanceToNow } from 'date-fns';
+import { FaLeaf } from 'react-icons/fa';
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -17,21 +18,27 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   userId,
 }) => {
   return (
-    <div className="w-full h-full flex flex-col bg-card-bg dark:bg-gray-800">
-      <h2 className="text-xl font-semibold p-6 border-b border-border dark:border-gray-700 text-primary dark:text-accent">
-        Messages
-      </h2>
+    <div className="w-full h-full flex flex-col bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+      <div className="py-5.5 px-4 border-b border-gray-200 dark:border-gray-700 bg-card-bg dark:bg-gray-900 shadow-sm">
+        <h2 className="text-lg font-semibold flex items-center text-primary dark:text-accent">
+          <FaLeaf className="h-5 w-5 mr-2 text-accent" />
+          Conversations
+        </h2>
+      </div>
       
       <div className="overflow-y-auto flex-grow">
         {conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 p-6 text-center">
-            <p className="text-muted dark:text-gray-400">No conversations yet</p>
-            <p className="text-sm text-muted-foreground dark:text-gray-500 mt-3">
-              When you message sellers, your conversations will appear here
+            <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
+              <FaLeaf className="h-6 w-6 text-green-600 dark:text-green-400" />
+            </div>
+            <p className="text-gray-700 dark:text-gray-300 font-medium">No conversations yet</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-xs">
+              When you message sellers about sustainable items, your conversations will appear here
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-border dark:divide-gray-700">
+          <ul className="pt-2">
             {conversations.map((conversation) => {
               const isActive = activeConversationId === conversation.id;
               const otherPersonName = userId === conversation.buyerId 
@@ -48,37 +55,42 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                 <li
                   key={conversation.id}
                   className={cn(
-                    'cursor-pointer transition-colors',
-                    isActive 
-                      ? 'bg-background dark:bg-gray-700 border-l-4 border-primary dark:border-accent' 
-                      : 'hover:bg-background/50 dark:hover:bg-gray-700/50 border-l-4 border-transparent',
+                    'mx-2 mb-0.5 rounded-md cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors',
+                    isActive ? 'bg-gray-200 dark:bg-gray-700' : 'bg-transparent'
                   )}
                   onClick={() => onSelectConversation(conversation.id)}
                 >
-                  <div className="p-4 pl-5">
-                    <div className="flex justify-between items-baseline">
-                      <h3 className={cn(
-                        "font-medium",
-                        isActive 
-                          ? "text-primary dark:text-accent" 
-                          : "text-foreground dark:text-gray-100"
-                      )}>
-                        {otherPersonName}
-                      </h3>
-                      {timestamp && (
-                        <span className="text-xs text-muted dark:text-gray-400">
-                          {formatDistanceToNow(timestamp, { addSuffix: true })}
-                        </span>
-                      )}
+                  <div className="p-3 flex items-start">
+                    <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 flex-shrink-0">
+                      {otherPersonName.charAt(0).toUpperCase()}
                     </div>
-                    <p className="text-sm text-muted dark:text-gray-400 mt-1 line-clamp-1">
-                      {conversation.listingName}
-                    </p>
-                    {conversation.lastMessage && (
-                      <p className="text-sm text-muted-foreground dark:text-gray-300 mt-2 line-clamp-1">
-                        {conversation.lastMessage.text}
-                      </p>
-                    )}
+                    
+                    <div className="ml-3 flex-grow min-w-0">
+                      <div className="flex justify-between items-baseline">
+                        <h3 className={cn(
+                          "font-medium text-gray-900 dark:text-gray-100 truncate max-w-[120px]",
+                          isActive && "text-primary dark:text-accent"
+                        )}>
+                          {otherPersonName}
+                        </h3>
+                        {timestamp && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
+                            {formatDistanceToNow(timestamp, { addSuffix: false })}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-col mt-0.5">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]">
+                          {conversation.listingName}
+                        </p>
+                        {conversation.lastMessage && (
+                          <p className="text-sm text-gray-600 dark:text-gray-300 truncate max-w-[150px] mt-1">
+                            {conversation.lastMessage.text}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </li>
               );

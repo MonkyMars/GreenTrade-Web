@@ -3,133 +3,215 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MessageBubble } from './MessageBubble';
 import { ChatMessage, Conversation } from '@/lib/types/chat';
-import { FiSend } from 'react-icons/fi';
-import { cn } from '@/lib/functions/cn';
+import { FiSend, FiPaperclip, FiSmile } from 'react-icons/fi';
 
 interface ChatInterfaceProps {
-  conversation: Conversation | null;
-  messages: ChatMessage[];
-  onSendMessage: (text: string) => void;
-  userId: string;
-  isLoading?: boolean;
+	conversation: Conversation | null;
+	messages: ChatMessage[];
+	onSendMessage: (text: string) => void;
+	userId: string;
+	isLoading?: boolean;
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
-  conversation,
-  messages,
-  onSendMessage,
-  userId,
-  isLoading = false,
+	conversation,
+	messages,
+	onSendMessage,
+	userId,
+	isLoading = false,
 }) => {
-  const [newMessage, setNewMessage] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+	const [newMessage, setNewMessage] = useState('');
+	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newMessage.trim() && conversation) {
-      onSendMessage(newMessage.trim());
-      setNewMessage('');
-    }
-  };
+	const handleSendMessage = (e: React.FormEvent) => {
+		e.preventDefault();
+		if (newMessage.trim() && conversation) {
+			onSendMessage(newMessage.trim());
+			setNewMessage('');
+		}
+	};
 
-  useEffect(() => {
-    // Scroll to bottom when messages change
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+	// Group messages by sender for a more Discord-like appearance
+	const groupedMessages = React.useMemo(() => {
+		const groups: { senderName: string, senderId: string, messages: ChatMessage[], isOwn: boolean }[] = [];
 
-  useEffect(() => {
-    // Focus input when conversation changes
-    inputRef.current?.focus();
-  }, [conversation]);
+		messages.forEach((message, i) => {
+			const isOwn = message.senderId === userId;
+			const senderName = isOwn
+				? 'You'
+				: conversation?.buyerId === message.senderId
+					? conversation?.buyerName || 'User'
+					: conversation?.sellerName || 'User';
 
-  if (!conversation) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-6 text-center bg-background dark:bg-gray-900">
-        <h2 className="text-2xl font-semibold text-primary dark:text-accent">
-          Select a conversation
-        </h2>
-        <p className="text-muted dark:text-gray-400 mt-3 max-w-md">
-          Choose a conversation from the list to start messaging
-        </p>
-      </div>
-    );
-  }
+			// Check if this message should be grouped with the previous one
+			if (
+				i > 0 &&
+				messages[i - 1].senderId === message.senderId &&
+				// Messages within 10 minutes are grouped together
+				Math.abs(
+					new Date(message.timestamp).getTime() -
+					new Date(messages[i - 1].timestamp).getTime()
+				) < 10 * 60 * 1000
+			) {
+				// Add to the existing group
+				groups[groups.length - 1].messages.push(message);
+			} else {
+				// Create a new group
+				groups.push({
+					senderName,
+					senderId: message.senderId,
+					messages: [message],
+					isOwn
+				});
+			}
+		});
 
-  const otherPersonName = userId === conversation.buyerId 
-    ? conversation.sellerName 
-    : conversation.buyerName;
+		return groups;
+	}, [messages, userId, conversation]);
 
-  return (
-    <div className="flex flex-col h-full">
-      {/* Chat header */}
-      <div className="px-6 py-4 border-b border-border dark:border-gray-700 shrink-0 bg-card-bg dark:bg-gray-800">
-        <div className="flex items-center">
-          <div>
-            <h3 className="font-semibold text-xl text-primary dark:text-accent">
-              {otherPersonName}
-            </h3>
-            <p className="text-sm text-muted dark:text-gray-400">
-              {conversation.listingName}
-            </p>
-          </div>
-        </div>
-      </div>
+	useEffect(() => {
+		// Scroll to the bottom of the messages when new messages are added
+		if (messagesEndRef.current) {
+			messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+		}
+	}, [messages]);
 
-      {/* Messages */}
-      <div className="flex-grow overflow-y-auto p-6 space-y-4 bg-white dark:bg-gray-900">
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-pulse text-muted dark:text-gray-400">
-              Loading messages...
-            </div>
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-center">
-            <p className="text-muted dark:text-gray-400">No messages yet</p>
-            <p className="text-sm text-muted-foreground dark:text-gray-500 mt-2">
-              Send a message to start the conversation
-            </p>
-          </div>
-        ) : (
-          messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isOwn={message.senderId === userId}
-            />
-          ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+	useEffect(() => {
+		// Focus input when conversation changes
+		inputRef.current?.focus();
+	}, [conversation]);
 
-      {/* Message input */}
-      <form 
-        onSubmit={handleSendMessage}
-        className={cn(
-          "p-4 border-t border-border dark:border-gray-700 shrink-0",
-          "bg-card-bg dark:bg-gray-800"
-        )}
-      >
-        <div className="flex items-center gap-3">
-          <Input
-            ref={inputRef}
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-grow shadow-sm focus-visible:ring-primary/50"
-            disabled={isLoading}
-          />
-          <Button 
-            type="submit" 
-            disabled={!newMessage.trim() || isLoading}
-            className="bg-primary hover:bg-primary-hover text-white"
-          >
-            <FiSend className="h-4 w-4 mr-2" />
-            <span>Send</span>
-          </Button>
-        </div>
-      </form>
-    </div>
-  );
+	if (!conversation) {
+		return (
+			<div className="flex flex-col items-center justify-center h-full p-6 text-center bg-white dark:bg-gray-900">
+				<div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-6">
+					<FiSend className="h-8 w-8 text-green-600 dark:text-green-400" />
+				</div>
+				<h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+					Select a conversation
+				</h2>
+				<p className="text-gray-600 dark:text-gray-400 mt-3 max-w-md">
+					Choose a conversation from the list to start messaging about sustainable items
+				</p>
+			</div>
+		);
+	}
+
+	const otherPersonName = userId === conversation.buyerId
+		? conversation.sellerName
+		: conversation.buyerName;
+
+	return (
+		<div className="flex flex-col h-full">
+			{/* Chat header */}
+			<div className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 shrink-0 bg-white dark:bg-gray-900 shadow-sm z-10">
+				<div className="flex items-center">
+					<div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 flex-shrink-0 mr-3">
+						{otherPersonName.charAt(0).toUpperCase()}
+					</div>
+					<div>
+						<h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
+							{otherPersonName}
+						</h3>
+						<p className="text-sm text-gray-500 dark:text-gray-400">
+							{conversation.listingName}
+						</p>
+					</div>
+				</div>
+			</div>
+
+			{/* Messages */}
+			<div
+				ref={messagesEndRef}
+				className="flex-grow overflow-y-auto bg-white dark:bg-gray-900 pb-4"
+			>
+				{isLoading ? (
+					<div className="flex justify-center items-center h-full">
+						<div className="animate-pulse flex flex-col items-center">
+							<div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-3">
+								<FiSend className="h-5 w-5 text-green-600 dark:text-green-400" />
+							</div>
+							<p className="text-gray-500 dark:text-gray-400">Loading messages...</p>
+						</div>
+					</div>
+				) : messages.length === 0 ? (
+					<div className="flex flex-col items-center justify-center h-full text-center p-6">
+						<div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
+							<FiSend className="h-6 w-6 text-green-600 dark:text-green-400" />
+						</div>
+						<p className="text-gray-700 dark:text-gray-300 font-medium">No messages yet</p>
+						<p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-xs">
+							Start the conversation about sustainable trading
+						</p>
+					</div>
+				) : (
+					<div className="space-y-3 pt-4">
+						{groupedMessages.map((group, groupIndex) => (
+							<div key={`${group.senderId}-${groupIndex}`} className="message-group">
+								{group.messages.map((message, messageIndex) => (
+									<MessageBubble
+										key={message.id}
+										message={message}
+										isOwn={group.isOwn}
+										showSender={messageIndex === 0}
+										senderName={group.senderName}
+									/>
+								))}
+							</div>
+						))}
+						<div ref={messagesEndRef} /> {/* Empty div for scrolling to the end */}
+					</div>
+				)}
+			</div>
+
+			{/* Message input */}
+			<div className="px-4 pb-4 pt-2 border-t border-gray-200 dark:border-gray-700 shrink-0 bg-white dark:bg-gray-900">
+				<form
+					onSubmit={handleSendMessage}
+					className="relative"
+				>
+					<div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl pl-4 pr-2 py-2">
+						<button
+							type="button"
+							className="text-gray-500 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400 p-1"
+							aria-label="Add file"
+							disabled={isLoading}
+						>
+							<FiPaperclip className="h-5 w-5" />
+						</button>
+
+						<Input
+							ref={inputRef}
+							value={newMessage}
+							onChange={(e) => setNewMessage(e.target.value)}
+							placeholder="Type a message..."
+							className="flex-grow border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-3"
+							disabled={isLoading}
+						/>
+
+						<div className="flex items-center">
+							<button
+								type="button"
+								className="text-gray-500 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400 p-1 mr-1"
+								aria-label="Add emoji"
+								disabled={isLoading}
+							>
+								<FiSmile className="h-5 w-5" />
+							</button>
+
+							<Button
+								type="submit"
+								disabled={!newMessage.trim() || isLoading}
+								className="bg-accent hover:bg-accent-hover text-white rounded-xl h-9 w-9 p-0 flex items-center justify-center ml-1"
+								aria-label="Send message"
+							>
+								<FiSend className="h-4 w-4" />
+							</Button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	);
 };
