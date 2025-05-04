@@ -44,11 +44,15 @@ const AccountPage: NextPage = () => {
 		loading: authLoading,
 		isAuthenticated,
 	} = useAuth();
+	const [location, setLocation] = useState<{ city: string; country: string }>({
+		city: "",
+		country: "",
+	});
 	const [user, setUser] = useState<User>({
 		id: "",
 		name: "",
 		email: "",
-		location: "",
+		location: `${location.city}, ${location.country}`,
 		profileUrl: "",
 		updatedAt: "",
 		createdAt: "",
@@ -59,15 +63,45 @@ const AccountPage: NextPage = () => {
 	const [userListings, setUserListings] = useState<FetchedListing[]>([]);
 	const [userReviews, setUserReviews] = useState<FetchedReview[]>([]);
 
+	// Add this new useEffect at the beginning of the component after the state declarations
+	// This will ensure the city and country values are properly initialized on mount
+	useEffect(() => {
+		// This useEffect only runs once on component mount to ensure the user data is fully populated
+		if (authUser?.location) {
+			const [cityPart = "", countryPart = ""] = authUser.location.split(", ");
+
+			// Only update if we have actual values
+			if (cityPart || countryPart) {
+				console.log("Setting initial location from authUser:", { city: cityPart, country: countryPart });
+				setLocation({
+					city: cityPart,
+					country: countryPart
+				});
+			}
+		}
+		console.log(authUser?.location)
+	}, [authUser?.location]);  // Empty dependency array means this runs once on mount
+
 	useEffect(() => {
 		if (!authLoading) {
 			if (authUser) {
+				// Parse location from authUser if available
+				const cityFromAuth = authUser.location?.split(", ")[0] || "";
+				const countryFromAuth = authUser.location?.split(", ")[1] || "";
+
+				// Update location state
+				setLocation({
+					city: cityFromAuth,
+					country: countryFromAuth
+				});
+
 				// Update the user state with data from AuthContext
 				setUser({
+					...user,
 					id: authUser.id || "",
 					name: authUser.name || "",
 					email: authUser.email || "",
-					location: authUser.location || "",
+					location: authUser.location || `${cityFromAuth}, ${countryFromAuth}`,
 					profileUrl: authUser.profileUrl || "",
 					updatedAt: authUser.updatedAt || "",
 					createdAt: authUser.createdAt || "",
@@ -82,7 +116,18 @@ const AccountPage: NextPage = () => {
 				console.log("Not authenticated and no user data available");
 			}
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [authUser, authLoading, isAuthenticated]);
+
+	useEffect(() => {
+		// Update the user object whenever location state changes
+		if (location.city && location.country) {
+			setUser(prevUser => ({
+				...prevUser,
+				location: `${location.city}, ${location.country}`
+			}));
+		}
+	}, [location.city, location.country]);
 
 	const handleLogout = async () => {
 		logout(); // need to improve logout handling with a
@@ -137,24 +182,31 @@ const AccountPage: NextPage = () => {
 		}
 	}, [user]);
 
+	useEffect(() => {
+		console.log(user)
+	}, [user]);
+
 	const handleUdateUser = async (e: React.FormEvent) => {
 		e.preventDefault();
 		const formData = new FormData(e.target as HTMLFormElement);
 		const data = Object.fromEntries(formData.entries());
 
+		// Combine city and country to create a properly formatted location string
+		data.location = `${location.city}, ${location.country}`;
+
 		try {
-			const response = await api.patch(`/user/update`, {
-				method: "PUT",
-				credentials: "include",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(data),
-			});
+			const response = await api.patch(`/user/update`, data);
 
 			if (!response.data.success) {
 				throw new Error("Failed to update user data");
 			}
+
+			// Update local user state with the new data
+			setUser({
+				...user,
+				...data,
+				location: data.location
+			});
 
 			setUpdateSuccess("User data updated successfully!");
 		} catch (error) {
@@ -194,7 +246,7 @@ const AccountPage: NextPage = () => {
 								</p>
 
 								{userListings.length > 0 && (
-									<Badge className="mb-4 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+									<Badge className="mb-4 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-800">
 										<FaStore className="mr-1 h-3 w-3" />
 										Seller
 									</Badge>
@@ -340,25 +392,36 @@ const AccountPage: NextPage = () => {
 										<div className="block">
 											<div className="flex items-center justify-between">
 												<label
-													htmlFor="country"
-													className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-												>
-													Country
-												</label>
-												<label
 													htmlFor="city"
 													className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
 												>
 													City
 												</label>
-												<label></label>
+												<label
+													htmlFor="country"
+													className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+												>
+													Country
+												</label>
 											</div>
 											<div className="flex items-center justify-center gap-2">
-												<Select defaultValue={user?.location.split(", ")[1] || ""}>
-													<SelectTrigger className="w-full px-3 py-5 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-white">
+												<input
+													type="text"
+													id="city"
+													name="city"
+													value={location.city || ""}
+													onChange={(e) => setLocation({ ...location, city: e.target.value })}
+													placeholder="Enter your city"
+													className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-white"
+												/>
+												<Select
+													value={location.country || ""}
+													onValueChange={(value) => setLocation({ ...location, country: value })}
+												>
+													<SelectTrigger id="country" className="w-full px-3 py-5 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-white">
 														<SelectValue placeholder="Select country" />
 													</SelectTrigger>
-													<SelectContent>
+													<SelectContent className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border-none mt-3">
 														{countries.map((country, index) => (
 															<SelectItem
 																value={country.name}
@@ -369,22 +432,11 @@ const AccountPage: NextPage = () => {
 														))}
 													</SelectContent>
 												</Select>
-												{/* <input
-													type="text"
-													id="country"
-													name="location"
-													value={user?.location.split(", ")[1] || ""}
-													className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-white"
-												/> */}
-												<input
-													type="text"
-													id="city"
-													name="location"
-													value={user?.location.split(", ")[0] || ""}
-													className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-white"
-												/>
 											</div>
-
+											{/* Preview of the combined location */}
+											<p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+												Your location will be saved as: {location.city && location.country ? `${location.city}, ${location.country}` : "Not set yet"}
+											</p>
 										</div>
 
 										<div>
