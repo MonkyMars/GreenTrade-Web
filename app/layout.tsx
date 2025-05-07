@@ -26,7 +26,8 @@ export const metadata: Metadata = {
 	icons: {
 		icon: [
 			{ url: "/icon.png", sizes: "16x16" },
-			{ url: "/icon.png", sizes: "32x32" }
+			{ url: "/icon.png", sizes: "32x32" },
+			{ url: "/images/logo.png", sizes: "192x192" },
 		],
 		// apple: { url: "/apple-touch-icon.png" },
 		other: [
@@ -40,6 +41,9 @@ export const metadata: Metadata = {
 		url: "https://greenvue.eu",
 		siteName: "GreenVue",
 		locale: "en_US",
+		images: [
+			"/images/logo.png"
+		],
 		type: "website",
 	},
 	twitter: {
