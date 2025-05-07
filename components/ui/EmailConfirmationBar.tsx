@@ -32,6 +32,8 @@ export const EmailConfirmationBar: React.FC = () => {
 		} catch (error) {
 			console.error("Error resending email:", error);
 			toast.error("Failed to resend confirmation email. Please try again later.");
+		} finally {
+			handleClose();
 		}
 	};
 
