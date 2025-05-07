@@ -1,8 +1,8 @@
-# GreenTrade - Sustainable Marketplace
+# GreenVue - Sustainable Marketplace
 
-GreenTrade is an eco-friendly online marketplace platform designed for environmentally conscious buyers and sellers across the EU. The platform promotes sustainability by highlighting eco-friendly attributes of products and rewarding sustainable practices.
+GreenVue is an eco-friendly online marketplace platform designed for environmentally conscious buyers and sellers across the EU. The platform promotes sustainability by highlighting eco-friendly attributes of products and rewarding sustainable practices.
 
-![GreenTrade Logo](public/icon.png)
+![GreenVue Logo](public/icon.png)
 
 ## 🌱 Features
 
@@ -26,12 +26,13 @@ GreenTrade is an eco-friendly online marketplace platform designed for environme
 
 ## 🚀 Deployment
 
-This application is **not intended for self-hosting** by individual users. GreenTrade is a centralized platform operated by our team to ensure consistent quality, security, and user experience across the EU marketplace.
+This application is **not intended for self-hosting** by individual users. GreenVue is a centralized platform operated by our team to ensure consistent quality, security, and user experience across the EU marketplace.
 
-### Accessing GreenTrade
+### Accessing GreenVue
 
-The official GreenTrade marketplace is available at:
-- Website: https://greentradeeu.vercel.app
+The official GreenVue marketplace is available at:
+
+- Website: https://greenvueeu.vercel.app
 - Mobile apps: Available on iOS and Android app stores
 
 ## 🛡️ Security Considerations

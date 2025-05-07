@@ -1,9 +1,9 @@
 "use client";
 
-// This is a client-side page that allows authorized users to post a new listing to GreenTrade.
+// This is a client-side page that allows authorized users to post a new listing to GreenVue.
 // It includes a form for entering item details, uploading images, and selecting eco-friendly attributes.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { uploadImage } from "@/lib/backend/listings/uploadImage";
 import { uploadListing } from "@/lib/backend/listings/uploadListing";
@@ -31,298 +31,314 @@ import { type EcoAttributes } from "@/lib/functions/ecoAttributes";
 type CategoryName = Exclude<Categories["name"], "All Categories">;
 
 const listingSchema = z.object({
-  title: z
-    .string()
-    .min(5, { message: "Title must be at least 5 characters" })
-    .max(100, { message: "Title must be at most 100 characters" }),
-  description: z
-    .string()
-    .min(20, { message: "Description must be at least 20 characters" })
-    .max(1000, { message: "Description must be at most 1000 characters" }),
-  category: z
-    .custom<CategoryName>((val) => {
-      return categories.some(category => category.name === val && category.name !== "All Categories" && val !== "");
-    }, {
-      message: "Please select a valid category"
-    }),
-  condition: z
-    .custom<Condition["name"]>((val) => {
-      return conditions.some(condition => condition.name === val);
-    }, {
-      message: "Please select a valid condition"
-    }),
-  price: z
-    .string()
-    .refine((val) => val !== "", { message: "Price is required" })
-    .refine((val) => !isNaN(Number(val)), { message: "Price must be a number" })
-    .refine((val) => Number(val) > 0, {
-      message: "Price must be greater than 0",
-    }),
-  negotiable: z.boolean().default(false),
-  ecoAttributes: z.array(z.custom<EcoAttributes>()).default([])
+	title: z
+		.string()
+		.min(5, { message: "Title must be at least 5 characters" })
+		.max(100, { message: "Title must be at most 100 characters" }),
+	description: z
+		.string()
+		.min(20, { message: "Description must be at least 20 characters" })
+		.max(1000, { message: "Description must be at most 1000 characters" }),
+	category: z
+		.custom<CategoryName>((val) => {
+			return categories.some(category => category.name === val && category.name !== "All Categories" && val !== "");
+		}, {
+			message: "Please select a valid category"
+		}),
+	condition: z
+		.custom<Condition["name"]>((val) => {
+			return conditions.some(condition => condition.name === val);
+		}, {
+			message: "Please select a valid condition"
+		}),
+	price: z
+		.string()
+		.refine((val) => val !== "", { message: "Price is required" })
+		.refine((val) => !isNaN(Number(val)), { message: "Price must be a number" })
+		.refine((val) => Number(val) > 0, {
+			message: "Price must be greater than 0",
+		}),
+	negotiable: z.boolean().default(false),
+	ecoAttributes: z.array(z.custom<EcoAttributes>()).default([])
 });
 
 export type ListingFormType = z.infer<typeof listingSchema>;
 
 const PostListingPage: NextPage = () => {
-  const { user } = useAuth();
-  const [formData, setFormData] = useState<ListingFormType>({
-    title: "",
-    description: "",
-    category: "" as CategoryName,
-    condition: "" as Condition["name"],
-    price: "",
-    ecoAttributes: [],
-    negotiable: false,
-  });
-  const [images, setImages] = useState<
-    { uri: string; type?: string; name?: string }[]
-  >([]);
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [formErrors, setFormErrors] = useState<z.ZodIssue[]>([]);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [ecoScore, setEcoScore] = useState<number>(0);
+	const { user } = useAuth();
+	const [formData, setFormData] = useState<ListingFormType>({
+		title: "",
+		description: "",
+		category: "" as CategoryName,
+		condition: "" as Condition["name"],
+		price: "",
+		ecoAttributes: [],
+		negotiable: false,
+	});
+	const [images, setImages] = useState<
+		{ uri: string; type?: string; name?: string }[]
+	>([]);
+	const [imageFiles, setImageFiles] = useState<File[]>([]);
+	const [uploading, setUploading] = useState(false);
+	const [formErrors, setFormErrors] = useState<z.ZodIssue[]>([]);
+	const [successMessage, setSuccessMessage] = useState("");
+	const [errorMessage, setErrorMessage] = useState("");
+	const [ecoScore, setEcoScore] = useState<number>(0);
 
-  // Handle form input changes
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+	// Check if user has set their location for posting
+	useEffect(() => {
+		if (user && user.id) {
+			if (!user.location) {
+				setErrorMessage("Location required: Please update your profile with a location before posting.");
+				toast.error("Missing location information", {
+					duration: 5000,
+					icon: '📍',
+				});
+			} else if (errorMessage.includes("location")) {
+				// Clear location-related error when user has location
+				setErrorMessage("");
+			}
+		}
+	}, [user, errorMessage]);
 
-    // Clear errors for this field when edited
-    setFormErrors(formErrors.filter((error) => error.path[0] !== name));
-  };
+	// Handle form input changes
+	const handleChange = (
+		e: React.ChangeEvent<
+			HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+		>
+	) => {
+		const { name, value } = e.target;
+		setFormData({
+			...formData,
+			[name]: value,
+		});
 
-  // Form validation
-  const validateForm = () => {
-    const result = listingSchema.safeParse(formData);
-    if (!result.success) {
-      setFormErrors(result.error.issues);
-      return false;
-    }
-    return true;
-  };
+		// Clear errors for this field when edited
+		setFormErrors(formErrors.filter((error) => error.path[0] !== name));
+	};
 
-  const resetForm = () => {
-    setFormData({
-      title: "",
-      description: "",
-      category: "" as CategoryName,
-      condition: "" as Condition["name"],
-      price: "",
-      ecoAttributes: [],
-      negotiable: false,
-    });
-    setImages([]);
-    setImageFiles([]);
-    setEcoScore(0);
-  };
+	// Form validation
+	const validateForm = () => {
+		const result = listingSchema.safeParse(formData);
+		if (!result.success) {
+			setFormErrors(result.error.issues);
+			return false;
+		}
+		return true;
+	};
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+	const resetForm = () => {
+		setFormData({
+			title: "",
+			description: "",
+			category: "" as CategoryName,
+			condition: "" as Condition["name"],
+			price: "",
+			ecoAttributes: [],
+			negotiable: false,
+		});
+		setImages([]);
+		setImageFiles([]);
+		setEcoScore(0);
+	};
 
-    // Clear messages
-    setFormErrors([]);
-    setSuccessMessage("");
-    setErrorMessage("");
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
 
-    const isValid = validateForm();
-    if (!isValid) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
+		// Clear messages
+		setFormErrors([]);
+		setSuccessMessage("");
+		setErrorMessage("");
 
-    // Show loading toast
-    const loadingToast = toast.loading("Creating your listing...");
+		const isValid = validateForm();
+		if (!isValid) {
+			window.scrollTo({ top: 0, behavior: "smooth" });
+			return;
+		}
 
-    try {
-      // Check if user is available
-      if (!user || !user.id) {
-        throw new AppError("You must be logged in to post a listing", {
-          code: "AUTH_REQUIRED",
-          status: 401,
-          context: "Post Listing",
-        });
-      }
+		// Show loading toast
+		const loadingToast = toast.loading("Creating your listing...");
 
-      // Use retryOperation for image upload with proper error handling
-      const imageUrls = await retryOperation(
-        () => uploadImage(images, formData.title),
-        {
-          context: "Image Upload",
-          maxRetries: 2,
-          showToastOnRetry: true,
-        }
-      );
+		try {
+			// Check if user is available
+			if (!user || !user.id) {
+				throw new AppError("You must be logged in to post a listing", {
+					code: "AUTH_REQUIRED",
+					status: 401,
+					context: "Post Listing",
+				});
+			}
 
-      if (!imageUrls) {
-        throw new AppError("Failed to upload images", {
-          code: "IMAGE_UPLOAD_FAILED",
-          context: "Post Listing",
-        });
-      }
+			// Use retryOperation for image upload with proper error handling
+			const imageUrls = await retryOperation(
+				() => uploadImage(images, formData.title),
+				{
+					context: "Image Upload",
+					maxRetries: 2,
+					showToastOnRetry: true,
+				}
+			);
 
-      const listing: UploadListing = {
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        condition: formData.condition as Condition["name"],
-        price: parseFloat(formData.price),
-        negotiable: formData.negotiable,
-        ecoAttributes: formData.ecoAttributes,
-        ecoScore: calculateEcoScore(formData.ecoAttributes),
-        imageUrl: imageUrls.urls,
-        sellerId: user.id,
-      };
+			if (!imageUrls) {
+				throw new AppError("Failed to upload images", {
+					code: "IMAGE_UPLOAD_FAILED",
+					context: "Post Listing",
+				});
+			}
 
-      // Use retryOperation for listing upload with proper error handling
-      const uploadResponse = await retryOperation(
-        () => uploadListing(listing),
-        {
-          context: "Upload Listing",
-          maxRetries: 1,
-          showToastOnRetry: true,
-        }
-      );
+			const listing: UploadListing = {
+				title: formData.title,
+				description: formData.description,
+				category: formData.category,
+				condition: formData.condition as Condition["name"],
+				price: parseFloat(formData.price),
+				negotiable: formData.negotiable,
+				ecoAttributes: formData.ecoAttributes,
+				ecoScore: calculateEcoScore(formData.ecoAttributes),
+				imageUrl: imageUrls.urls,
+				sellerId: user.id,
+			};
 
-      if (!uploadResponse) {
-        throw new AppError("Failed to post listing", {
-          code: "LISTING_UPLOAD_FAILED",
-          context: "Post Listing",
-        });
-      }
+			// Use retryOperation for listing upload with proper error handling
+			const uploadResponse = await retryOperation(
+				() => uploadListing(listing),
+				{
+					context: "Upload Listing",
+					maxRetries: 1,
+					showToastOnRetry: true,
+				}
+			);
 
-      // Dismiss loading toast and show success
-      toast.dismiss(loadingToast);
-      toast.success("Listing posted successfully!");
-      setSuccessMessage("Listing posted successfully!");
+			if (!uploadResponse) {
+				throw new AppError("Failed to post listing", {
+					code: "LISTING_UPLOAD_FAILED",
+					context: "Post Listing",
+				});
+			}
 
-      // Reset form data on success
-      resetForm();
-    } catch (error) {
-      // Dismiss loading toast
-      toast.dismiss(loadingToast);
+			// Dismiss loading toast and show success
+			toast.dismiss(loadingToast);
+			toast.success("Listing posted successfully!");
+			setSuccessMessage("Listing posted successfully!");
 
-      // Convert to AppError if not already
-      const appError =
-        error instanceof AppError
-          ? error
-          : AppError.from(error, "Post Listing");
+			// Reset form data on success
+			resetForm();
+		} catch (error) {
+			// Dismiss loading toast
+			toast.dismiss(loadingToast);
 
-      // Log in development, use proper error tracking in production
-      if (process.env.NODE_ENV !== "production") {
-        console.error("Post listing error:", appError);
-      } else {
-        // In production, this would use a service like Sentry
-        // Example: Sentry.captureException(appError);
-      }
+			// Convert to AppError if not already
+			const appError =
+				error instanceof AppError
+					? error
+					: AppError.from(error, "Post Listing");
 
-      // Set appropriate user-friendly error message based on error code/type
-      if (appError.code === "AUTH_REQUIRED" || appError.status === 401) {
-        setErrorMessage(
-          "Authentication required. Please ensure you are logged in."
-        );
-        toast.error("Authentication required");
-      } else if (appError.code === "IMAGE_UPLOAD_FAILED") {
-        setErrorMessage(
-          "Failed to upload images. Please try again with different images or check your connection."
-        );
-        toast.error("Image upload failed");
-      } else if (appError.code === "LISTING_UPLOAD_FAILED") {
-        setErrorMessage("Failed to post your listing. Please try again.");
-        toast.error("Listing upload failed");
-      } else if (
-        appError.validationErrors &&
-        Object.keys(appError.validationErrors).length > 0
-      ) {
-        const validationMessages = Object.values(appError.validationErrors)
-          .flat()
-          .join(", ");
-        setErrorMessage(`Validation error: ${validationMessages}`);
-        toast.error("Please check your listing information");
-      } else if (appError.message) {
-        setErrorMessage(`Failed to post listing: ${appError.message}`);
-        toast.error(appError.message);
-      } else {
-        setErrorMessage(
-          "An unexpected error occurred. Please try again later."
-        );
-        toast.error("Something went wrong");
-      }
-    } finally {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
+			// Log in development, use proper error tracking in production
+			if (process.env.NODE_ENV !== "production") {
+				console.error("Post listing error:", appError);
+			} else {
+				// In production, this would use a service like Sentry
+				// Example: Sentry.captureException(appError);
+			}
 
-  return (
-    <ProtectedRoute>
-      <main className="pt-16 pb-16 bg-gray-50 dark:bg-gray-900 min-h-screen">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="my-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Post a New Listing
-            </h1>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">
-              Share your sustainable item with the community
-            </p>
-          </div>
+			// Set appropriate user-friendly error message based on error code/type
+			if (appError.code === "AUTH_REQUIRED" || appError.status === 401) {
+				setErrorMessage(
+					"Authentication required. Please ensure you are logged in."
+				);
+				toast.error("Authentication required");
+			} else if (appError.code === "IMAGE_UPLOAD_FAILED") {
+				setErrorMessage(
+					"Failed to upload images. Please try again with different images or check your connection."
+				);
+				toast.error("Image upload failed");
+			} else if (appError.code === "LISTING_UPLOAD_FAILED") {
+				setErrorMessage("Failed to post your listing. Please try again.");
+				toast.error("Listing upload failed");
+			} else if (
+				appError.validationErrors &&
+				Object.keys(appError.validationErrors).length > 0
+			) {
+				const validationMessages = Object.values(appError.validationErrors)
+					.flat()
+					.join(", ");
+				setErrorMessage(`Validation error: ${validationMessages}`);
+				toast.error("Please check your listing information");
+			} else if (appError.message) {
+				setErrorMessage(`Failed to post listing: ${appError.message}`);
+				toast.error(appError.message);
+			} else {
+				setErrorMessage(
+					"An unexpected error occurred. Please try again later."
+				);
+				toast.error("Something went wrong");
+			}
+		} finally {
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		}
+	};
 
-          <FormSuccessMessage successMessage={successMessage} />
-          <FormErrorDisplay formErrors={formErrors} errorMessage={errorMessage} />
+	return (
+		<ProtectedRoute>
+			<main className="pt-16 pb-16 bg-gray-50 dark:bg-gray-900 min-h-screen">
+				<div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+					<div className="my-8">
+						<h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+							Post a New Listing
+						</h1>
+						<p className="mt-2 text-gray-600 dark:text-gray-400">
+							Share your sustainable item with the community
+						</p>
+					</div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Item Details */}
-            <ItemDetailsForm
-              formData={formData}
-              handleChange={handleChange}
-              setFormData={setFormData}
-              formErrors={formErrors}
-            />
+					<FormSuccessMessage successMessage={successMessage} />
+					<FormErrorDisplay formErrors={formErrors} errorMessage={errorMessage} />
 
-            {/* Price & Location */}
-            <PriceLocationForm
-              formData={formData}
-              handleChange={handleChange}
-              setFormData={setFormData}
-              formErrors={formErrors}
-              user={user}
-            />
+					<form onSubmit={handleSubmit} className="space-y-8">
+						{/* Item Details */}
+						<ItemDetailsForm
+							formData={formData}
+							handleChange={handleChange}
+							setFormData={setFormData}
+							formErrors={formErrors}
+						/>
 
-            {/* Images */}
-            <ImageUploadForm
-              images={images}
-              setImages={setImages}
-              imageFiles={imageFiles}
-              setImageFiles={setImageFiles}
-              uploading={uploading}
-              setUploading={setUploading}
-              formErrors={formErrors}
-            />
+						{/* Price & Location */}
+						<PriceLocationForm
+							formData={formData}
+							handleChange={handleChange}
+							setFormData={setFormData}
+							formErrors={formErrors}
+							user={user}
+						/>
 
-            {/* Eco-friendly Attributes */}
-            <EcoAttributesForm
-              formData={formData}
-              setFormData={setFormData}
-              ecoScore={ecoScore}
-              setEcoScore={setEcoScore}
-              formErrors={formErrors}
-            />
+						{/* Images */}
+						<ImageUploadForm
+							images={images}
+							setImages={setImages}
+							imageFiles={imageFiles}
+							setImageFiles={setImageFiles}
+							uploading={uploading}
+							setUploading={setUploading}
+							formErrors={formErrors}
+						/>
 
-            {/* Terms and Submit */}
-            <TermsAndSubmitForm onSubmit={handleSubmit} />
-          </form>
-        </div>
-      </main>
-    </ProtectedRoute>
-  );
+						{/* Eco-friendly Attributes */}
+						<EcoAttributesForm
+							formData={formData}
+							setFormData={setFormData}
+							ecoScore={ecoScore}
+							setEcoScore={setEcoScore}
+							formErrors={formErrors}
+						/>
+
+						{/* Terms and Submit */}
+						<TermsAndSubmitForm onSubmit={handleSubmit} />
+					</form>
+				</div>
+			</main>
+		</ProtectedRoute>
+	);
 };
 
 export default PostListingPage;

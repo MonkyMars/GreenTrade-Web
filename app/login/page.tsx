@@ -127,7 +127,7 @@ const Login: NextPage = () => {
 					<Link href="/" className="inline-block">
 						<div className="flex items-center justify-center">
 							<FaLeaf className="h-12 w-12 text-green-600" />
-							<h1 className="ml-2 text-3xl font-bold text-green-600">GreenTrade</h1>
+							<h1 className="ml-2 text-3xl font-bold text-green-600">GreenVue</h1>
 						</div>
 					</Link>
 					<h2 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">Sign in to your account</h2>

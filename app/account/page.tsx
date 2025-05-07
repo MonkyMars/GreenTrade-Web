@@ -54,8 +54,8 @@ const AccountPage: NextPage = () => {
 		email: "",
 		location: `${location.city}, ${location.country}`,
 		profileUrl: "",
-		updatedAt: "",
 		createdAt: "",
+		lastSignInAt: "",
 	});
 	const [activeTab, setActiveTab] = useState<ActiveTab["activeTab"]>("profile");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -72,7 +72,6 @@ const AccountPage: NextPage = () => {
 
 			// Only update if we have actual values
 			if (cityPart || countryPart) {
-				console.log("Setting initial location from authUser:", { city: cityPart, country: countryPart });
 				setLocation({
 					city: cityPart,
 					country: countryPart
@@ -103,7 +102,6 @@ const AccountPage: NextPage = () => {
 					email: authUser.email || "",
 					location: authUser.location || `${cityFromAuth}, ${countryFromAuth}`,
 					profileUrl: authUser.profileUrl || "",
-					updatedAt: authUser.updatedAt || "",
 					createdAt: authUser.createdAt || "",
 				});
 			} else if (isAuthenticated) {
@@ -182,10 +180,6 @@ const AccountPage: NextPage = () => {
 		}
 	}, [user]);
 
-	useEffect(() => {
-		console.log(user)
-	}, [user]);
-
 	const handleUdateUser = async (e: React.FormEvent) => {
 		e.preventDefault();
 		const formData = new FormData(e.target as HTMLFormElement);
@@ -255,7 +249,7 @@ const AccountPage: NextPage = () => {
 								<div className="w-full mt-2">
 									<Button
 										variant="outline"
-										className="w-full mb-2 relative justify-between"
+										className={`w-full mb-2 relative justify-between ${activeTab === "profile" ? "bg-green-400 border-none text-gray-800 dark:bg-green-800 dark:text-white hover:bg-green-500 hover:dark:bg-green-900" : ""}`}
 										onClick={() => setActiveTab("profile")}
 									>
 										<FaUser className="mr-2 left-2 relative h-4 w-4" />
@@ -264,7 +258,7 @@ const AccountPage: NextPage = () => {
 									</Button>
 									<Button
 										variant="outline"
-										className="w-full mb-2 relative justify-between"
+										className={`w-full mb-2 relative justify-between ${activeTab === "security" ? "bg-green-400 border-none text-gray-800 dark:bg-green-800 dark:text-white hover:bg-green-500 hover:dark:bg-green-900" : ""}`}
 										onClick={() => setActiveTab("security")}
 									>
 										<FaShieldAlt className="mr-2 left-2 relative h-4 w-4" />
@@ -273,7 +267,7 @@ const AccountPage: NextPage = () => {
 									</Button>
 									<Button
 										variant="outline"
-										className="w-full mb-2 relative justify-between"
+										className={`w-full mb-2 relative justify-between ${activeTab === "delete" ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-none hover:bg-red-200 dark:hover:bg-red-800/70" : ""}`}
 										onClick={() => setActiveTab("delete")}
 									>
 										<FaTrash className="mr-2 left-2 relative h-4 w-4 text-red-500" />

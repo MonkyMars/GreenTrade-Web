@@ -4,6 +4,7 @@ import "./globals.css";
 import Navigation from "../components/ui/Navigation";
 import { FooterWrapper } from "../components/ui/FooterWrapper";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
+import { EmailConfirmationBar } from "@/components/ui/EmailConfirmationBar";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -16,12 +17,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "GreenTrade - Sustainable Trading Solutions",
-	description: "GreenTrade offers eco-friendly trading solutions focused on sustainability and environmental responsibility.",
+	title: "GreenVue - Sustainable Trading Solutions",
+	description: "GreenVue offers eco-friendly trading solutions focused on sustainability and environmental responsibility.",
 	keywords: ["green trading", "sustainable finance", "eco-friendly investments", "environmental markets"],
-	authors: [{ name: "GreenTrade Team" }],
-	creator: "GreenTrade",
-	publisher: "GreenTrade EU",
+	authors: [{ name: "GreenVue Team" }],
+	creator: "GreenVue",
+	publisher: "GreenVue EU",
 	icons: {
 		icon: [
 			{ url: "/icon.png", sizes: "16x16" },
@@ -34,16 +35,16 @@ export const metadata: Metadata = {
 		],
 	},
 	openGraph: {
-		title: "GreenTrade - Sustainable Trading Solutions",
+		title: "GreenVue - Sustainable Trading Solutions",
 		description: "Eco-friendly trading platform for environmentally conscious investors",
-		url: "https://greentrade.eu",
-		siteName: "GreenTrade",
+		url: "https://greenvue.eu",
+		siteName: "GreenVue",
 		locale: "en_US",
 		type: "website",
 	},
 	twitter: {
 		card: "summary_large_image",
-		title: "GreenTrade - Sustainable Trading Solutions",
+		title: "GreenVue - Sustainable Trading Solutions",
 		description: "Eco-friendly trading platform for environmentally conscious investors",
 	},
 	robots: "index, follow",
@@ -69,10 +70,11 @@ export default function RootLayout({
 			>
 				<AuthProvider>
 					<Navigation />
+					<EmailConfirmationBar />
 					{children}
 					<FooterWrapper />
 				</AuthProvider>
 			</body>
-		</html>
+		</html >
 	);
 }
