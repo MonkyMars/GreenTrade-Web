@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { NextPage } from "next";
 import { Button } from "@/components/ui/button";
 import { encodeQueryParam } from "@/lib/functions/url";
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 
 const Home: NextPage = () => {
 	const [featuredListings, setFeaturedListings] = useState<FetchedListing[]>(
@@ -28,13 +29,22 @@ const Home: NextPage = () => {
 	const [searchQuery, setSearchQuery] = useState<string>("");
 	const router = useRouter();
 
+	const useListings = () => {
+		return useQuery<FetchedListing[]>({
+			queryKey: ['listings'],
+			queryFn: () => getListings("", 4) as Promise<FetchedListing[]>,
+			staleTime: 1000 * 60 * 5, // 5 mins
+		});
+	};
+
+	// In your component
+	const { data: listingsData, isLoading } = useListings();
+
 	useEffect(() => {
-		const fetchFeaturedListings = async () => {
-			const data = (await getListings()) as FetchedListing[];
-			setFeaturedListings(data.slice(0, 4));
-		};
-		fetchFeaturedListings();
-	}, []);
+		if (!isLoading && listingsData) {
+			setFeaturedListings(listingsData);
+		}
+	}, [isLoading, listingsData]);
 
 	const handleNavigate = () => {
 		console.log(selectedCategory)
@@ -450,4 +460,14 @@ const Home: NextPage = () => {
 	);
 }
 
-export default Home;
+const HomePage = () => {
+	const [queryClient] = useState(() => new QueryClient());
+
+	return (
+		<QueryClientProvider client={queryClient}>
+			<Home />
+		</QueryClientProvider>
+	)
+}
+
+export default HomePage;
