@@ -2,8 +2,6 @@
 
 GreenVue is an eco-friendly online marketplace platform designed for environmentally conscious buyers and sellers across the EU. The platform promotes sustainability by highlighting eco-friendly attributes of products and rewarding sustainable practices.
 
-![GreenVue Logo](public/icon.png)
-
 ## 🌱 Features
 
 - **Eco-Score System**: Products receive scores based on sustainability factors
