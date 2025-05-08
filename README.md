@@ -30,7 +30,7 @@ This application is **not intended for self-hosting** by individual users. Green
 
 The official GreenVue marketplace is available at:
 
-- Website: https://greenvueeu.vercel.app
+- Website: https://greenvue.eu
 - Mobile apps: Available on iOS and Android app stores
 
 ## 🛡️ Security Considerations
