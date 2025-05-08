@@ -128,8 +128,6 @@ const BrowserComponent: NextPage = () => {
 		if (filters.sortBy && filters.sortBy !== "newest")
 			params.append("sortBy", filters.sortBy);
 
-		// Use replace instead of push to avoid polluting browser history on filter changes
-		console.log(params)
 		router.replace(`/browse?${params.toString()}`, { scroll: false });
 	};
 

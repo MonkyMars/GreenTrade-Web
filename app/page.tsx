@@ -17,6 +17,7 @@ import {
 import { useRouter } from "next/navigation";
 import { NextPage } from "next";
 import { Button } from "@/components/ui/button";
+import { encodeQueryParam } from "@/lib/functions/url";
 
 const Home: NextPage = () => {
 	const [featuredListings, setFeaturedListings] = useState<FetchedListing[]>(
@@ -34,10 +35,6 @@ const Home: NextPage = () => {
 		};
 		fetchFeaturedListings();
 	}, []);
-
-	const encodeQueryParam = (value: string) => {
-		return encodeURIComponent(value).replace(/%20/g, '+');
-	}
 
 	const handleNavigate = () => {
 		console.log(selectedCategory)
