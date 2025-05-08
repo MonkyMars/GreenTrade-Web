@@ -145,6 +145,14 @@ const Footer: React.FC = () => {
 										About Us
 									</Link>
 								</li>
+								<li>
+									<Link
+										href="https://github.com/MonkyMars/GreenVue-Web"
+										className="text-base text-gray-600 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400"
+									>
+										Source Code
+									</Link>
+								</li>
 							</ul>
 						</div>
 					</div>
