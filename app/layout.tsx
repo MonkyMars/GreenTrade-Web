@@ -5,6 +5,7 @@ import Navigation from "../components/ui/Navigation";
 import { FooterWrapper } from "../components/ui/FooterWrapper";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
 import { EmailConfirmationBar } from "@/components/ui/EmailConfirmationBar";
+import { Analytics } from "@vercel/analytics/react";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -71,6 +72,7 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
+				<Analytics />
 				<AuthProvider>
 					<Navigation />
 					<EmailConfirmationBar />
