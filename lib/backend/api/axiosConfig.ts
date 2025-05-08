@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-export const BASE_URL = 'https://greenvueeu.up.railway.app';
-// https://greenvueeu.up.railway.app
+export const BASE_URL = 'https://greenvue.up.railway.app';
+// https://greenvue.up.railway.app
 // http://192.168.178.10:8080
 // http://192.168.2.26:8080
 
