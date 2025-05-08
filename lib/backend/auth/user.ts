@@ -25,7 +25,12 @@ export const getUser = async (uuid: string): Promise<User> => {
 		}
 
 		const user = response.data.data.user;
-		return user;
+		const mappedUser: User = {
+			...user,
+			lastSignInAt: response.data.data.user.last_sign_in_at,
+			createdAt: response.data.data.user.created_at,
+		};
+		return mappedUser;
 	} catch (error) {
 		// Convert to AppError if not already
 		const appError =
