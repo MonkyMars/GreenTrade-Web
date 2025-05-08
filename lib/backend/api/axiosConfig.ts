@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-export const BASE_URL = 'https://greenvue.up.railway.app';
-// https://greenvue.up.railway.app
-// http://192.168.178.10:8080
-// http://192.168.2.26:8080
+export const BASE_URL =
+	process.env.NODE_ENV === 'production'
+		? 'https://greenvue.up.railway.app'
+		: 'http://192.168.178.10:8080';
 
 const api = axios.create({
 	baseURL: BASE_URL,
