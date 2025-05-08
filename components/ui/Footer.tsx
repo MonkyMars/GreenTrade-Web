@@ -6,9 +6,9 @@ import { categories } from "@/lib/functions/categories";
 
 const Footer: React.FC = () => {
 	return (
-		<footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+		<footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 min-h-[400px]">
 			{/* Newsletter section */}
-			<div className="bg-green-50 dark:bg-gray-800">
+			<div className="bg-green-50 dark:bg-gray-800 min-h-[150px]">
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 					<div className="lg:flex lg:items-center lg:justify-between">
 						<div className="lg:w-0 lg:flex-1">
@@ -49,7 +49,7 @@ const Footer: React.FC = () => {
 			</div>
 
 			{/* Main footer */}
-			<div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:py-16 lg:px-8">
+			<div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:py-16 lg:px-8 min-h-[250px]">
 				<div className="xl:grid xl:grid-cols-4 xl:gap-8">
 					{/* Logo and about */}
 					<div className="space-y-8 xl:col-span-1">

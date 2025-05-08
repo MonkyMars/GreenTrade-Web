@@ -91,8 +91,8 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
 	return (
 		<header
 			className={`fixed w-full z-99 transition-all duration-300 ${scrolled || !transparent
-					? "bg-white dark:bg-gray-900 shadow-md"
-					: "bg-transparent"
+				? "bg-white dark:bg-gray-900 shadow-md"
+				: "bg-transparent"
 				}`}
 		>
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -108,7 +108,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
 					</div>
 
 					{/* Desktop Navigation */}
-					<nav className="hidden md:flex items-center space-x-8">
+					<nav className="hidden md:flex items-center space-x-8 h-16">
 						<div className="relative group">
 							<button className="flex items-center text-gray-700 dark:text-gray-200 hover:text-green-500 dark:hover:text-green-400">
 								Categories
