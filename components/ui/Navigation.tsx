@@ -89,6 +89,23 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
 		}
 	};
 
+	const HandleAccountButton = () => {
+		// If user is authenticated, show account button.
+		// Else return null to prevent double user icon.
+		if (isAuthenticated) {
+			return (
+				<Link
+					href="/account"
+					className="text-gray-700 dark:text-gray-200 hover:text-green-500"
+				>
+					<FiUser className="w-5 h-5" />
+				</Link>
+			);
+		} else {
+			return null;
+		}
+	}
+
 	return (
 		<header
 			className={`fixed w-full z-99 transition-all duration-300 ${scrolled || !transparent
@@ -166,12 +183,7 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
 								<FiMessageSquare className="w-5 h-5" />
 							</Link>
 
-							<Link
-								href="/account"
-								className="text-gray-700 dark:text-gray-200 hover:text-green-500"
-							>
-								<FiUser className="w-5 h-5" />
-							</Link>
+							<HandleAccountButton />
 
 							<HandlePostButtonDesktop />
 						</div>
