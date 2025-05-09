@@ -43,7 +43,7 @@ const BrowserComponent: NextPage = () => {
 	const useListings = () => {
 		return useQuery<FetchedListing[]>({
 			queryKey: ['listings'],
-			queryFn: () => getListings() as Promise<FetchedListing[]>,
+			queryFn: () => getListings("", 50) as Promise<FetchedListing[]>,
 			staleTime: 1000 * 60 * 5, // 5 mins
 		});
 	};
