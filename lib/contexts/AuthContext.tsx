@@ -15,7 +15,6 @@ import { getUser } from "@/lib/backend/auth/user";
 import { toast } from "react-hot-toast";
 import { AppError, handleError, retryOperation } from "@/lib/errorUtils";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/router";
 
 interface AuthContextType {
 	user: User | null;
@@ -39,7 +38,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Create a separate component for handling OAuth redirect
 const OAuthRedirectHandler: React.FC<{ onUserLoad: (user: User) => void }> = ({ onUserLoad }) => {
 	const searchParams = useSearchParams();
-	const router = useRouter();
 	useEffect(() => {
 		const handleOAuthRedirect = async () => {
 			// Check if the user is redirected from a login or registration page
@@ -72,9 +70,6 @@ const OAuthRedirectHandler: React.FC<{ onUserLoad: (user: User) => void }> = ({ 
 				// Show success message
 				toast.success("Login successful!");
 
-				// Redirect to account page
-				router.push("/account");
-
 			} catch (error) {
 				localStorage.removeItem("userId");
 
@@ -102,9 +97,6 @@ const OAuthRedirectHandler: React.FC<{ onUserLoad: (user: User) => void }> = ({ 
 				// Log in development, use proper error tracking in production
 				if (process.env.NODE_ENV !== 'production') {
 					console.error("Login failed:", error);
-				} else {
-					// In production, this would use a service like Sentry
-					// Example: Sentry.captureException(error);
 				}
 
 				// Display error to user via toast
@@ -117,11 +109,12 @@ const OAuthRedirectHandler: React.FC<{ onUserLoad: (user: User) => void }> = ({ 
 				url.searchParams.delete("user_id");
 				url.searchParams.delete("expires_in");
 				window.history.replaceState({}, document.title, url.toString());
+				window.location.href = '/account';
 			}
 		};
 
 		handleOAuthRedirect();
-	}, [searchParams, onUserLoad, router]);
+	}, [searchParams, onUserLoad]);
 
 	return null;
 };
