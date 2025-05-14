@@ -3,14 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FaLeaf, FaUser, FaEnvelope, FaLock, FaGoogle } from "react-icons/fa";
+import { FaLeaf, FaUser, FaEnvelope, FaLock } from "react-icons/fa";
 import { z } from "zod";
 import { Button } from "../../components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { NextPage } from "next";
-import { BASE_URL } from "@/lib/backend/api/axiosConfig";
-import { AppError } from "@/lib/errorUtils";
+// import { BASE_URL } from "@/lib/backend/api/axiosConfig";
+// import { AppError } from "@/lib/errorUtils";
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import api from "@/lib/backend/api/axiosConfig";
 
 const registerSchema = z.object({
 	name: z.string().min(2, "Name must be at least 2 characters"),
@@ -136,270 +138,287 @@ const RegisterPage: NextPage = () => {
 		}
 	};
 
-	const handleSocialLogin = async (provider: string) => {
-		setRegisterError("");
-		try {
-			setIsLoading(true);
-			router.push(`${BASE_URL}/auth/login/${provider}`);
-			// The actual social login logic would be handled in the backend
-		} catch (error) {
-			// Handle social login error
-			const appError = error instanceof AppError
-				? error
-				: AppError.from(error, 'SocialLogin');
+	// const handleSocialLogin = async (provider: string) => {
+	// 	setRegisterError("");
+	// 	try {
+	// 		setIsLoading(true);
+	// 		router.push(`${BASE_URL}/auth/login/${provider}`);
+	// 		// The actual social login logic would be handled in the backend
+	// 	} catch (error) {
+	// 		// Handle social login error
+	// 		const appError = error instanceof AppError
+	// 			? error
+	// 			: AppError.from(error, 'SocialLogin');
 
-			if (process.env.NODE_ENV !== 'production') {
-				console.error("Social login error:", appError);
-			} else {
-				// In production, this would use a service like Sentry
-				// Example: Sentry.captureException(appError);
-			}
+	// 		if (process.env.NODE_ENV !== 'production') {
+	// 			console.error("Social login error:", appError);
+	// 		} else {
+	// 			// In production, this would use a service like Sentry
+	// 			// Example: Sentry.captureException(appError);
+	// 		}
 
-			setRegisterError("An error occurred during social login. Please try again.");
-		} finally {
-			setIsLoading(false);
-		}
-	};
+	// 		setRegisterError("An error occurred during social login. Please try again.");
+	// 	} finally {
+	// 		setIsLoading(false);
+	// 	}
+	// };
 
 	return (
-		<div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4 py-22 sm:px-6 lg:px-8">
-			<div className="max-w-md w-full space-y-8 dark:bg-slate-800 p-8 rounded-xl shadow-xl">
-				<div className="text-center">
-					<Link href="/" className="inline-block">
-						<div className="flex items-center justify-center">
-							<FaLeaf className="h-12 w-12 text-green-600" />
-							<h1 className="ml-2 text-3xl font-bold text-green-600">GreenVue</h1>
-						</div>
-					</Link>
-					<h2 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">Create your account</h2>
-					<p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-						Already have an account?{" "}
-						<Link
-							href="/login"
-							prefetch={false}
-							className="font-medium text-green-600 hover:text-green-500 dark:text-green-400 dark:hover:text-green-300"
-						>
-							Sign in
+		<GoogleOAuthProvider clientId="235849009633-efomk49fqdtlt8am0aufci14qoq38brg.apps.googleusercontent.com">
+			<div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4 py-22 sm:px-6 lg:px-8">
+				<div className="max-w-md w-full space-y-8 dark:bg-slate-800 p-8 rounded-xl shadow-xl">
+					<div className="text-center">
+						<Link href="/" className="inline-block">
+							<div className="flex items-center justify-center">
+								<FaLeaf className="h-12 w-12 text-green-600" />
+								<h1 className="ml-2 text-3xl font-bold text-green-600">GreenVue</h1>
+							</div>
 						</Link>
-					</p>
-				</div>
-
-				{registerError && (
-					<div className="bg-red-100 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded relative" role="alert">
-						<span className="block sm:inline">{registerError}</span>
+						<h2 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">Create your account</h2>
+						<p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+							Already have an account?{" "}
+							<Link
+								href="/login"
+								prefetch={false}
+								className="font-medium text-green-600 hover:text-green-500 dark:text-green-400 dark:hover:text-green-300"
+							>
+								Sign in
+							</Link>
+						</p>
 					</div>
-				)}
 
-				<form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-					<div className="rounded-md shadow-sm -space-y-px">
-						<div className="mb-4">
-							<label htmlFor="name" className="sr-only">
-								Full Name
-							</label>
-							<div className="relative">
-								<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-									<FaUser className="h-5 w-5 text-gray-400" />
-								</div>
-								<input
-									id="name"
-									name="name"
-									type="text"
-									autoComplete="name"
-									required
-									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.name ? "border-red-300" : "border-gray-300"
-										} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
-									placeholder="Full Name"
-									value={formData.name}
-									onChange={handleChange}
-								/>
-							</div>
-							{errors.name && (
-								<p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>
-							)}
+					{registerError && (
+						<div className="bg-red-100 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded relative" role="alert">
+							<span className="block sm:inline">{registerError}</span>
 						</div>
+					)}
 
-						<div className="mb-4">
-							<label htmlFor="email" className="sr-only">
-								Email address
-							</label>
-							<div className="relative">
-								<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-									<FaEnvelope className="h-5 w-5 text-gray-400" />
-								</div>
-								<input
-									id="email"
-									name="email"
-									type="email"
-									autoComplete="email"
-									required
-									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.email ? "border-red-300" : "border-gray-300"
-										} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
-									placeholder="Email address"
-									value={formData.email}
-									onChange={handleChange}
-								/>
-							</div>
-							{errors.email && (
-								<p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
-							)}
-						</div>
-
-						<div className="mb-4">
-							<label htmlFor="password" className="sr-only">
-								Password
-							</label>
-							<div className="relative">
-								<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-									<FaLock className="h-5 w-5 text-gray-400" />
-								</div>
-								<input
-									id="password"
-									name="password"
-									type="password"
-									autoComplete="new-password"
-									required
-									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.password ? "border-red-300" : "border-gray-300"
-										} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
-									placeholder="Password"
-									value={formData.password}
-									onChange={handleChange}
-								/>
-							</div>
-							{errors.password && (
-								<p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
-							)}
-
-							{/* Password strength indicator */}
-							{formData.password && (
-								<div className="mt-2">
-									<div className="flex justify-between mb-1">
-										<span className="text-xs text-gray-500 dark:text-gray-400">Password strength:</span>
-										<span className="text-xs font-medium">
-											{passwordStrength === 0 && "Very Weak"}
-											{passwordStrength === 1 && "Weak"}
-											{passwordStrength === 2 && "Fair"}
-											{passwordStrength === 3 && "Good"}
-											{passwordStrength === 4 && "Strong"}
-											{passwordStrength === 5 && "Very Strong"}
-										</span>
+					<form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+						<div className="rounded-md shadow-sm -space-y-px">
+							<div className="mb-4">
+								<label htmlFor="name" className="sr-only">
+									Full Name
+								</label>
+								<div className="relative">
+									<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+										<FaUser className="h-5 w-5 text-gray-400" />
 									</div>
-									<div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
-										<div
-											className={`h-1.5 rounded-full ${passwordStrength <= 1 ? "bg-red-500" :
-												passwordStrength <= 2 ? "bg-orange-500" :
-													passwordStrength <= 3 ? "bg-yellow-500" :
-														"bg-green-500"
-												}`}
-											style={{ width: `${(passwordStrength / 5) * 100}%` }}
-										></div>
-									</div>
+									<input
+										id="name"
+										name="name"
+										type="text"
+										autoComplete="name"
+										required
+										className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.name ? "border-red-300" : "border-gray-300"
+											} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
+										placeholder="Full Name"
+										value={formData.name}
+										onChange={handleChange}
+									/>
 								</div>
-							)}
+								{errors.name && (
+									<p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>
+								)}
+							</div>
+
+							<div className="mb-4">
+								<label htmlFor="email" className="sr-only">
+									Email address
+								</label>
+								<div className="relative">
+									<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+										<FaEnvelope className="h-5 w-5 text-gray-400" />
+									</div>
+									<input
+										id="email"
+										name="email"
+										type="email"
+										autoComplete="email"
+										required
+										className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.email ? "border-red-300" : "border-gray-300"
+											} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
+										placeholder="Email address"
+										value={formData.email}
+										onChange={handleChange}
+									/>
+								</div>
+								{errors.email && (
+									<p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
+								)}
+							</div>
+
+							<div className="mb-4">
+								<label htmlFor="password" className="sr-only">
+									Password
+								</label>
+								<div className="relative">
+									<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+										<FaLock className="h-5 w-5 text-gray-400" />
+									</div>
+									<input
+										id="password"
+										name="password"
+										type="password"
+										autoComplete="new-password"
+										required
+										className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.password ? "border-red-300" : "border-gray-300"
+											} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
+										placeholder="Password"
+										value={formData.password}
+										onChange={handleChange}
+									/>
+								</div>
+								{errors.password && (
+									<p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
+								)}
+
+								{/* Password strength indicator */}
+								{formData.password && (
+									<div className="mt-2">
+										<div className="flex justify-between mb-1">
+											<span className="text-xs text-gray-500 dark:text-gray-400">Password strength:</span>
+											<span className="text-xs font-medium">
+												{passwordStrength === 0 && "Very Weak"}
+												{passwordStrength === 1 && "Weak"}
+												{passwordStrength === 2 && "Fair"}
+												{passwordStrength === 3 && "Good"}
+												{passwordStrength === 4 && "Strong"}
+												{passwordStrength === 5 && "Very Strong"}
+											</span>
+										</div>
+										<div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+											<div
+												className={`h-1.5 rounded-full ${passwordStrength <= 1 ? "bg-red-500" :
+													passwordStrength <= 2 ? "bg-orange-500" :
+														passwordStrength <= 3 ? "bg-yellow-500" :
+															"bg-green-500"
+													}`}
+												style={{ width: `${(passwordStrength / 5) * 100}%` }}
+											></div>
+										</div>
+									</div>
+								)}
+							</div>
+
+							<div className="mb-4">
+								<label htmlFor="passwordConfirm" className="sr-only">
+									Confirm Password
+								</label>
+								<div className="relative">
+									<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+										<FaLock className="h-5 w-5 text-gray-400" />
+									</div>
+									<input
+										id="passwordConfirm"
+										name="passwordConfirm"
+										type="password"
+										autoComplete="new-password"
+										required
+										className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.passwordConfirm ? "border-red-300" : "border-gray-300"
+											} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
+										placeholder="Confirm Password"
+										value={formData.passwordConfirm}
+										onChange={handleChange}
+									/>
+								</div>
+								{errors.passwordConfirm && (
+									<p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.passwordConfirm}</p>
+								)}
+							</div>
 						</div>
 
-						<div className="mb-4">
-							<label htmlFor="passwordConfirm" className="sr-only">
-								Confirm Password
-							</label>
-							<div className="relative">
-								<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-									<FaLock className="h-5 w-5 text-gray-400" />
-								</div>
-								<input
-									id="passwordConfirm"
-									name="passwordConfirm"
-									type="password"
-									autoComplete="new-password"
+						<div className="flex items-start">
+							<div className="flex items-center h-5">
+								<Checkbox
+									id="acceptTerms"
+									name="acceptTerms"
+									className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+									checked={formData.acceptTerms}
+									onClick={() => setFormData((prev) => ({ ...prev, acceptTerms: !prev.acceptTerms }))}
 									required
-									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.passwordConfirm ? "border-red-300" : "border-gray-300"
-										} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
-									placeholder="Confirm Password"
-									value={formData.passwordConfirm}
-									onChange={handleChange}
 								/>
 							</div>
-							{errors.passwordConfirm && (
-								<p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.passwordConfirm}</p>
-							)}
-						</div>
-					</div>
-
-					<div className="flex items-start">
-						<div className="flex items-center h-5">
-							<Checkbox
-								id="acceptTerms"
-								name="acceptTerms"
-								className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-								checked={formData.acceptTerms}
-								onClick={() => setFormData((prev) => ({ ...prev, acceptTerms: !prev.acceptTerms }))}
-								required
-							/>
-						</div>
-						<div className="ml-3 text-sm">
-							<label htmlFor="acceptTerms" className="text-gray-700 dark:text-gray-300">
-								I agree to the{" "}
-								<Link
-									href="/terms"
-									className="text-green-600 hover:text-green-500 dark:text-green-400 dark:hover:text-green-300"
-								>
-									Terms of Service
-								</Link>{" "}
-								and{" "}
-								<Link
-									href="/privacy"
-									className="text-green-600 hover:text-green-500 dark:text-green-400 dark:hover:text-green-300"
-								>
-									Privacy Policy
-								</Link>
-							</label>
-							{errors.acceptTerms && (
-								<p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.acceptTerms}</p>
-							)}
-						</div>
-					</div>
-
-					<div>
-						<Button
-							type="submit"
-							disabled={isLoading}
-							className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-						>
-							{isLoading ? (
-								<svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-									<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-									<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-								</svg>
-							) : "Create Account"}
-						</Button>
-					</div>
-
-					<div className="mt-6">
-						<div className="relative">
-							<div className="absolute inset-0 flex items-center">
-								<div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+							<div className="ml-3 text-sm">
+								<label htmlFor="acceptTerms" className="text-gray-700 dark:text-gray-300">
+									I agree to the{" "}
+									<Link
+										href="/terms"
+										className="text-green-600 hover:text-green-500 dark:text-green-400 dark:hover:text-green-300"
+									>
+										Terms of Service
+									</Link>{" "}
+									and{" "}
+									<Link
+										href="/privacy"
+										className="text-green-600 hover:text-green-500 dark:text-green-400 dark:hover:text-green-300"
+									>
+										Privacy Policy
+									</Link>
+								</label>
+								{errors.acceptTerms && (
+									<p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.acceptTerms}</p>
+								)}
 							</div>
-							<div className="relative flex justify-center text-sm">
-								<span className="px-2 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-									Or register with
-								</span>
-							</div>
+						</div>
+
+						<div>
+							<Button
+								type="submit"
+								disabled={isLoading}
+								className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+							>
+								{isLoading ? (
+									<svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+										<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+										<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+									</svg>
+								) : "Create Account"}
+							</Button>
 						</div>
 
 						<div className="mt-6">
-							<Button
-								variant={"secondary"}
-								type="button"
-								onClick={() => handleSocialLogin("google")}
-								className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-							>
-								<FaGoogle className="h-5 w-5 dark:text-white text-black" />
-								<span className="ml-2">Google</span>
-							</Button>
+							<div className="relative">
+								<div className="absolute inset-0 flex items-center">
+									<div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+								</div>
+								<div className="relative flex justify-center text-sm">
+									<span className="px-2 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+										Or register with
+									</span>
+								</div>
+							</div>
+
+							<div className="mt-6">
+								<GoogleLogin
+									onSuccess={(credentialResponse) => {
+										// credentialResponse.credential contains the ID token
+										const idToken = credentialResponse.credential;
+
+										if (!idToken) return;
+
+										const body: { id_token: string } = {
+											id_token: idToken,
+										}
+
+										// Now you can send this token to your backend
+										api.post('/auth/register/google', { body })
+									}}
+									onError={() => {
+										console.log('Login Failed');
+									}}
+									size="large"
+									theme="filled_black"
+									shape="rectangular"
+									text="continue_with"
+									logo_alignment="left"
+									width={"100%"}
+								/>
+							</div>
 						</div>
-					</div>
-				</form>
+					</form>
+				</div>
 			</div>
-		</div>
+		</GoogleOAuthProvider>
 	);
 }
 
