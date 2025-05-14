@@ -3,13 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FaLeaf, FaUser, FaEnvelope, FaLock } from "react-icons/fa";
+import { FaLeaf, FaUser, FaEnvelope, FaLock, FaGoogle } from "react-icons/fa";
 import { z } from "zod";
 import { Button } from "../../components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { NextPage } from "next";
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import api from "@/lib/backend/api/axiosConfig";
 
 const registerSchema = z.object({
@@ -136,35 +136,38 @@ const RegisterPage: NextPage = () => {
 		}
 	};
 
-	// const CustomGoogleButton = () => {
-	// 	const login = useGoogleLogin({
-	// 		onSuccess: async (tokenResponse) => {
-	// 			const idToken = tokenResponse.access_token;
+	const CustomGoogleButton = () => {
+		const login = useGoogleLogin({
+			flow: 'auth-code',
+			redirect_uri: "https://api.greenvue.eu/auth/register/google",
+			scope: 'openid email profile',
+			onSuccess: async (tokenResponse) => {
+				const idToken = tokenResponse.code;
 
-	// 			const request = await api.post('/auth/register/google', { id_token: idToken });
+				const request = await api.post('/auth/register/google', { id_token: idToken });
 
-	// 			if (request.data.success) {
-	// 				localStorage.setItem("userId", request.data.data.userId);
-	// 				router.push("/account?registered=true");
-	// 			}
-	// 		},
-	// 		onError: () => {
-	// 			console.log('Login Failed');
-	// 		}
-	// 	});
+				if (request.data.success) {
+					localStorage.setItem("userId", request.data.data.userId);
+					router.push("/account?registered=true");
+				}
+			},
+			onError: () => {
+				console.log('Login Failed');
+			}
+		});
 
-	// 	return (
-	// 		<Button
-	// 			variant={"secondary"}
-	// 			type="button"
-	// 			onClick={() => login()}
-	// 			className="w-full border border-gray-300 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-	// 		>
-	// 			<FaGoogle className="h-5 w-5 dark:text-white text-black" />
-	// 			<span className="ml-2">Google</span>
-	// 		</Button>
-	// 	);
-	// };
+		return (
+			<Button
+				variant={"secondary"}
+				type="button"
+				onClick={() => login()}
+				className="w-full border border-gray-300 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+			>
+				<FaGoogle className="h-5 w-5 dark:text-white text-black" />
+				<span className="ml-2">Google</span>
+			</Button>
+		);
+	};
 
 	return (
 		<GoogleOAuthProvider clientId="235849009633-efomk49fqdtlt8am0aufci14qoq38brg.apps.googleusercontent.com">
@@ -392,8 +395,8 @@ const RegisterPage: NextPage = () => {
 							</div>
 
 							<div className="mt-6">
-								{/* <CustomGoogleButton /> */}
-								<GoogleLogin
+								<CustomGoogleButton />
+								{/* <GoogleLogin
 									onSuccess={async (tokenResponse) => {
 										const idToken = tokenResponse.credential;
 
@@ -404,11 +407,10 @@ const RegisterPage: NextPage = () => {
 											router.push("/account?registered=true");
 										}
 									}}
-									onError={() => {
-										console.log('Login Failed');
-									}}
 									ux_mode="redirect"
-								/>
+									context="signup"
+
+								/> */}
 							</div>
 						</div>
 					</form>
