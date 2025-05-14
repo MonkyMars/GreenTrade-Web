@@ -3,15 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FaLeaf, FaUser, FaEnvelope, FaLock } from "react-icons/fa";
+import { FaLeaf, FaUser, FaEnvelope, FaLock, FaGoogle } from "react-icons/fa";
 import { z } from "zod";
 import { Button } from "../../components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { NextPage } from "next";
-// import { BASE_URL } from "@/lib/backend/api/axiosConfig";
-// import { AppError } from "@/lib/errorUtils";
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import api from "@/lib/backend/api/axiosConfig";
 
 const registerSchema = z.object({
@@ -138,30 +136,36 @@ const RegisterPage: NextPage = () => {
 		}
 	};
 
-	// const handleSocialLogin = async (provider: string) => {
-	// 	setRegisterError("");
-	// 	try {
-	// 		setIsLoading(true);
-	// 		router.push(`${BASE_URL}/auth/login/${provider}`);
-	// 		// The actual social login logic would be handled in the backend
-	// 	} catch (error) {
-	// 		// Handle social login error
-	// 		const appError = error instanceof AppError
-	// 			? error
-	// 			: AppError.from(error, 'SocialLogin');
+	const CustomGoogleButton = () => {
+		const login = useGoogleLogin({
+			onSuccess: async (tokenResponse) => {
+				const idToken = tokenResponse.access_token;
+				if (!idToken) return;
 
-	// 		if (process.env.NODE_ENV !== 'production') {
-	// 			console.error("Social login error:", appError);
-	// 		} else {
-	// 			// In production, this would use a service like Sentry
-	// 			// Example: Sentry.captureException(appError);
-	// 		}
+				const request = await api.post('/auth/register/google', { id_token: idToken });
 
-	// 		setRegisterError("An error occurred during social login. Please try again.");
-	// 	} finally {
-	// 		setIsLoading(false);
-	// 	}
-	// };
+				if (request.data.success) {
+					localStorage.setItem("userId", request.data.data.userId);
+					router.push("/account?registered=true");
+				}
+			},
+			onError: () => {
+				console.log('Login Failed');
+			}
+		});
+
+		return (
+			<Button
+				variant={"secondary"}
+				type="button"
+				onClick={() => login()}
+				className="w-full border border-gray-300 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+			>
+				<FaGoogle className="h-5 w-5 dark:text-white text-black" />
+				<span className="ml-2">Google</span>
+			</Button>
+		);
+	};
 
 	return (
 		<GoogleOAuthProvider clientId="235849009633-efomk49fqdtlt8am0aufci14qoq38brg.apps.googleusercontent.com">
@@ -389,26 +393,7 @@ const RegisterPage: NextPage = () => {
 							</div>
 
 							<div className="mt-6">
-								<GoogleLogin
-									onSuccess={(credentialResponse) => {
-										// credentialResponse.credential contains the ID token
-										const idToken = credentialResponse.credential;
-
-										if (!idToken) return;
-
-										// Now you can send this token to your backend
-										api.post('/auth/register/google', { id_token: idToken })
-									}}
-									onError={() => {
-										console.log('Login Failed');
-									}}
-									size="large"
-									theme="filled_black"
-									shape="rectangular"
-									text="continue_with"
-									logo_alignment="left"
-									width={"100%"}
-								/>
+								<CustomGoogleButton />
 							</div>
 						</div>
 					</form>
