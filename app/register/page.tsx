@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { NextPage } from "next";
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
-import api from "@/lib/backend/api/axiosConfig";
+// import api from "@/lib/backend/api/axiosConfig";
 
 const registerSchema = z.object({
 	name: z.string().min(2, "Name must be at least 2 characters"),
@@ -140,17 +140,19 @@ const RegisterPage: NextPage = () => {
 		const login = useGoogleLogin({
 			onSuccess: async (tokenResponse) => {
 				const idToken = tokenResponse.access_token;
-				if (!idToken) return;
+				console.log("Google ID Token:", idToken);
+				// 	if (!idToken) return;
 
-				const request = await api.post('/auth/register/google', { id_token: idToken });
+				// 	const request = await api.post('/auth/register/google', { id_token: idToken });
 
-				if (request.data.success) {
-					localStorage.setItem("userId", request.data.data.userId);
-					router.push("/account?registered=true");
-				}
-			},
-			onError: () => {
-				console.log('Login Failed');
+				// 	if (request.data.success) {
+				// 		localStorage.setItem("userId", request.data.data.userId);
+				// 		router.push("/account?registered=true");
+				// 	}
+				// },
+				// onError: () => {
+				// 	console.log('Login Failed');
+				// }
 			}
 		});
 
