@@ -6,6 +6,7 @@ import React, {
 	useEffect,
 	useRef,
 	useCallback,
+	Suspense,
 } from "react";
 import axios from "axios";
 import { User } from "../types/user";
@@ -34,11 +35,88 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Create a separate component for handling OAuth redirect
+const OAuthRedirectHandler: React.FC<{ onUserLoad: (user: User) => void }> = ({ onUserLoad }) => {
+	const searchParams = useSearchParams();
+
+	useEffect(() => {
+		const handleOAuthRedirect = async () => {
+			// Check if the user is redirected from a login or registration page
+			const accessToken = searchParams.get("access_token");
+			const refreshToken = searchParams.get("refresh_token");
+			const userId = searchParams.get("user_id");
+			let expiresIn: string | number | null = searchParams.get("expires_in");
+
+			expiresIn = expiresIn ? parseInt(expiresIn) : null;
+
+			if (!userId || !accessToken || !refreshToken || !expiresIn) {
+				if (process.env.NODE_ENV !== 'production') {
+					console.log("No tokens found in URL");
+				}
+				return;
+			}
+
+			localStorage.setItem("userId", userId);
+
+			try {
+				const user = await getUser(userId);
+
+				if (!user) {
+					throw new AppError("User not found", { code: 'USER_NOT_FOUND' });
+				}
+
+				// Update user state - this will trigger navigation due to authentication state change
+				onUserLoad(user);
+
+				// Show success message
+				toast.success("Login successful!");
+			} catch (error) {
+				localStorage.removeItem("userId");
+
+				// Handle common errors and expose appropriate messages for user login experience
+				let errorMessage = "Login failed. Please try again.";
+
+				if (axios.isAxiosError(error)) {
+					if (error.response) {
+						// Server responded with an error status code
+						if (error.response.status === 401) {
+							errorMessage = "Invalid email or password. Please try again.";
+						} else if (error.response.data && error.response.data.message) {
+							errorMessage = error.response.data.message;
+						} else if (error.response.status >= 500) {
+							errorMessage = "Server error. Please try again later.";
+						}
+					} else if (error.request) {
+						// No response received
+						errorMessage = "Network error. Please check your connection.";
+					}
+				} else if (error instanceof Error) {
+					errorMessage = error.message;
+				}
+
+				// Log in development, use proper error tracking in production
+				if (process.env.NODE_ENV !== 'production') {
+					console.error("Login failed:", error);
+				} else {
+					// In production, this would use a service like Sentry
+					// Example: Sentry.captureException(error);
+				}
+
+				// Display error to user via toast
+				toast.error(errorMessage);
+			}
+		};
+
+		handleOAuthRedirect();
+	}, [searchParams, onUserLoad]);
+
+	return null;
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
 }) => {
 	const [user, setUser] = useState<User | null>(null);
-	const searchParams = useSearchParams();
 	const [loading, setLoading] = useState(true);
 	// Add refs to track refresh state
 	const refreshInProgress = useRef(false);
@@ -46,7 +124,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 	const maxRefreshAttempts = 3;
 	const lastRefreshTime = useRef(0);
 	const tokenExpirationTime = useRef<number | null>(null);
-	const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);	// Function to refresh access token
+	const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+	// Create a ref for the refreshTokens function
+	const refreshTokensRef = useRef<() => Promise<boolean>>(null);
+
+	// Forward declare the function type
+	const setupTokenRefresh: (expiresIn: number) => void = useCallback((expiresIn: number) => {
+		// Convert expiresIn (seconds) to milliseconds and calculate expiration timestamp
+		const expirationTime = Date.now() + (expiresIn * 1000);
+		tokenExpirationTime.current = expirationTime;
+
+		// Clear any existing timer
+		if (refreshTimerRef.current) {
+			clearTimeout(refreshTimerRef.current);
+		}
+
+		// Schedule refresh at 90% of token lifetime
+		const refreshDelay = Math.floor(expiresIn * 0.9) * 1000;
+
+		refreshTimerRef.current = setTimeout(() => {
+			if (process.env.NODE_ENV !== 'production') {
+				console.log("Auto-refreshing token before expiry");
+			}
+			refreshTokensRef.current?.();
+		}, refreshDelay);
+
+		if (process.env.NODE_ENV !== 'production') {
+			const refreshDate = new Date(Date.now() + refreshDelay);
+			console.log(`Token will expire in ${expiresIn}s, refresh scheduled for ${refreshDate.toLocaleTimeString()}`);
+		}
+	}, []); // No dependencies needed here
+
+	// Function to refresh access token
 	const refreshTokens = useCallback(async (): Promise<boolean> => {
 		// Prevent concurrent refresh attempts
 		if (refreshInProgress.current) {
@@ -117,31 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			localStorage.setItem("userId", userId);
 			// Store expiration time and schedule refresh
 			if (expiresIn) {
-				// Convert expiresIn (seconds) to milliseconds and calculate the exact expiration time
-				const expirationTime = Date.now() + (expiresIn * 1000);
-				tokenExpirationTime.current = expirationTime;
-
-				// Schedule refresh at 90% of token lifetime to ensure we refresh before expiry
-				// Clear any existing refresh timer
-				if (refreshTimerRef.current) {
-					clearTimeout(refreshTimerRef.current);
-				}
-
-				// Calculate refresh time - refresh at 90% of token lifetime
-				const refreshDelay = Math.floor(expiresIn * 0.9) * 1000;
-
-				// Set timer to refresh the token before it expires
-				refreshTimerRef.current = setTimeout(() => {
-					if (process.env.NODE_ENV !== 'production') {
-						console.log("Auto-refreshing token before expiry");
-					}
-					refreshTokens();
-				}, refreshDelay);
-
-				if (process.env.NODE_ENV !== 'production') {
-					const refreshDate = new Date(Date.now() + refreshDelay);
-					console.log(`Token will expire in ${expiresIn}s, refresh scheduled for ${refreshDate.toLocaleTimeString()}`);
-				}
+				setupTokenRefresh(expiresIn);
 			}
 
 			if (process.env.NODE_ENV !== 'production') {
@@ -179,7 +265,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			refreshInProgress.current = false;
 			setLoading(false);
 		}
-	}, []);
+	}, [setupTokenRefresh]);
 
 	// Fix the axios interceptor to handle authentication errors
 	useEffect(() => {
@@ -296,108 +382,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 		checkAuthStatus();
 	}, [refreshTokens]);
 
-	// Handle OAuth redirects and token extraction from URL
-	useEffect(() => {
-		const handleOAuthRedirect = async () => {
-			if (user) return;
-
-			// Check if the user is redirected from a login or registration page
-			const accessToken = searchParams.get("access_token");
-			const refreshToken = searchParams.get("refresh_token");
-			const userId = searchParams.get("user_id");
-			let expiresIn: string | number | null = searchParams.get("expires_in");
-
-			expiresIn = expiresIn ? parseInt(expiresIn) : null;
-
-			if (!userId || !accessToken || !refreshToken || !expiresIn) {
-				if (process.env.NODE_ENV !== 'production') {
-					console.log("No tokens found in URL");
-				}
-				return;
-			};
-
-			localStorage.setItem("userId", userId);
-
-			// Handle token expiration for automatic refresh
-			if (expiresIn) {
-				// Convert expiresIn (seconds) to milliseconds and calculate expiration timestamp
-				const expirationTime = Date.now() + (expiresIn * 1000);
-				tokenExpirationTime.current = expirationTime;
-
-				// Clear any existing timer
-				if (refreshTimerRef.current) {
-					clearTimeout(refreshTimerRef.current);
-				}
-
-				// Schedule refresh at 90% of token lifetime
-				const refreshDelay = Math.floor(expiresIn * 0.9) * 1000;
-
-				refreshTimerRef.current = setTimeout(() => {
-					if (process.env.NODE_ENV !== 'production') {
-						console.log("Auto-refreshing token before expiry from login");
-					}
-					refreshTokens();
-				}, refreshDelay);
-
-				if (process.env.NODE_ENV !== 'production') {
-					console.log(`Token will expire in ${expiresIn}s, refresh scheduled`);
-				}
-			}
-
-			try {
-				const user = await getUser(userId);
-
-				if (!user) {
-					throw new AppError("User not found", { code: 'USER_NOT_FOUND' });
-				}
-
-				// Update user state - this will trigger navigation due to authentication state change
-				setUser(user);
-
-				// Show success message
-				toast.success("Login successful!");
-			} catch (error) {
-				localStorage.removeItem("userId");
-
-				// Handle common errors and expose appropriate messages for user login experience
-				let errorMessage = "Login failed. Please try again.";
-
-				if (axios.isAxiosError(error)) {
-					if (error.response) {
-						// Server responded with an error status code
-						if (error.response.status === 401) {
-							errorMessage = "Invalid email or password. Please try again.";
-						} else if (error.response.data && error.response.data.message) {
-							errorMessage = error.response.data.message;
-						} else if (error.response.status >= 500) {
-							errorMessage = "Server error. Please try again later.";
-						}
-					} else if (error.request) {
-						// No response received
-						errorMessage = "Network error. Please check your connection.";
-					}
-				} else if (error instanceof Error) {
-					errorMessage = error.message;
-				}
-
-				// Log in development, use proper error tracking in production
-				if (process.env.NODE_ENV !== 'production') {
-					console.error("Login failed:", error);
-				} else {
-					// In production, this would use a service like Sentry
-					// Example: Sentry.captureException(error);
-				}
-
-				// Display error to user via toast
-				toast.error(errorMessage);
-
-				// Rethrow for component handling with standardized message
-				throw new Error(errorMessage);
-			}
-		};
-
-		handleOAuthRedirect();
-	}, [searchParams, user, refreshTokens])
+	// Handle user update from OAuth redirect
+	const handleSetUser = (newUser: User) => {
+		setUser(newUser);
+	};
 
 	// Login function
 	const login = async (email: string, password: string) => {
@@ -437,28 +425,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			// Handle token expiration for automatic refresh
 			if (expiresIn) {
-				// Convert expiresIn (seconds) to milliseconds and calculate expiration timestamp
-				const expirationTime = Date.now() + (expiresIn * 1000);
-				tokenExpirationTime.current = expirationTime;
-
-				// Clear any existing timer
-				if (refreshTimerRef.current) {
-					clearTimeout(refreshTimerRef.current);
-				}
-
-				// Schedule refresh at 90% of token lifetime
-				const refreshDelay = Math.floor(expiresIn * 0.9) * 1000;
-
-				refreshTimerRef.current = setTimeout(() => {
-					if (process.env.NODE_ENV !== 'production') {
-						console.log("Auto-refreshing token before expiry from login");
-					}
-					refreshTokens();
-				}, refreshDelay);
-
-				if (process.env.NODE_ENV !== 'production') {
-					console.log(`Token will expire in ${expiresIn}s, refresh scheduled`);
-				}
+				setupTokenRefresh(expiresIn);
 			}
 
 			// Set user data
@@ -552,28 +519,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			// Handle token expiration for automatic refresh
 			if (expiresIn) {
-				// Convert expiresIn (seconds) to milliseconds and calculate expiration timestamp
-				const expirationTime = Date.now() + (expiresIn * 1000);
-				tokenExpirationTime.current = expirationTime;
-
-				// Clear any existing timer
-				if (refreshTimerRef.current) {
-					clearTimeout(refreshTimerRef.current);
-				}
-
-				// Schedule refresh at 90% of token lifetime
-				const refreshDelay = Math.floor(expiresIn * 0.9) * 1000;
-
-				refreshTimerRef.current = setTimeout(() => {
-					if (process.env.NODE_ENV !== 'production') {
-						console.log("Auto-refreshing token before expiry from registration");
-					}
-					refreshTokens();
-				}, refreshDelay);
-
-				if (process.env.NODE_ENV !== 'production') {
-					console.log(`Token will expire in ${expiresIn}s, refresh scheduled`);
-				}
+				setupTokenRefresh(expiresIn);
 			}
 
 			// Set user data
@@ -624,6 +570,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			setLoading(false);
 		}
 	};
+
 	// Logout function
 	const logout = async () => {
 		if (process.env.NODE_ENV !== 'production') {
@@ -669,6 +616,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			}
 		}
 	};
+
 	const reloadUser = async () => {
 		setLoading(true);
 		try {
@@ -709,6 +657,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 		const remainingTime = tokenExpirationTime.current - Date.now();
 		return remainingTime > 0 ? Math.floor(remainingTime / 1000) : 0; // Return in seconds
 	};
+
 	return (
 		<AuthContext.Provider
 			value={{
@@ -723,6 +672,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 				getTokenRemainingTime,
 			}}
 		>
+			{/* Wrap the OAuth handler in a Suspense boundary */}
+			<Suspense fallback={null}>
+				<OAuthRedirectHandler onUserLoad={handleSetUser} />
+			</Suspense>
 			{children}
 		</AuthContext.Provider>
 	);
