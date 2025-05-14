@@ -396,12 +396,8 @@ const RegisterPage: NextPage = () => {
 
 										if (!idToken) return;
 
-										const body: { id_token: string } = {
-											id_token: idToken,
-										}
-
 										// Now you can send this token to your backend
-										api.post('/auth/register/google', { body })
+										api.post('/auth/register/google', { id_token: idToken })
 									}}
 									onError={() => {
 										console.log('Login Failed');
