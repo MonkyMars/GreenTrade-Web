@@ -122,6 +122,7 @@ const Login: NextPage = () => {
 		try {
 			setIsLoading(true);
 			router.push(`${BASE_URL}/auth/login/${provider}`);
+			// The actual social login logic would be handled in the backend
 		} catch (error) {
 			// Handle social login error
 			const appError = error instanceof AppError

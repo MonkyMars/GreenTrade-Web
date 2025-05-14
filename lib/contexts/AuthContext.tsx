@@ -13,6 +13,7 @@ import api from "../backend/api/axiosConfig";
 import { getUser } from "@/lib/backend/auth/user";
 import { toast } from "react-hot-toast";
 import { AppError, handleError, retryOperation } from "@/lib/errorUtils";
+import { useSearchParams } from "next/navigation";
 
 interface AuthContextType {
 	user: User | null;
@@ -37,6 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
 }) => {
 	const [user, setUser] = useState<User | null>(null);
+	const searchParams = useSearchParams();
 	const [loading, setLoading] = useState(true);
 	// Add refs to track refresh state
 	const refreshInProgress = useRef(false);
@@ -293,6 +295,109 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 		checkAuthStatus();
 	}, [refreshTokens]);
+
+	// Handle OAuth redirects and token extraction from URL
+	useEffect(() => {
+		const handleOAuthRedirect = async () => {
+			if (user) return;
+
+			// Check if the user is redirected from a login or registration page
+			const accessToken = searchParams.get("access_token");
+			const refreshToken = searchParams.get("refresh_token");
+			const userId = searchParams.get("user_id");
+			let expiresIn: string | number | null = searchParams.get("expires_in");
+
+			expiresIn = expiresIn ? parseInt(expiresIn) : null;
+
+			if (!userId || !accessToken || !refreshToken || !expiresIn) {
+				if (process.env.NODE_ENV !== 'production') {
+					console.log("No tokens found in URL");
+				}
+				return;
+			};
+
+			localStorage.setItem("userId", userId);
+
+			// Handle token expiration for automatic refresh
+			if (expiresIn) {
+				// Convert expiresIn (seconds) to milliseconds and calculate expiration timestamp
+				const expirationTime = Date.now() + (expiresIn * 1000);
+				tokenExpirationTime.current = expirationTime;
+
+				// Clear any existing timer
+				if (refreshTimerRef.current) {
+					clearTimeout(refreshTimerRef.current);
+				}
+
+				// Schedule refresh at 90% of token lifetime
+				const refreshDelay = Math.floor(expiresIn * 0.9) * 1000;
+
+				refreshTimerRef.current = setTimeout(() => {
+					if (process.env.NODE_ENV !== 'production') {
+						console.log("Auto-refreshing token before expiry from login");
+					}
+					refreshTokens();
+				}, refreshDelay);
+
+				if (process.env.NODE_ENV !== 'production') {
+					console.log(`Token will expire in ${expiresIn}s, refresh scheduled`);
+				}
+			}
+
+			try {
+				const user = await getUser(userId);
+
+				if (!user) {
+					throw new AppError("User not found", { code: 'USER_NOT_FOUND' });
+				}
+
+				// Update user state - this will trigger navigation due to authentication state change
+				setUser(user);
+
+				// Show success message
+				toast.success("Login successful!");
+			} catch (error) {
+				localStorage.removeItem("userId");
+
+				// Handle common errors and expose appropriate messages for user login experience
+				let errorMessage = "Login failed. Please try again.";
+
+				if (axios.isAxiosError(error)) {
+					if (error.response) {
+						// Server responded with an error status code
+						if (error.response.status === 401) {
+							errorMessage = "Invalid email or password. Please try again.";
+						} else if (error.response.data && error.response.data.message) {
+							errorMessage = error.response.data.message;
+						} else if (error.response.status >= 500) {
+							errorMessage = "Server error. Please try again later.";
+						}
+					} else if (error.request) {
+						// No response received
+						errorMessage = "Network error. Please check your connection.";
+					}
+				} else if (error instanceof Error) {
+					errorMessage = error.message;
+				}
+
+				// Log in development, use proper error tracking in production
+				if (process.env.NODE_ENV !== 'production') {
+					console.error("Login failed:", error);
+				} else {
+					// In production, this would use a service like Sentry
+					// Example: Sentry.captureException(error);
+				}
+
+				// Display error to user via toast
+				toast.error(errorMessage);
+
+				// Rethrow for component handling with standardized message
+				throw new Error(errorMessage);
+			}
+		};
+
+		handleOAuthRedirect();
+	}, [searchParams, user, refreshTokens])
 
 	// Login function
 	const login = async (email: string, password: string) => {
