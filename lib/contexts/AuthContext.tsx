@@ -24,10 +24,11 @@ interface AuthContextType {
 		password: string,
 		location: string
 	) => Promise<void>;
-	logout: () => void;
+	logout: () => Promise<void>;
 	isAuthenticated: boolean;
 	refreshTokens: () => Promise<boolean>;
 	reloadUser: () => Promise<void>;
+	getTokenRemainingTime: () => number | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,14 +38,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
-
 	// Add refs to track refresh state
 	const refreshInProgress = useRef(false);
 	const refreshAttempts = useRef(0);
 	const maxRefreshAttempts = 3;
 	const lastRefreshTime = useRef(0);
-
-	// Function to refresh access token
+	const tokenExpirationTime = useRef<number | null>(null);
+	const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);	// Function to refresh access token
 	const refreshTokens = useCallback(async (): Promise<boolean> => {
 		// Prevent concurrent refresh attempts
 		if (refreshInProgress.current) {
@@ -76,55 +76,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 				}),
 				"Authentication"
 			);
-			await logout();
+			// Clear user ID and state since we can't refresh the token anymore
+			localStorage.removeItem("userId");
+			setUser(null);
 			return false;
 		}
 
+		// Increment refresh attempts
 		refreshAttempts.current += 1;
 		refreshInProgress.current = true;
 
+		if (process.env.NODE_ENV !== 'production') {
+			console.log(`Attempting token refresh (${refreshAttempts.current})`);
+		}
+
+		// Set a loading state for the refresh operation
+		setLoading(true);
+
 		try {
-			const refreshToken = localStorage.getItem("refreshToken");
-
-			if (!refreshToken) {
-				throw new AppError("No refresh token found", { code: 'TOKEN_MISSING' });
-			}
-
-			if (process.env.NODE_ENV !== 'production') {
-				console.log(
-					"Attempting to refresh token with:",
-					refreshToken.substring(0, 10) + "..."
-				);
-			}
-
-			// Match the backend's expected format exactly
-			const response = await api.post(
-				`/auth/refresh`,
-				{ refreshToken } // This needs to match your backend's expected structure
+			// Use our retry operation for the API call
+			const response = await retryOperation(
+				() => api.post(`/auth/refresh`),
+				{
+					maxRetries: 2,
+					delayMs: 1000,
+					context: "Token refresh"
+				}
 			);
 
-			// Match your backend response structure
-			const {
-				accessToken,
-				refreshToken: newRefreshToken,
-				expiresIn,
-			} = response.data.data;
+			// Match your backend response structure - we only need userId with HTTP-only cookies
+			const { userId, expiresIn } = response.data.data;
 
-			if (!accessToken || !newRefreshToken) {
+			if (!userId) {
 				throw new AppError("Invalid refresh token response", { code: 'INVALID_TOKEN_RESPONSE' });
 			}
 
-			// Store the new tokens
-			localStorage.setItem("accessToken", accessToken);
-			localStorage.setItem("refreshToken", newRefreshToken);
+			// Store the user ID
+			localStorage.setItem("userId", userId);
+			// Store expiration time and schedule refresh
+			if (expiresIn) {
+				// Convert expiresIn (seconds) to milliseconds and calculate the exact expiration time
+				const expirationTime = Date.now() + (expiresIn * 1000);
+				tokenExpirationTime.current = expirationTime;
 
-			// Store the expiration time
-			const expirationTime = new Date().getTime() + expiresIn * 1000;
-			localStorage.setItem("tokenExpiration", expirationTime.toString());
+				// Schedule refresh at 90% of token lifetime to ensure we refresh before expiry
+				// Clear any existing refresh timer
+				if (refreshTimerRef.current) {
+					clearTimeout(refreshTimerRef.current);
+				}
 
-			// Give a small delay to ensure the token is properly stored
-			// before the next request uses it
-			await new Promise((resolve) => setTimeout(resolve, 50));
+				// Calculate refresh time - refresh at 90% of token lifetime
+				const refreshDelay = Math.floor(expiresIn * 0.9) * 1000;
+
+				// Set timer to refresh the token before it expires
+				refreshTimerRef.current = setTimeout(() => {
+					if (process.env.NODE_ENV !== 'production') {
+						console.log("Auto-refreshing token before expiry");
+					}
+					refreshTokens();
+				}, refreshDelay);
+
+				if (process.env.NODE_ENV !== 'production') {
+					const refreshDate = new Date(Date.now() + refreshDelay);
+					console.log(`Token will expire in ${expiresIn}s, refresh scheduled for ${refreshDate.toLocaleTimeString()}`);
+				}
+			}
 
 			if (process.env.NODE_ENV !== 'production') {
 				console.log("Token refresh successful");
@@ -147,12 +163,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 				if (process.env.NODE_ENV !== 'production') {
 					console.log("Max refresh attempts reached, logging out");
 				}
-				localStorage.removeItem("accessToken");
-				localStorage.removeItem("refreshToken");
+				// We only keep userId in localStorage now
 				localStorage.removeItem("userId");
-				localStorage.removeItem("tokenExpiration");
 
-				delete api.defaults.headers.common["Authorization"];
 				setUser(null);
 
 				// Notify user of session expiration
@@ -162,10 +175,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			return false;
 		} finally {
 			refreshInProgress.current = false;
+			setLoading(false);
 		}
 	}, []);
 
-	// Fix the axios interceptor to avoid infinite refresh loops
+	// Fix the axios interceptor to handle authentication errors
 	useEffect(() => {
 		const interceptor = api.interceptors.response.use(
 			(response) => response,
@@ -184,21 +198,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 						if (process.env.NODE_ENV !== 'production') {
 							console.log("401 error detected, attempting token refresh");
 						}
+
+						// Try to refresh the cookie-based token
 						const refreshSuccess = await refreshTokens();
+
 						if (refreshSuccess) {
-							// Retry the original request with new token
-							// Get the latest token to ensure we're using the most recent one
-							const token = localStorage.getItem("accessToken");
-							if (!token) {
-								throw new AppError("Failed to get new access token after refresh", {
-									code: 'TOKEN_REFRESH_FAILED'
-								});
-							}
-
-							// Use the fresh token for the retried request
-							originalRequest.headers["Authorization"] = `Bearer ${token}`;
-
-							// Small delay to ensure token is available
+							// With cookie-based auth, we just need to retry the original request
+							// The cookies will be automatically sent with the request
 							await new Promise((resolve) => setTimeout(resolve, 50));
 
 							// Return the retried request
@@ -223,42 +229,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 		};
 	}, [refreshTokens]);
 
+	// Clean up the refresh timer on unmount
+	useEffect(() => {
+		return () => {
+			if (refreshTimerRef.current) {
+				clearTimeout(refreshTimerRef.current);
+			}
+		};
+	}, []);
+
 	// Check if user is logged in on initial load
 	useEffect(() => {
 		const checkAuthStatus = async () => {
 			try {
-				const token = localStorage.getItem("accessToken");
-				const expirationTime = localStorage.getItem("tokenExpiration");
-
-				if (!token) {
+				// Fetch user data to check authentication status
+				// The cookies will be automatically sent with the request
+				// We only need to check if we have a userId stored
+				const userId = localStorage.getItem("userId");
+				if (!userId) {
 					setLoading(false);
 					return;
 				}
 
-				// Check if token is expired
-				if (expirationTime) {
-					const now = new Date().getTime();
-					const expiration = parseInt(expirationTime, 10);
-
-					// If token is expired or about to expire (within 60 seconds), refresh it
-					if (now >= expiration - 60000) {
-						const refreshSuccess = await refreshTokens();
-						if (!refreshSuccess) {
-							setLoading(false);
-							return;
-						}
-					}
-				}
-
-				// Configure axios to use the token
-				api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-				// Fetch user data
-				const userId = localStorage.getItem("userId");
-				if (!userId) {
-					throw new AppError("User ID not found", { code: 'USER_ID_MISSING' });
-				}
-
+				// Make a request to validate auth status
+				// This will use the HTTP cookies automatically
 				try {
 					// Use retry operation for API call
 					const response = await retryOperation(
@@ -287,14 +281,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 					throw apiError; // Rethrow to trigger the catch block below
 				}
 			} catch (error) {
-				// Clear tokens on authentication error
+				// Clear user ID on authentication error
 				if (process.env.NODE_ENV !== 'production') {
 					console.error("Authentication error:", error);
 				}
-				localStorage.removeItem("accessToken");
-				localStorage.removeItem("refreshToken");
 				localStorage.removeItem("userId");
-				localStorage.removeItem("tokenExpiration");
 			} finally {
 				setLoading(false);
 			}
@@ -316,7 +307,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			const response = await retryOperation(
 				() => api.post(`/auth/login`, { email, password }),
 				{
-					maxRetries: 2, // Fewer retries for login to avoid lockouts
+					maxRetries: 2,
 					delayMs: 800,
 					context: "Login attempt"
 				}
@@ -329,35 +320,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			if (!response.data || !response.data.data) {
 				throw new AppError("Invalid login response format", { code: 'INVALID_RESPONSE_FORMAT' });
+			}			// With HTTP-only cookies we only need the userId and token expiration
+			const { userId, expiresIn } = response.data.data;
+
+			if (!userId) {
+				throw new AppError("Missing user ID in response", { code: 'USER_ID_MISSING' });
 			}
 
-			// Check response format based on your API
-			const { accessToken, refreshToken, userId, expiresIn } =
-				response.data.data;
-
-			api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
-
-			console.log(accessToken)
-
-			if (!accessToken) {
-				throw new AppError("Missing authentication token", { code: 'TOKEN_MISSING' });
-			}
-
-			// Store tokens
-			localStorage.setItem("accessToken", accessToken);
-			if (refreshToken) {
-				localStorage.setItem("refreshToken", refreshToken);
-			}
+			// Store only the user ID in localStorage
 			localStorage.setItem("userId", userId);
 
-			// Store token expiration time if provided
+			// Handle token expiration for automatic refresh
 			if (expiresIn) {
-				const expirationTime = new Date().getTime() + expiresIn * 1000;
-				localStorage.setItem("tokenExpiration", expirationTime.toString());
+				// Convert expiresIn (seconds) to milliseconds and calculate expiration timestamp
+				const expirationTime = Date.now() + (expiresIn * 1000);
+				tokenExpirationTime.current = expirationTime;
+
+				// Clear any existing timer
+				if (refreshTimerRef.current) {
+					clearTimeout(refreshTimerRef.current);
+				}
+
+				// Schedule refresh at 90% of token lifetime
+				const refreshDelay = Math.floor(expiresIn * 0.9) * 1000;
+
+				refreshTimerRef.current = setTimeout(() => {
+					if (process.env.NODE_ENV !== 'production') {
+						console.log("Auto-refreshing token before expiry from login");
+					}
+					refreshTokens();
+				}, refreshDelay);
+
+				if (process.env.NODE_ENV !== 'production') {
+					console.log(`Token will expire in ${expiresIn}s, refresh scheduled`);
+				}
 			}
-
-			// Set auth header for future requests
-
 
 			// Set user data
 			const user = await getUser(userId);
@@ -373,10 +370,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			toast.success("Login successful!");
 		} catch (error) {
 			// Handle error and clean up any partial auth state
-			localStorage.removeItem("accessToken");
-			localStorage.removeItem("refreshToken");
 			localStorage.removeItem("userId");
-			localStorage.removeItem("tokenExpiration");
 
 			// Handle common errors and expose appropriate messages for user login experience
 			let errorMessage = "Login failed. Please try again.";
@@ -442,30 +436,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			if (!response.data.success) {
 				throw new AppError(response.data.message || "Registration failed", { code: 'REGISTRATION_FAILED' });
+			} const { userId, expiresIn } = response.data.data;
+
+			if (!userId) {
+				throw new AppError("Missing user ID in response", { code: 'USER_ID_MISSING' });
 			}
 
-			const { accessToken, refreshToken, userId, expiresIn } =
-				response.data.data;
-
-			if (!accessToken) {
-				throw new AppError("Missing authentication token", { code: 'TOKEN_MISSING' });
-			}
-
-			// Store tokens
-			localStorage.setItem("accessToken", accessToken);
-			if (refreshToken) {
-				localStorage.setItem("refreshToken", refreshToken);
-			}
+			// Store only the user ID in localStorage
 			localStorage.setItem("userId", userId);
 
-			// Store token expiration time if provided
+			// Handle token expiration for automatic refresh
 			if (expiresIn) {
-				const expirationTime = new Date().getTime() + expiresIn * 1000;
-				localStorage.setItem("tokenExpiration", expirationTime.toString());
-			}
+				// Convert expiresIn (seconds) to milliseconds and calculate expiration timestamp
+				const expirationTime = Date.now() + (expiresIn * 1000);
+				tokenExpirationTime.current = expirationTime;
 
-			// Set auth header for future requests
-			api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+				// Clear any existing timer
+				if (refreshTimerRef.current) {
+					clearTimeout(refreshTimerRef.current);
+				}
+
+				// Schedule refresh at 90% of token lifetime
+				const refreshDelay = Math.floor(expiresIn * 0.9) * 1000;
+
+				refreshTimerRef.current = setTimeout(() => {
+					if (process.env.NODE_ENV !== 'production') {
+						console.log("Auto-refreshing token before expiry from registration");
+					}
+					refreshTokens();
+				}, refreshDelay);
+
+				if (process.env.NODE_ENV !== 'production') {
+					console.log(`Token will expire in ${expiresIn}s, refresh scheduled`);
+				}
+			}
 
 			// Set user data
 			const user = await getUser(userId);
@@ -515,7 +519,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			setLoading(false);
 		}
 	};
-
 	// Logout function
 	const logout = async () => {
 		if (process.env.NODE_ENV !== 'production') {
@@ -528,14 +531,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			refreshInProgress.current = false;
 			lastRefreshTime.current = 0;
 
-			// Clear stored data
-			localStorage.removeItem("accessToken");
-			localStorage.removeItem("refreshToken");
-			localStorage.removeItem("userId");
-			localStorage.removeItem("tokenExpiration");
+			// Clear token expiration time and cancel any scheduled refresh
+			tokenExpirationTime.current = null;
+			if (refreshTimerRef.current) {
+				clearTimeout(refreshTimerRef.current);
+				refreshTimerRef.current = null;
+			}
 
-			// Clear auth headers
-			delete api.defaults.headers.common["Authorization"];
+			// Call the logout endpoint to clear cookies on the server
+			await api.post('/auth/logout');
+
+			// Clear stored user ID
+			localStorage.removeItem("userId");
 
 			// Clear user state
 			setUser(null);
@@ -545,6 +552,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 		} catch (error) {
 			// For logout, even if there's an error, we still want to clear local state
 			// so a failed logout doesn't leave the user in a broken authentication state
+			localStorage.removeItem("userId");
 			setUser(null);
 
 			// Log the error but don't display to user since we're still clearing their session
@@ -556,7 +564,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			}
 		}
 	};
-
 	const reloadUser = async () => {
 		setLoading(true);
 		try {
@@ -588,6 +595,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 		}
 	};
 
+	// Get remaining time until token expiration
+	const getTokenRemainingTime = () => {
+		if (!tokenExpirationTime.current) {
+			return null;
+		}
+
+		const remainingTime = tokenExpirationTime.current - Date.now();
+		return remainingTime > 0 ? Math.floor(remainingTime / 1000) : 0; // Return in seconds
+	};
 	return (
 		<AuthContext.Provider
 			value={{
@@ -599,6 +615,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 				isAuthenticated: !!user,
 				refreshTokens,
 				reloadUser,
+				getTokenRemainingTime,
 			}}
 		>
 			{children}

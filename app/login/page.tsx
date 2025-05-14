@@ -9,6 +9,7 @@ import { Button } from "../../components/ui/button";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { AppError } from '@/lib/errorUtils';
 import { NextPage } from "next";
+import { BASE_URL } from "@/lib/backend/api/axiosConfig";
 
 const loginSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),
@@ -117,7 +118,27 @@ const Login: NextPage = () => {
 	};
 
 	const handleSocialLogin = async (provider: string) => {
-		window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/auth/${provider}`;
+		setLoginError("");
+		try {
+			setIsLoading(true);
+			router.push(`${BASE_URL}/auth/login/${provider}`);
+		} catch (error) {
+			// Handle social login error
+			const appError = error instanceof AppError
+				? error
+				: AppError.from(error, 'SocialLogin');
+
+			if (process.env.NODE_ENV !== 'production') {
+				console.error("Social login error:", appError);
+			} else {
+				// In production, this would use a service like Sentry
+				// Example: Sentry.captureException(appError);
+			}
+
+			setLoginError("An error occurred during social login. Please try again.");
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	return (
