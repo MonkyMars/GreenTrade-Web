@@ -104,6 +104,14 @@ const OAuthRedirectHandler: React.FC<{ onUserLoad: (user: User) => void }> = ({ 
 
 				// Display error to user via toast
 				toast.error(errorMessage);
+			} finally {
+				// Clear URL parameters to avoid reprocessing
+				const url = new URL(window.location.href);
+				url.searchParams.delete("access_token");
+				url.searchParams.delete("refresh_token");
+				url.searchParams.delete("user_id");
+				url.searchParams.delete("expires_in");
+				window.history.replaceState({}, document.title, url.toString());
 			}
 		};
 

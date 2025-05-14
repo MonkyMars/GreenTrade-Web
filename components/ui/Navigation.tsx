@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-	FiSearch,
 	FiUser,
 	FiMenu,
 	FiX,
@@ -216,15 +215,6 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
 						className="md:hidden bg-white dark:bg-gray-900 shadow-lg z-99"
 					>
 						<div className="px-4 pt-2 pb-4 space-y-1">
-							<div className="relative mb-4">
-								<input
-									type="text"
-									placeholder="Search sustainable goods..."
-									className="w-full px-4 py-2 pl-10 pr-4 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-								/>
-								<FiSearch className="absolute left-3 top-2.5 text-gray-400" />
-							</div>
-
 							<div className="py-2">
 								<p className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
 									Categories
@@ -239,24 +229,6 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
 										{category.name}
 									</Link>
 								))}
-							</div>
-
-							<div className="border-t border-gray-200 dark:border-gray-700 pt-4 pb-2">
-								<Link
-									href="/browse"
-									className="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-gray-800 rounded-md"
-									onClick={() => setIsOpen(false)}
-								>
-									Browse
-								</Link>
-
-								<Link
-									href="/about"
-									className="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-gray-800 rounded-md"
-									onClick={() => setIsOpen(false)}
-								>
-									About Us
-								</Link>
 							</div>
 
 							<div className="border-t border-gray-200 dark:border-gray-700 pt-4 pb-2">

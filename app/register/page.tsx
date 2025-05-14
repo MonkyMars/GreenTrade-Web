@@ -9,6 +9,8 @@ import { Button } from "../../components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { NextPage } from "next";
+import { BASE_URL } from "@/lib/backend/api/axiosConfig";
+import { AppError } from "@/lib/errorUtils";
 
 const registerSchema = z.object({
 	name: z.string().min(2, "Name must be at least 2 characters"),
@@ -134,9 +136,29 @@ const RegisterPage: NextPage = () => {
 		}
 	};
 
-	const handleSocialRegister = async (provider: string) => {
-		// Redirect to OAuth provider for registration
-		router.replace(`${process.env.NEXT_PUBLIC_BACKEND_URL_PUBLIC}/auth/${provider}`);
+	const handleSocialLogin = async (provider: string) => {
+		setRegisterError("");
+		try {
+			setIsLoading(true);
+			router.push(`${BASE_URL}/auth/login/${provider}`);
+			// The actual social login logic would be handled in the backend
+		} catch (error) {
+			// Handle social login error
+			const appError = error instanceof AppError
+				? error
+				: AppError.from(error, 'SocialLogin');
+
+			if (process.env.NODE_ENV !== 'production') {
+				console.error("Social login error:", appError);
+			} else {
+				// In production, this would use a service like Sentry
+				// Example: Sentry.captureException(appError);
+			}
+
+			setRegisterError("An error occurred during social login. Please try again.");
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	return (
@@ -264,9 +286,9 @@ const RegisterPage: NextPage = () => {
 									<div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
 										<div
 											className={`h-1.5 rounded-full ${passwordStrength <= 1 ? "bg-red-500" :
-													passwordStrength <= 2 ? "bg-orange-500" :
-														passwordStrength <= 3 ? "bg-yellow-500" :
-															"bg-green-500"
+												passwordStrength <= 2 ? "bg-orange-500" :
+													passwordStrength <= 3 ? "bg-yellow-500" :
+														"bg-green-500"
 												}`}
 											style={{ width: `${(passwordStrength / 5) * 100}%` }}
 										></div>
@@ -367,7 +389,7 @@ const RegisterPage: NextPage = () => {
 							<Button
 								variant={"secondary"}
 								type="button"
-								onClick={() => handleSocialRegister("google")}
+								onClick={() => handleSocialLogin("google")}
 								className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
 							>
 								<FaGoogle className="h-5 w-5 dark:text-white text-black" />
