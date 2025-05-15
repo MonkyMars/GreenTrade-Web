@@ -55,7 +55,7 @@ const AccountPage: NextPage = () => {
 		location: `${location.city}, ${location.country}`,
 		profileUrl: "",
 		createdAt: "",
-		lastSignInAt: "",
+		emailVerified: false,
 	});
 	const [activeTab, setActiveTab] = useState<ActiveTab["activeTab"]>("profile");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
