@@ -14,7 +14,7 @@ export const EmailConfirmationBar: React.FC = () => {
 
 	// Check if user is logged in but hasn't confirmed email (lastSignInAt is undefined)
 	useEffect(() => {
-		setIsVisible(!!user && user.lastSignInAt === undefined);
+		setIsVisible(!!user && user.emailVerified == false);
 	}, [user]);
 
 	const handleClose = () => {

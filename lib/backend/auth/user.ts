@@ -27,7 +27,7 @@ export const getUser = async (uuid: string): Promise<User> => {
 		const user = response.data.data.user;
 		const mappedUser: User = {
 			...user,
-			lastSignInAt: response.data.data.user.last_sign_in_at,
+			emailVerified: response.data.data.user.email_verified,
 			createdAt: response.data.data.user.created_at,
 		};
 		return mappedUser;

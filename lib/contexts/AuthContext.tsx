@@ -361,10 +361,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 						throw new AppError("Failed to fetch user data", { code: 'USER_FETCH_FAILED' });
 					}
 
-					const mappedUser = {
+					const mappedUser: User = {
 						...response.data.data.user,
 						createdAt: response.data.data.user.created_at,
-						lastSignInAt: response.data.data.user.last_sign_in_at,
+						emailVerified: response.data.data.user.email_verified,
 					}
 
 					setUser(mappedUser);

@@ -5,7 +5,7 @@ export interface User {
 	location: string;
 	profileUrl: string;
 	createdAt: string;
-	lastSignInAt: string; // will be undefined if user has not confirmed their email.
+	emailVerified: boolean;
 	phone?: string;
 	profileImage?: string;
 	bio?: string;
