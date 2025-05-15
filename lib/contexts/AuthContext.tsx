@@ -109,7 +109,6 @@ const OAuthRedirectHandler: React.FC<{ onUserLoad: (user: User) => void }> = ({ 
 				url.searchParams.delete("user_id");
 				url.searchParams.delete("expires_in");
 				window.history.replaceState({}, document.title, url.toString());
-				window.location.href = '/account';
 			}
 		};
 
