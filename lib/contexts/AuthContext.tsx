@@ -367,7 +367,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 						emailVerified: response.data.data.user.email_verified,
 					}
 
-					setUser(mappedUser);
+					setUser({
+						id: mappedUser.id,
+						name: mappedUser.name,
+						email: mappedUser.email,
+						location: mappedUser.location,
+						picture: mappedUser.picture,
+						createdAt: mappedUser.createdAt,
+						emailVerified: mappedUser.emailVerified,
+						bio: mappedUser.bio,
+					});
 				} catch (apiError) {
 					// If retries fail, handle it gracefully
 					handleError(apiError, "Authentication validation");

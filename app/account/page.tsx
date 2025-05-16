@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import {
 	FaUser,
 	FaStore,
@@ -31,6 +30,7 @@ import api from "@/lib/backend/api/axiosConfig";
 import { NextPage } from "next";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchCountriesInEurope } from "@/lib/functions/countries";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface ActiveTab {
 	activeTab: "profile" | "seller" | "security" | "delete";
@@ -48,15 +48,7 @@ const AccountPage: NextPage = () => {
 		city: "",
 		country: "",
 	});
-	const [user, setUser] = useState<User>({
-		id: "",
-		name: "",
-		email: "",
-		location: `${location.city}, ${location.country}`,
-		profileUrl: "",
-		createdAt: "",
-		emailVerified: false,
-	});
+	const [user, setUser] = useState<User | null>(null);
 	const [activeTab, setActiveTab] = useState<ActiveTab["activeTab"]>("profile");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [updateSuccess, setUpdateSuccess] = useState("");
@@ -95,15 +87,7 @@ const AccountPage: NextPage = () => {
 				});
 
 				// Update the user state with data from AuthContext
-				setUser({
-					...user,
-					id: authUser.id || "",
-					name: authUser.name || "",
-					email: authUser.email || "",
-					location: authUser.location || `${cityFromAuth}, ${countryFromAuth}`,
-					profileUrl: authUser.profileUrl || "",
-					createdAt: authUser.createdAt || "",
-				});
+				setUser(authUser);
 			} else if (isAuthenticated) {
 				// We're authenticated but don't have user data yet
 				console.log(
@@ -114,18 +98,20 @@ const AccountPage: NextPage = () => {
 				console.log("Not authenticated and no user data available");
 			}
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [authUser, authLoading, isAuthenticated]);
 
 	useEffect(() => {
 		// Update the user object whenever location state changes
-		if (location.city && location.country) {
-			setUser(prevUser => ({
-				...prevUser,
-				location: `${location.city}, ${location.country}`
-			}));
+		if (location.city && location.country && user) {
+			setUser(prevUser => {
+				if (!prevUser) return prevUser;
+				return {
+					...prevUser,
+					location: `${location.city}, ${location.country}`
+				} as User;
+			});
 		}
-	}, [location.city, location.country]);
+	}, [location.city, location.country, user]);
 
 	const handleLogout = async () => {
 		logout(); // need to improve logout handling with a
@@ -152,6 +138,7 @@ const AccountPage: NextPage = () => {
 	};
 
 	useEffect(() => {
+		if (!user) return;
 		const fetchUserlisings = async () => {
 			try {
 				const data = await getSellerListings(user.id);
@@ -196,10 +183,13 @@ const AccountPage: NextPage = () => {
 			}
 
 			// Update local user state with the new data
-			setUser({
-				...user,
-				...data,
-				location: data.location
+			setUser(prevUser => {
+				if (!prevUser) return prevUser;
+				return {
+					...prevUser,
+					...data,
+					location: data.location
+				} as User;
 			});
 
 			setUpdateSuccess("User data updated successfully!");
@@ -219,18 +209,7 @@ const AccountPage: NextPage = () => {
 						<div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6 mb-6">
 							<div className="flex flex-col items-center">
 								<div className="relative h-24 w-24 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden mb-4">
-									{user?.profileImage ? (
-										<Image
-											src={user.profileImage}
-											alt={user.name}
-											fill
-											className="object-cover"
-										/>
-									) : (
-										<div className="absolute inset-0 flex items-center justify-center bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300 text-4xl font-bold">
-											{user?.name?.charAt(0).toUpperCase()}
-										</div>
-									)}
+									<Avatar user={user} />
 								</div>
 								<h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
 									{user?.name}
@@ -472,18 +451,7 @@ const AccountPage: NextPage = () => {
                   </label>
                   <div className="flex items-center mt-2">
                     <div className="relative h-16 w-16 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden mr-4">
-                      {user?.profileImage ? (
-                        <Image
-                          src={user.profileImage}
-                          alt={user.name}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300 text-2xl font-bold">
-                          {user?.name?.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+											<Avatar user={user} />
                     </div>
                     <Button variant="outline" size="sm">
                       <FaEdit className="mr-2 h-4 w-4" />

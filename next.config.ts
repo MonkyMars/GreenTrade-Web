@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
 				hostname: 'hxlhtgitnqjjnuvalsmh.supabase.co',
 				port: '',
 			},
+			{
+				protocol: 'https',
+				hostname: 'lh3.googleusercontent.com',
+				port: '',
+			},
 		],
 		// Optimize image quality and formats
 		formats: ['image/avif', 'image/webp'],

@@ -14,6 +14,7 @@ import { categories } from "@/lib/functions/categories";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { encodeQueryParam } from "@/lib/functions/url";
+import Image from "next/image";
 
 interface NavigationProps {
 	transparent?: boolean;
@@ -21,7 +22,7 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
 	const [isOpen, setIsOpen] = useState(false);
-	const { isAuthenticated } = useAuth();
+	const { isAuthenticated, user } = useAuth();
 	const [scrolled, setScrolled] = useState(false);
 
 	// Handle scroll events for transparent header
@@ -97,7 +98,20 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
 					href="/account"
 					className="text-gray-700 dark:text-gray-200 hover:text-green-500"
 				>
-					<FiUser className="w-5 h-5" />
+					{user?.picture ? (
+						<Image
+							src={user.picture}
+							alt={user.name}
+							className="rounded-full w-8 h-8 object-cover hover:opacity-80 transition-opacity duration-200"
+							width={28}
+							height={28}
+							draggable={false}
+							priority
+						/>
+					) : (
+						<FiUser className="w-5 h-5" />
+					)}
+
 				</Link>
 			);
 		} else {

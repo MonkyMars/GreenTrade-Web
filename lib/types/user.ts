@@ -3,11 +3,10 @@ export interface User {
 	name: string;
 	email: string;
 	location: string;
-	profileUrl: string;
 	createdAt: string;
 	emailVerified: boolean;
 	phone?: string;
-	profileImage?: string;
-	bio?: string;
+	picture?: string;
+	bio: string;
 	ecoScore?: number;
 }
