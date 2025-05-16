@@ -630,11 +630,11 @@ const AccountPage: NextPage = () => {
 								</h2>
 
 								<Tabs defaultValue="listings">
-									<TabsList>
-										<TabsTrigger value="listings">Your Listings</TabsTrigger>
-										<TabsTrigger value="reviews">User Reviews</TabsTrigger>
-										<TabsTrigger value="favorites">Favorites</TabsTrigger>
-										<TabsTrigger value="purchases">Purchases</TabsTrigger>
+									<TabsList className="flex items-start sm:w-fit w-full flex-1  overflow-x-auto sm:overflow-visible pl-38 sm:pl-1 no-scrollbar">
+										<TabsTrigger value="listings" className="sm:flex-grow-0">Your Listings</TabsTrigger>
+										<TabsTrigger value="reviews" className="sm:flex-grow-0">User Reviews</TabsTrigger>
+										<TabsTrigger value="favorites" className="sm:flex-grow-0">Favorites</TabsTrigger>
+										<TabsTrigger value="purchases" className="sm:flex-grow-0">Purchases</TabsTrigger>
 									</TabsList>
 
 									<TabsContent value="listings" className="pt-4">
