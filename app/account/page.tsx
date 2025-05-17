@@ -50,10 +50,11 @@ const AccountPage: NextPage = () => {
 	});
 	const [user, setUser] = useState<User | null>(null);
 	const [activeTab, setActiveTab] = useState<ActiveTab["activeTab"]>("profile");
-	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-	const [updateSuccess, setUpdateSuccess] = useState("");
+	const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+	const [updateSuccess, setUpdateSuccess] = useState<string>("");
 	const [userListings, setUserListings] = useState<FetchedListing[]>([]);
 	const [userReviews, setUserReviews] = useState<FetchedReview[]>([]);
+	const [disabled, setDisabled] = useState<boolean>(false);
 
 	// Add this new useEffect at the beginning of the component after the state declarations
 	// This will ensure the city and country values are properly initialized on mount
@@ -101,17 +102,23 @@ const AccountPage: NextPage = () => {
 	}, [authUser, authLoading, isAuthenticated]);
 
 	useEffect(() => {
-		// Update the user object whenever location state changes
-		if (location.city && location.country && user) {
-			setUser(prevUser => {
-				if (!prevUser) return prevUser;
-				return {
-					...prevUser,
-					location: `${location.city}, ${location.country}`
-				} as User;
-			});
-		}
-	}, [location.city, location.country, user]);
+		if (!location.city || !location.country) return;
+		if (!user) return;
+
+		setUser(prevUser => {
+			if (!prevUser) return prevUser;
+			// Prevent unnecessary updates
+			const newLocation = `${location.city}, ${location.country}`;
+			if (prevUser.location === newLocation) return prevUser;
+
+			return {
+				...prevUser,
+				location: newLocation
+			};
+		});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [location.city, location.country]);
+
 
 	const handleLogout = async () => {
 		logout(); // need to improve logout handling with a
@@ -169,26 +176,39 @@ const AccountPage: NextPage = () => {
 
 	const handleUdateUser = async (e: React.FormEvent) => {
 		e.preventDefault();
-		const formData = new FormData(e.target as HTMLFormElement);
-		const data = Object.fromEntries(formData.entries());
 
-		// Combine city and country to create a properly formatted location string
-		data.location = `${location.city}, ${location.country}`;
+		if (!user) return;
+
+		const body: {
+			id: string;
+			name: string;
+			bio: string;
+			location: string;
+		} = {
+			id: user.id,
+			name: user.name,
+			bio: user.bio,
+			location: `${location.city}, ${location.country}`,
+		}
 
 		try {
-			const response = await api.patch(`/user/update`, data);
+			const response = await api.patch(`/api/auth/user/${user.id}`, body);
 
 			if (!response.data.success) {
 				throw new Error("Failed to update user data");
 			}
 
-			// Update local user state with the new data
-			setUser(prevUser => {
+			const { id, name, bio, location } = response.data.data;
+
+			// Update user state with the new data
+			setUser((prevUser) => {
 				if (!prevUser) return prevUser;
 				return {
 					...prevUser,
-					...data,
-					location: data.location
+					id,
+					name,
+					bio,
+					location,
 				} as User;
 			});
 
@@ -199,6 +219,21 @@ const AccountPage: NextPage = () => {
 	};
 
 	const countries = fetchCountriesInEurope();
+
+	useEffect(() => {
+		// Check if user and authUser are defined before comparing
+		if (!user || !authUser) return;
+
+		// Compare user and authUser properties
+		const isSameUser = user.id === authUser.id &&
+			user.name === authUser.name &&
+			user.email === authUser.email &&
+			user.location === authUser.location &&
+			user.bio === authUser.bio;
+
+		// Set disabled state based on comparison
+		setDisabled(isSameUser);
+	}, [user, authUser])
 
 	return (
 		<ProtectedRoute>
@@ -313,6 +348,12 @@ const AccountPage: NextPage = () => {
 								<div className="flex items-center">
 									<FaCheck className="h-4 w-4 mr-2" />
 									<span>{updateSuccess}</span>
+									<button
+										className="ml-auto text-green-700 dark:text-green-300 hover:text-green-900 flex items-center justify-center dark:hover:text-green-200 text-2xl"
+										onClick={() => setUpdateSuccess("")}
+									>
+										&times;
+									</button>
 								</div>
 							</div>
 						)}
@@ -461,7 +502,7 @@ const AccountPage: NextPage = () => {
                 </div> */}
 
 									<div className="flex justify-end">
-										<Button type="submit">Save Changes</Button>
+										<Button type="submit" disabled={disabled}>Save Changes</Button>
 									</div>
 								</form>
 							</div>
@@ -655,7 +696,7 @@ const AccountPage: NextPage = () => {
 													You haven&apos;t created any listings yet.
 												</p>
 												<Button>
-													<Link href={"/post"} prefetch>
+													<Link href={"/post"}>
 														Create Your First Listing
 													</Link>
 												</Button>
@@ -668,6 +709,11 @@ const AccountPage: NextPage = () => {
 											<p className="text-gray-600 dark:text-gray-400">
 												You haven&apos;t saved any favorites yet.
 											</p>
+											<Button className="mt-4">
+												<Link href={"/browse"}>
+													Browse Listings
+												</Link>
+											</Button>
 										</div>
 									</TabsContent>
 
@@ -676,6 +722,11 @@ const AccountPage: NextPage = () => {
 											<p className="text-gray-600 dark:text-gray-400">
 												No purchase history available.
 											</p>
+											<Button className="mt-4">
+												<Link href={"/browse"}>
+													Browse Listings
+												</Link>
+											</Button>
 										</div>
 									</TabsContent>
 
@@ -697,8 +748,10 @@ const AccountPage: NextPage = () => {
 													</div>
 												</div>
 											) : (
-												<div>
-													<p className="text-gray-800 dark:text-gray-800"></p>
+												<div className="text-center py-6">
+													<p className="text-gray-600 dark:text-gray-400">
+														No reviews available.
+													</p>
 												</div>
 											)}
 										</div>
