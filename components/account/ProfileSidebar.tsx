@@ -2,7 +2,6 @@
 
 import { User } from "@/lib/types/user";
 import { FaUser, FaStore, FaShieldAlt, FaTrash, FaSignOutAlt } from "react-icons/fa";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/functions/cn";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/badge";
@@ -25,27 +24,30 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
 	userListingsCount,
 	averageEcoScore,
 }) => {
-	const fadeIn = {
-		hidden: { opacity: 0 },
-		visible: { opacity: 1, transition: { duration: 0.4 } },
-	};
+	// Common button classes
+	const baseButtonClasses = "w-full relative justify-start transition-colors";
 
-	const slideUp = {
-		hidden: { opacity: 0 },
-		visible: { opacity: 1, transition: { duration: 0.4 } },
-	};
+	// Green button states
+	const activeGreenButtonClasses = "bg-green-50 border-green-500 text-green-700 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400";
+	const inactiveGreenButtonClasses = "hover:border-green-200 hover:bg-green-50 dark:hover:border-green-800 dark:hover:bg-green-950";
+
+	// Red button states
+	const activeRedButtonClasses = "bg-red-50 border-red-500 text-red-700 dark:bg-red-900/20 dark:border-red-700 dark:text-red-400";
+	const inactiveRedButtonClasses = "hover:border-red-200 hover:bg-red-50 dark:hover:border-red-800 dark:hover:bg-red-950 text-red-600 dark:text-red-500";
+	// Icon classes
+	const baseIconClasses = "mr-3 h-4 w-4";
+	const greenIconClasses = cn(baseIconClasses, "text-green-600 dark:text-green-500");
+	const redIconClasses = cn(baseIconClasses, "text-red-600 dark:text-red-500");
+
+	// Summary item classes
+	const summaryItemClasses = "flex justify-between text-sm items-center";
+	const summaryLabelClasses = "text-gray-600 dark:text-gray-400";
+	const summaryValueClasses = "font-medium text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded";
+	const ecoScoreClasses = "font-medium border border-green-200 dark:border-green-900 bg-green-50 text-green-700 dark:bg-green-900/40 dark:text-green-300 px-2 py-1 rounded";
 
 	return (
-		<motion.div
-			initial="hidden"
-			animate="visible"
-			variants={fadeIn}
-			className="md:w-72 flex-shrink-0 space-y-6"
-		>
-			<motion.div
-				variants={slideUp}
-				className="bg-white dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-800 p-6"
-			>
+		<div className="md:w-72 flex-shrink-0 space-y-4">
+			<div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 rounded">
 				<div className="flex flex-col items-center">
 					<div className="relative h-24 w-24 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden mb-4 border-2 border-green-100 dark:border-green-900">
 						<Avatar user={user} />
@@ -60,61 +62,45 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
 					</p>
 
 					{userListingsCount > 0 && (
-						<Badge className="mb-4 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-800 transition-colors duration-200 px-3 py-1">
+						<Badge className="mb-4 bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-200 border border-green-200 dark:border-green-800 px-3 py-1">
 							<FaStore className="mr-2 h-3 w-3" />
 							Seller
 						</Badge>
 					)}
 
-					<div className="w-full mt-3 space-y-2">
-						<Button
-							variant="outline"
-							className={cn(
-								"w-full relative justify-start transition-colors",
-								activeTab === "profile"
-									? "bg-green-500 hover:bg-green-600 border-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700 dark:border-green-700"
-									: "hover:border-green-200 hover:bg-green-50 dark:hover:border-green-800 dark:hover:bg-green-950"
-							)}
-							onClick={() => setActiveTab("profile")}
-						>
-							<FaUser className={cn(
-								"mr-3 h-4 w-4",
-								activeTab === "profile" ? "text-white" : "text-green-600 dark:text-green-500"
-							)} />
-							Profile
-						</Button>
+					<div className="w-full mt-3 space-y-2">						<Button
+						variant="outline"
+						className={cn(
+							baseButtonClasses,
+							activeTab === "profile" ? activeGreenButtonClasses : inactiveGreenButtonClasses
+						)}
+						onClick={() => setActiveTab("profile")}
+					>
+						<FaUser className={greenIconClasses} />
+						Profile
+					</Button>
 
 						<Button
 							variant="outline"
 							className={cn(
-								"w-full relative justify-start transition-colors",
-								activeTab === "security"
-									? "bg-green-500 hover:bg-green-600 border-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700 dark:border-green-700"
-									: "hover:border-green-200 hover:bg-green-50 dark:hover:border-green-800 dark:hover:bg-green-950"
+								baseButtonClasses,
+								activeTab === "security" ? activeGreenButtonClasses : inactiveGreenButtonClasses
 							)}
 							onClick={() => setActiveTab("security")}
 						>
-							<FaShieldAlt className={cn(
-								"mr-3 h-4 w-4",
-								activeTab === "security" ? "text-white" : "text-green-600 dark:text-green-500"
-							)} />
+							<FaShieldAlt className={greenIconClasses} />
 							Security
 						</Button>
 
 						<Button
 							variant="outline"
 							className={cn(
-								"w-full relative justify-start transition-colors",
-								activeTab === "delete"
-									? "bg-red-500 hover:bg-red-600 border-red-600 text-white dark:bg-red-600 dark:hover:bg-red-700 dark:border-red-700"
-									: "hover:border-red-200 hover:bg-red-50 dark:hover:border-red-800 dark:hover:bg-red-950 text-red-600 dark:text-red-500"
+								baseButtonClasses,
+								activeTab === "delete" ? activeRedButtonClasses : inactiveRedButtonClasses
 							)}
 							onClick={() => setActiveTab("delete")}
 						>
-							<FaTrash className={cn(
-								"mr-3 h-4 w-4",
-								activeTab === "delete" ? "text-white" : "text-red-600 dark:text-red-500"
-							)} />
+							<FaTrash className={redIconClasses} />
 							Delete Account
 						</Button>
 
@@ -128,48 +114,45 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
 						</Button>
 					</div>
 				</div>
-			</motion.div>
+			</div>
 
-			<motion.div
-				variants={slideUp}
-				className="bg-white dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-800 p-6"
-			>
+			<div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6">
 				<h3 className="text-sm font-medium text-gray-900 dark:text-white mb-4">
 					Account Summary
 				</h3>
 
 				<div className="space-y-4">
-					<div className="flex justify-between text-sm items-center">
-						<span className="text-gray-600 dark:text-gray-400">
+					<div className={summaryItemClasses}>
+						<span className={summaryLabelClasses}>
 							Member since
 						</span>
-						<span className="font-medium text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded">
+						<span className={summaryValueClasses}>
 							{new Date(user?.createdAt || Date.now()).toLocaleDateString()}
 						</span>
 					</div>
 
-					<div className="flex justify-between text-sm items-center">
-						<span className="text-gray-600 dark:text-gray-400">
+					<div className={summaryItemClasses}>
+						<span className={summaryLabelClasses}>
 							Listings
 						</span>
-						<span className="font-medium text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded">
+						<span className={summaryValueClasses}>
 							{userListingsCount || 0}
 						</span>
 					</div>
 
 					{userListingsCount > 0 && (
-						<div className="flex justify-between text-sm items-center">
-							<span className="text-gray-600 dark:text-gray-400">
+						<div className={summaryItemClasses}>
+							<span className={summaryLabelClasses}>
 								Eco Score
 							</span>
-							<span className="font-medium border border-green-200 dark:border-green-900 bg-green-50 text-green-700 dark:bg-green-900/40 dark:text-green-300 px-2 py-1 rounded">
+							<span className={ecoScoreClasses}>
 								{averageEcoScore}/5
 							</span>
 						</div>
 					)}
 				</div>
-			</motion.div>
-		</motion.div>
+			</div>
+		</div>
 	);
 };
 

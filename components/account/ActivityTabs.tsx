@@ -8,8 +8,8 @@ import { FetchedListing } from "@/lib/types/main";
 import { FetchedReview } from "@/lib/types/review";
 import ListingCard from "@/components/ui/ListingCard";
 import ReviewCard from "@/components/ui/ReviewCard";
-import { motion } from "framer-motion";
 import { FiPackage, FiStar, FiHeart, FiShoppingBag } from "react-icons/fi";
+import { cn } from "@/lib/functions/cn";
 
 interface ActivityTabsProps {
 	userListings: FetchedListing[];
@@ -19,28 +19,19 @@ interface ActivityTabsProps {
 const ActivityTabs: React.FC<ActivityTabsProps> = ({ userListings, userReviews }) => {
 	const [activeTab, setActiveTab] = useState("listings");
 
-	const container = {
-		hidden: { opacity: 0 },
-		show: {
-			opacity: 1,
-			transition: {
-				staggerChildren: 0.05
-			}
-		}
-	};
+	// Common classes for tabs
+	const baseTabClasses = "flex items-center gap-2 px-4 py-2 rounded-t rounded-b-none border-b-2 transition-all duration-200 text-md";
+	const activeTabClasses = "text-green-600 dark:bg-green-900/20! bg-green-300/20! border-green-600 dark:text-green-400 dark:border-green-400 font-medium";
+	const inactiveTabClasses = "text-gray-500 border-transparent hover:text-green-600 hover:border-green-300 dark:hover:text-green-400 dark:hover:border-green-800";
 
-	const item = {
-		hidden: { opacity: 0 },
-		show: { opacity: 1 }
-	};
+	// Common classes for icons
+	const getIconClasses = (tab: string) => cn(
+		"h-4 w-4",
+		activeTab === tab ? "text-green-600 dark:text-green-400" : "text-gray-500"
+	);
 
 	return (
-		<motion.div
-			initial={{ opacity: 0 }}
-			animate={{ opacity: 1 }}
-			transition={{ duration: 0.4 }}
-			className="bg-white dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-800 p-6"
-		>
+		<div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 rounded">
 			<h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
 				Your Activity
 			</h2>
@@ -55,68 +46,65 @@ const ActivityTabs: React.FC<ActivityTabsProps> = ({ userListings, userReviews }
 					<TabsTrigger
 						value="listings"
 						onClick={() => setActiveTab("listings")}
-						className={`flex items-center gap-2 px-4 py-2 rounded-t-lg border-b-2 transition-all duration-200 text-md ${activeTab === "listings"
-								? "text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 font-medium"
-								: "text-gray-500 border-transparent hover:text-green-600 hover:border-green-300 dark:hover:text-green-400 dark:hover:border-green-800"
-							}`}
+						className={cn(
+							baseTabClasses,
+							activeTab === "listings"
+								? activeTabClasses
+								: inactiveTabClasses
+						)}
 					>
-						<FiPackage className={`h-4 w-4 ${activeTab === "listings" ? "text-green-600 dark:text-green-400" : "text-gray-500"}`} />
+						<FiPackage className={getIconClasses("listings")} />
 						Your Listings
 					</TabsTrigger>
 
 					<TabsTrigger
 						value="reviews"
 						onClick={() => setActiveTab("reviews")}
-						className={`flex items-center gap-2 px-4 py-2 rounded-t-lg border-b-2 transition-all duration-200 text-md ${activeTab === "reviews"
-								? "text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 font-medium"
-								: "text-gray-500 border-transparent hover:text-green-600 hover:border-green-300 dark:hover:text-green-400 dark:hover:border-green-800"
-							}`}
+						className={cn(
+							baseTabClasses,
+							activeTab === "reviews" ? activeTabClasses : inactiveTabClasses
+						)}
 					>
-						<FiStar className={`h-4 w-4 ${activeTab === "reviews" ? "text-green-600 dark:text-green-400" : "text-gray-500"}`} />
+						<FiStar className={getIconClasses("reviews")} />
 						User Reviews
 					</TabsTrigger>
 
 					<TabsTrigger
 						value="favorites"
 						onClick={() => setActiveTab("favorites")}
-						className={`flex items-center gap-2 px-4 py-2 rounded-t-lg border-b-2 transition-all duration-200 text-md ${activeTab === "favorites"
-								? "text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 font-medium"
-								: "text-gray-500 border-transparent hover:text-green-600 hover:border-green-300 dark:hover:text-green-400 dark:hover:border-green-800"
-							}`}
+						className={cn(
+							baseTabClasses,
+							activeTab === "favorites" ? activeTabClasses : inactiveTabClasses
+						)}
 					>
-						<FiHeart className={`h-4 w-4 ${activeTab === "favorites" ? "text-green-600 dark:text-green-400" : "text-gray-500"}`} />
+						<FiHeart className={getIconClasses("favorites")} />
 						Favorites
 					</TabsTrigger>
 
 					<TabsTrigger
 						value="purchases"
 						onClick={() => setActiveTab("purchases")}
-						className={`flex items-center gap-2 px-4 py-2 rounded-t-lg border-b-2 transition-all duration-200 text-md ${activeTab === "purchases"
-								? "text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 font-medium"
-								: "text-gray-500 border-transparent hover:text-green-600 hover:border-green-300 dark:hover:text-green-400 dark:hover:border-green-800"
-							}`}
+						className={cn(
+							baseTabClasses,
+							activeTab === "purchases" ? activeTabClasses : inactiveTabClasses
+						)}
 					>
-						<FiShoppingBag className={`h-4 w-4 ${activeTab === "purchases" ? "text-green-600 dark:text-green-400" : "text-gray-500"}`} />
+						<FiShoppingBag className={getIconClasses("purchases")} />
 						Purchases
 					</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="listings" className="pt-2">
 					{userListings && userListings.length > 0 ? (
-						<motion.div
-							variants={container}
-							initial="hidden"
-							animate="show"
-							className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-						>
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 							{userListings.map((listing) => (
-								<motion.div key={listing.id} variants={item}>
+								<div key={listing.id}>
 									<Link href={`/listings/${listing.id}`}>
 										<ListingCard listing={listing} viewMode="grid" className="h-full border border-gray-200 dark:border-gray-800 hover:border-green-200 dark:hover:border-green-800 transition-colors" />
 									</Link>
-								</motion.div>
+								</div>
 							))}
-						</motion.div>
+						</div>
 					) : (
 						<div className="text-center py-10 border border-dashed border-gray-200 dark:border-gray-800 rounded-md bg-gray-50 dark:bg-gray-900/50">
 							<p className="text-gray-500 dark:text-gray-400">You don&apos;t have any listings yet.</p>
@@ -129,18 +117,13 @@ const ActivityTabs: React.FC<ActivityTabsProps> = ({ userListings, userReviews }
 
 				<TabsContent value="reviews" className="pt-2">
 					{userReviews && userReviews.length > 0 ? (
-						<motion.div
-							variants={container}
-							initial="hidden"
-							animate="show"
-							className="space-y-4"
-						>
+						<div className="space-y-4">
 							{userReviews.map((review) => (
-								<motion.div key={review.id} variants={item}>
+								<div key={review.id}>
 									<ReviewCard review={review} className="border border-gray-200 dark:border-gray-800 hover:border-green-200 dark:hover:border-green-800 transition-colors" />
-								</motion.div>
+								</div>
 							))}
-						</motion.div>
+						</div>
 					) : (
 						<div className="text-center py-10 border border-dashed border-gray-200 dark:border-gray-800 rounded-md bg-gray-50 dark:bg-gray-900/50">
 							<p className="text-gray-500 dark:text-gray-400">No reviews yet.</p>
@@ -163,7 +146,7 @@ const ActivityTabs: React.FC<ActivityTabsProps> = ({ userListings, userReviews }
 					</div>
 				</TabsContent>
 			</Tabs>
-		</motion.div>
+		</div>
 	);
 };
 

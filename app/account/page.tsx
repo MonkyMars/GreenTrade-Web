@@ -198,87 +198,80 @@ const AccountPage: NextPage = () => {
 			user.bio === authUser.bio;
 
 		setDisabled(isSameUser);
-	}, [user, authUser]);
-	// Calculate average eco score
+	}, [user, authUser]);	// Calculate average eco score
 	const averageEcoScore = userListings.length > 0
 		? Number(calculateAverageEcoScore(userListings))
 		: 0;
 
+	// Common animation props
+	const tabAnimationProps = {
+		initial: { opacity: 0 },
+		animate: { opacity: 1 },
+		exit: { opacity: 0 },
+		transition: { duration: 0.3 }
+	};
+
 	return (
 		<ProtectedRoute>
-			<motion.div
-				initial={{ opacity: 0 }}
-				animate={{ opacity: 1 }}
-				transition={{ duration: 0.3 }}
-				className="container mx-auto px-4 py-22 max-w-6xl mb-12"
-			>
-				<div className="flex flex-col md:flex-row gap-8">
-					{/* Sidebar */}
-					<ProfileSidebar
-						user={user}
-						activeTab={activeTab}
-						setActiveTab={setActiveTab}
-						handleLogout={handleLogout}
-						userListingsCount={userListings.length}
-						averageEcoScore={averageEcoScore}
-					/>
+			<div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-16">
+				<div className="container mx-auto px-4 py-8">
+					<div className="flex flex-col md:flex-row gap-6">
+						<ProfileSidebar
+							user={user}
+							activeTab={activeTab}
+							setActiveTab={setActiveTab}
+							handleLogout={handleLogout}
+							userListingsCount={userListings.length}
+							averageEcoScore={averageEcoScore}
+						/>
 
-					{/* Main Content */}
-					<div className="flex-1">
-						<AnimatePresence mode="wait">
-							{activeTab === "profile" && (
-								<motion.div
-									key="profile"
-									initial={{ opacity: 0, x: 20 }}
-									animate={{ opacity: 1, x: 0 }}
-									exit={{ opacity: 0, x: -20 }}
-									transition={{ duration: 0.3 }}
-									className="space-y-6"
-								>
-									<ProfileInfo
-										user={user}
-										handleUpdateUser={handleUpdateUser}
-										updateSuccess={updateSuccess}
-										setUpdateSuccess={setUpdateSuccess}
-										location={location}
-										setLocation={setLocation}
-										disabled={disabled}
-									/>
+						<div className="flex-1">
+							<AnimatePresence mode="wait">
+								{activeTab === "profile" && (
+									<motion.div
+										key="profile"
+										{...tabAnimationProps}
+										className="space-y-6"
+									>
+										<ProfileInfo
+											user={user}
+											handleUpdateUser={handleUpdateUser}
+											updateSuccess={updateSuccess}
+											setUpdateSuccess={setUpdateSuccess}
+											location={location}
+											setLocation={setLocation}
+											disabled={disabled}
+										/>
 
-									<ActivityTabs
-										userListings={userListings}
-										userReviews={userReviews}
-									/>
-								</motion.div>
-							)}
+										<ActivityTabs
+											userListings={userListings}
+											userReviews={userReviews}
+										/>
+									</motion.div>
+								)}
 
-							{activeTab === "security" && (
-								<motion.div
-									key="security"
-									initial={{ opacity: 0, x: 20 }}
-									animate={{ opacity: 1, x: 0 }}
-									exit={{ opacity: 0, x: -20 }}
-									transition={{ duration: 0.3 }}
-								>
-									<SecuritySettings />
-								</motion.div>
-							)}
+								{activeTab === "security" && (
+									<motion.div
+										key="security"
+										{...tabAnimationProps}
+									>
+										<SecuritySettings />
+									</motion.div>
+								)}
 
-							{activeTab === "delete" && (
-								<motion.div
-									key="delete"
-									initial={{ opacity: 0, x: 20 }}
-									animate={{ opacity: 1, x: 0 }}
-									exit={{ opacity: 0, x: -20 }}
-									transition={{ duration: 0.3 }}
-								>
-									<DeleteAccount handleDeleteAccount={handleDeleteAccount} />
-								</motion.div>
-							)}
-						</AnimatePresence>
+								{activeTab === "delete" && (
+									<motion.div
+										key="delete"
+										{...tabAnimationProps}
+									>
+										<DeleteAccount handleDeleteAccount={handleDeleteAccount} />
+									</motion.div>
+								)}
+							</AnimatePresence>
+						</div>
 					</div>
 				</div>
-			</motion.div>
+			</div>
 		</ProtectedRoute>
 	);
 };

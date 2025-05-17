@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FaTrash, FaExclamationTriangle } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 
 interface DeleteAccountProps {
 	handleDeleteAccount: () => Promise<void>;
@@ -15,46 +15,51 @@ const DeleteAccount: React.FC<DeleteAccountProps> = ({ handleDeleteAccount }) =>
 
 	const confirmEnabled = deleteText.toLowerCase() === "delete my account";
 
+	// Common button classes
+	const redButtonClasses = "bg-white hover:bg-red-600 text-red-600 hover:text-white border border-red-500 dark:bg-gray-900 dark:hover:bg-red-600 dark:text-red-500 dark:hover:text-white dark:border-red-600 transition-colors";
+	const cancelButtonClasses = "border border-gray-300 hover:border-gray-400 text-gray-700 dark:border-gray-700 dark:hover:border-gray-600 dark:text-gray-300 transition-colors";
+	const iconClasses = "mr-2 h-4 w-4";
+
+	// Warning box classes
+	const warningBoxClasses = "p-6 bg-red-50 dark:bg-red-900/10 rounded-md border border-red-200 dark:border-red-900 mb-6";
+	const warningIconClasses = "h-6 w-6 text-red-500 mr-4 mt-0.5 flex-shrink-0";
+	const warningTitleClasses = "text-md font-semibold text-red-800 dark:text-red-300 mb-3";
+	const warningTextClasses = "text-gray-700 dark:text-gray-300 leading-relaxed";
+
+	// List item classes
+	const listItemClasses = "flex items-center";
+	const bulletPointClasses = "mr-2";
+
 	return (
-		<motion.div
-			initial={{ opacity: 0 }}
-			animate={{ opacity: 1 }}
-			transition={{ duration: 0.4 }}
-			className="bg-white dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-800 p-6 mb-6"
-		>
+		<div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 mb-6 rounded">
 			<h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
 				<FaTrash className="mr-3 h-5 w-5 text-red-500" />
 				Delete Account
 			</h2>
 
-			<motion.div
-				initial={{ opacity: 0 }}
-				animate={{ opacity: 1 }}
-				transition={{ delay: 0.1, duration: 0.3 }}
-				className="p-6 bg-red-50 dark:bg-red-900/10 rounded-md border border-red-200 dark:border-red-900 mb-6"
-			>
+			<div className={warningBoxClasses}>
 				<div className="flex items-start">
-					<FaExclamationTriangle className="h-6 w-6 text-red-500 mr-4 mt-0.5 flex-shrink-0" />
+					<FaExclamationTriangle className={warningIconClasses} />
 					<div>
-						<h3 className="text-md font-semibold text-red-800 dark:text-red-300 mb-3">
+						<h3 className={warningTitleClasses}>
 							Warning: This action cannot be undone
 						</h3>
-						<p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+						<p className={warningTextClasses}>
 							Deleting your account will permanently remove all your
 							data, including:
 						</p>
 						<ul className="mt-2 mb-2 space-y-1 text-gray-700 dark:text-gray-300">
-							<li className="flex items-center">
-								<span className="mr-2">•</span> Your personal information and profile data
+							<li className={listItemClasses}>
+								<span className={bulletPointClasses}>•</span> Your personal information and profile data
 							</li>
-							<li className="flex items-center">
-								<span className="mr-2">•</span> All your listings and product images
+							<li className={listItemClasses}>
+								<span className={bulletPointClasses}>•</span> All your listings and product images
 							</li>
-							<li className="flex items-center">
-								<span className="mr-2">•</span> Message history and conversations
+							<li className={listItemClasses}>
+								<span className={bulletPointClasses}>•</span> Message history and conversations
 							</li>
-							<li className="flex items-center">
-								<span className="mr-2">•</span> Purchase/sale history and reviews
+							<li className={listItemClasses}>
+								<span className={bulletPointClasses}>•</span> Purchase/sale history and reviews
 							</li>
 						</ul>
 						<p className="mt-3 text-gray-700 dark:text-gray-300 font-medium">
@@ -62,33 +67,22 @@ const DeleteAccount: React.FC<DeleteAccountProps> = ({ handleDeleteAccount }) =>
 						</p>
 					</div>
 				</div>
-			</motion.div>
+			</div>
 
 			<AnimatePresence mode="wait">
 				{!showDeleteConfirm ? (
-					<motion.div
-						key="delete-button"
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
-					>
+					<div>
 						<Button
 							variant="outline"
-							className="bg-white hover:bg-red-600 text-red-600 hover:text-white border border-red-500 dark:bg-gray-900 dark:hover:bg-red-600 dark:text-red-500 dark:hover:text-white dark:border-red-600 transition-colors"
+							className={redButtonClasses}
 							onClick={() => setShowDeleteConfirm(true)}
 						>
-							<FaTrash className="mr-2 h-4 w-4" />
+							<FaTrash className={iconClasses} />
 							Delete My Account
 						</Button>
-					</motion.div>
+					</div>
 				) : (
-					<motion.div
-						key="confirm-delete"
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
-						className="border-t border-gray-200 dark:border-gray-700 pt-6"
-					>
+					<div className="border-t border-gray-200 dark:border-gray-700 pt-6">
 						<h3 className="text-md font-medium text-gray-900 dark:text-white mb-4">
 							Confirm Account Deletion
 						</h3>
@@ -108,7 +102,7 @@ const DeleteAccount: React.FC<DeleteAccountProps> = ({ handleDeleteAccount }) =>
 						<div className="flex justify-between">
 							<Button
 								variant="outline"
-								className="border border-gray-300 hover:border-gray-400 text-gray-700 dark:border-gray-700 dark:hover:border-gray-600 dark:text-gray-300 transition-colors"
+								className={cancelButtonClasses}
 								onClick={() => {
 									setShowDeleteConfirm(false);
 									setDeleteText("");
@@ -118,18 +112,18 @@ const DeleteAccount: React.FC<DeleteAccountProps> = ({ handleDeleteAccount }) =>
 							</Button>
 							<Button
 								variant="outline"
-								className="bg-white hover:bg-red-600 text-red-600 hover:text-white border border-red-500 dark:bg-gray-900 dark:hover:bg-red-600 dark:text-red-500 dark:hover:text-white dark:border-red-600 transition-colors"
+								className={redButtonClasses}
 								disabled={!confirmEnabled}
 								onClick={() => handleDeleteAccount()}
 							>
-								<FaTrash className="mr-2 h-4 w-4" />
+								<FaTrash className={iconClasses} />
 								Permanently Delete Account
 							</Button>
 						</div>
-					</motion.div>
+					</div>
 				)}
 			</AnimatePresence>
-		</motion.div>
+		</div>
 	);
 };
 
