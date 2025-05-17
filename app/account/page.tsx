@@ -20,6 +20,7 @@ import ProfileInfo from "@/components/account/ProfileInfo";
 import SecuritySettings from "@/components/account/SecuritySettings";
 import DeleteAccount from "@/components/account/DeleteAccount";
 import ActivityTabs from "@/components/account/ActivityTabs";
+import { AppError } from "@/lib/errorUtils";
 
 interface ActiveTab {
 	activeTab: "profile" | "seller" | "security" | "delete";
@@ -211,6 +212,45 @@ const AccountPage: NextPage = () => {
 		transition: { duration: 0.3 }
 	};
 
+	const onUserDownload = async () => {
+		try {
+			// Make the API request
+			const response = await api.get("/api/auth/download_user_data", {
+				responseType: "json"
+			});
+
+			// Check if the response is valid
+			if (!response.data || !response.data.data) {
+				throw new Error("Invalid response format");
+			}
+
+			// Convert the response data to a JSON string
+			const jsonData = JSON.stringify(response.data.data, null, 2);
+
+			// Create a blob with the JSON data
+			const blob = new Blob([jsonData], { type: "application/json" });
+
+			// Create a download link
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = `${user?.name || "user_data"}.json`;
+
+			// Trigger the download
+			document.body.appendChild(a);
+			a.click();
+
+			// Clean up
+			a.remove();
+			window.URL.revokeObjectURL(url);
+
+			console.log("User data downloaded successfully");
+		} catch (error) {
+			console.error("Download error:", error);
+			throw new AppError("Failed to download user data: " + error);
+		}
+	};
+
 	return (
 		<ProtectedRoute>
 			<div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-16">
@@ -255,7 +295,9 @@ const AccountPage: NextPage = () => {
 										key="security"
 										{...tabAnimationProps}
 									>
-										<SecuritySettings />
+										<SecuritySettings
+											onUserDownload={onUserDownload}
+										/>
 									</motion.div>
 								)}
 

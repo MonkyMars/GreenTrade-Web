@@ -149,7 +149,7 @@ const Home: NextPage = () => {
 						{categories.map((category) => (
 							<Link
 								key={category.name}
-								href={`/browse?category=${category.id}`}
+								href={`/browse?category=${encodeQueryParam(category.name)}`}
 								className="bg-gray-50 dark:bg-gray-800 p-6 rounded-xl hover:shadow-md transition-shadow flex flex-col items-center text-center group"
 							>
 								<div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
@@ -235,7 +235,7 @@ const Home: NextPage = () => {
 								trade.
 							</p>
 							<Link
-								href="/how-it-works"
+								href="/about"
 								className="text-green-600 dark:text-green-400 font-medium inline-flex items-center"
 							>
 								Learn More <FiArrowRight className="ml-2" />
@@ -289,7 +289,7 @@ const Home: NextPage = () => {
 											<FaMapMarkedAlt className="mr-1" /> {listing.location}
 										</div>
 										<Link
-											href={`/listing/${listing.id}`}
+											href={`/listings/${listing.id}`}
 											className="mt-4 w-full block text-center bg-gray-100 dark:bg-gray-700 hover:bg-green-100 dark:hover:bg-green-900 text-gray-800 dark:text-white py-2 rounded-md transition-colors"
 										>
 											View Details

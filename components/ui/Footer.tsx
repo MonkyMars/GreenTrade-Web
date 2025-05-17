@@ -134,7 +134,7 @@ const Footer: React.FC = () => {
 						</div>
 						<div className="text-center md:text-left">
 							<h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-								We
+								GreenVue
 							</h3>
 							<ul className="mt-4 space-y-4">
 								<li>
@@ -151,6 +151,22 @@ const Footer: React.FC = () => {
 										className="text-base text-gray-600 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400"
 									>
 										Source Code
+									</Link>
+								</li>
+								<li>
+									<Link
+										href="/terms"
+										className="text-base text-gray-600 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400"
+									>
+										Terms of Service
+									</Link>
+								</li>
+								<li>
+									<Link
+										href="/privacy"
+										className="text-base text-gray-600 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400"
+									>
+										Privacy Policy
 									</Link>
 								</li>
 							</ul>

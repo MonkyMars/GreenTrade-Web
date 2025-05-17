@@ -99,9 +99,8 @@ const ActivityTabs: React.FC<ActivityTabsProps> = ({ userListings, userReviews }
 						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 							{userListings.map((listing) => (
 								<div key={listing.id}>
-									<Link href={`/listings/${listing.id}`}>
-										<ListingCard listing={listing} viewMode="grid" className="h-full border border-gray-200 dark:border-gray-800 hover:border-green-200 dark:hover:border-green-800 transition-colors" />
-									</Link>
+									<ListingCard listing={listing} viewMode="grid" className="h-full border border-gray-200 dark:border-gray-800 hover:border-green-200 dark:hover:border-green-800 transition-colors" />
+
 								</div>
 							))}
 						</div>
