@@ -11,7 +11,7 @@ import { FetchedListing } from "@/lib/types/main";
 import { getSellerListings } from "@/lib/backend/listings/getListings";
 import ListingCard from "@/components/ui/ListingCard";
 import api from "@/lib/backend/api/axiosConfig";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { AppError, retryOperation } from "@/lib/errorUtils";
 import { getReviews } from "@/lib/backend/reviews/getReviews";
 import { FetchedReview } from "@/lib/types/review";

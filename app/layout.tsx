@@ -6,6 +6,7 @@ import { FooterWrapper } from "../components/ui/FooterWrapper";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
 import { EmailConfirmationBar } from "@/components/ui/EmailConfirmationBar";
 import { Analytics } from "@vercel/analytics/react";
+import { Toaster } from "@/components/ui/sonner"
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -77,6 +78,7 @@ export default function RootLayout({
 					<Navigation />
 					<EmailConfirmationBar />
 					{children}
+					<Toaster />
 					<FooterWrapper />
 				</AuthProvider>
 			</body>

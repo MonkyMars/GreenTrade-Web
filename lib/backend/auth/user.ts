@@ -1,6 +1,6 @@
 import api from '../api/axiosConfig';
 import { User } from '@/lib/types/user';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { AppError, retryOperation } from '@/lib/errorUtils';
 
 /**

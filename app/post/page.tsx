@@ -13,7 +13,7 @@ import ProtectedRoute from "../../components/ProtectedRoute";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { type Categories, categories } from "@/lib/functions/categories";
 import { AppError, retryOperation } from "@/lib/errorUtils";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { NextPage } from "next";
 import { type Condition, conditions } from "@/lib/functions/conditions";
 import { FiGrid, FiList } from "react-icons/fi";

@@ -12,7 +12,7 @@ import axios from "axios";
 import { User } from "../types/user";
 import api from "../backend/api/axiosConfig";
 import { getUser } from "@/lib/backend/auth/user";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { AppError, handleError, retryOperation } from "@/lib/errorUtils";
 import { useSearchParams } from "next/navigation";
 
@@ -66,10 +66,6 @@ const OAuthRedirectHandler: React.FC<{ onUserLoad: (user: User) => void }> = ({ 
 
 				// Update user state - this will trigger navigation due to authentication state change
 				onUserLoad(user);
-
-				// Show success message
-				toast.success("Login successful!");
-
 			} catch (error) {
 				localStorage.removeItem("userId");
 
@@ -453,7 +449,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			setUser(user);
 
 			// Show success message
-			toast.success("Login successful!");
+			toast.success(`Logged in successfully as ${user.name}!`);
 		} catch (error) {
 			// Handle error and clean up any partial auth state
 			localStorage.removeItem("userId");

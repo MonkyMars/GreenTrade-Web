@@ -1,6 +1,6 @@
 import { UploadListing } from '@/lib/types/main';
 import api from '@/lib/backend/api/axiosConfig';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { AppError, retryOperation } from '@/lib/errorUtils';
 
 export const uploadImage = async (

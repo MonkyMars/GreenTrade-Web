@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import React from "react";
 import { FiAlertCircle, FiX } from "react-icons/fi";
 import { useState, useEffect } from "react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { resendEmail } from "@/lib/backend/auth/user";
 
 
