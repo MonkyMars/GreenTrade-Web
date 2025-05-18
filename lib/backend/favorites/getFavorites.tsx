@@ -2,7 +2,6 @@ import api from "@/lib/backend/api/axiosConfig";
 import { toast } from "sonner";
 import { AppError, retryOperation } from "@/lib/errorUtils";
 import { FetchedListing } from "@/lib/types/main";
-import React from "react";
 
 /**
  * Fetch user's favorite listings with proper error handling
@@ -11,7 +10,7 @@ export const getFavorites = async (
 	userId: string
 ): Promise<FetchedListing[]> => {
 	// Show loading state in production
-	let loadingToast: string | undefined;
+	let loadingToast;
 	if (process.env.NODE_ENV === "production") {
 		loadingToast = toast.loading("Fetching your favorites...");
 	}
@@ -71,12 +70,7 @@ export const getFavorites = async (
 		}
 
 		if (favorites.length === 0 && process.env.NODE_ENV === "production") {
-			// Use toast.custom instead of toast.info which doesn't exist
-			toast.custom(() => (
-				<div className="bg-blue-50 border border-blue-200 rounded p-3 shadow-md">
-					<p className="text-blue-800">You don&apos;t have any favorites yet</p>
-				</div>
-			));
+			toast.info("You don't have any favorites yet.");
 		}
 
 		return favorites;

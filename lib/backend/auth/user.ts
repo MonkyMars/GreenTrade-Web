@@ -76,7 +76,7 @@ export const updateUser = async (
 	}
 ) => {
 	// Show loading state
-	let loadingToast: string | undefined;
+	let loadingToast;
 	if (process.env.NODE_ENV === 'production') {
 		loadingToast = toast.loading('Updating profile...');
 	}
@@ -170,7 +170,7 @@ export const updateUser = async (
  */
 export const resendEmail = async (email: string) => {
 	// Show loading state
-	let loadingToast: string | undefined;
+	let loadingToast;
 	if (process.env.NODE_ENV === 'production') {
 		loadingToast = toast.loading('Sending verification email...');
 	}

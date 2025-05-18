@@ -2,7 +2,6 @@ import { FetchedListing } from '@/lib/types/main'
 import api from '@/lib/backend/api/axiosConfig'
 import { toast } from 'sonner'
 import { AppError, retryOperation } from '@/lib/errorUtils'
-import { ReactElement } from 'react'
 
 /**
  * Fetch a single listing or all listings with improved error handling and retry logic
@@ -14,7 +13,7 @@ export const getListings = async (
 	try {
 		if (id) {
 			// Show loading state in production
-			let loadingToast: string | undefined
+			let loadingToast;
 			if (process.env.NODE_ENV === 'production') {
 				loadingToast = toast.loading('Fetching listing details...')
 			}
@@ -120,12 +119,7 @@ export const getListings = async (
 
 			if (validListings.length === 0) {
 				if (process.env.NODE_ENV === 'production') {
-					toast.custom((t) => (
-						<div className="bg-white p-4 rounded shadow-md">
-							<p className="text-gray-700">No listings found.</p>
-							<button onClick={() => toast.dismiss(t.id)} className="mt-2 text-blue-500">Dismiss</button>
-						</div>
-					) as ReactElement)
+					toast.info('No listings found.')
 				}
 			}
 
@@ -173,7 +167,7 @@ export const getSellerListings = async (
 	sellerId: string,
 ): Promise<FetchedListing[]> => {
 	// Show loading state in production
-	let loadingToast: string | undefined
+	let loadingToast;
 	if (process.env.NODE_ENV === 'production') {
 		loadingToast = toast.loading('Fetching seller listings...')
 	}
@@ -228,8 +222,7 @@ export const getSellerListings = async (
 		}
 
 		if (validListings.length === 0 && process.env.NODE_ENV === 'production') {
-			// Use toast.custom instead of toast.info which doesn't exist
-
+			toast.info('No listings found for this seller.')
 		}
 
 		return validListings

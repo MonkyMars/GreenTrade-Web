@@ -13,7 +13,7 @@ export const updateListing = async (
 	updates: Record<string, unknown>
 ) => {
 	// Show loading toast in production
-	let loadingToast: string | undefined;
+	let loadingToast;
 	if (process.env.NODE_ENV === 'production') {
 		loadingToast = toast.loading('Updating listing...');
 	}
