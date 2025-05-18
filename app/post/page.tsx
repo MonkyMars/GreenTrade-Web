@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { uploadImage } from "@/lib/backend/listings/uploadImage";
 import { uploadListing } from "@/lib/backend/listings/uploadListing";
-import { type UploadListing } from "@/lib/types/main";
+import { FetchedListing, type UploadListing } from "@/lib/types/main";
 import { calculateEcoScore } from "@/lib/functions/calculateEcoScore";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -16,6 +16,7 @@ import { AppError, retryOperation } from "@/lib/errorUtils";
 import { toast } from "react-hot-toast";
 import { NextPage } from "next";
 import { type Condition, conditions } from "@/lib/functions/conditions";
+import { FiGrid, FiList } from "react-icons/fi";
 
 // Import components
 import FormErrorDisplay from "@/components/post/FormErrorDisplay";
@@ -26,6 +27,8 @@ import ImageUploadForm from "@/components/post/ImageUploadForm";
 import EcoAttributesForm from "@/components/post/EcoAttributesForm";
 import TermsAndSubmitForm from "@/components/post/TermsAndSubmitForm";
 import { type EcoAttributes } from "@/lib/functions/ecoAttributes";
+import { Button } from "@/components/ui/button";
+import ListingCard from "@/components/ui/ListingCard";
 
 // Create a more specific type for category that excludes "All Categories"
 type CategoryName = Exclude<Categories["name"], "All Categories">;
@@ -84,6 +87,9 @@ const PostListingPage: NextPage = () => {
 	const [successMessage, setSuccessMessage] = useState("");
 	const [errorMessage, setErrorMessage] = useState("");
 	const [ecoScore, setEcoScore] = useState<number>(0);
+	const [tab, setTab] = useState<"edit" | "preview">("edit");
+	const [previewListing, setPreviewListing] = useState<FetchedListing | null>(null);
+	const [previewViewmode, setPreviewView] = useState<"grid" | "list">("grid");
 
 	// Check if user has set their location for posting
 	useEffect(() => {
@@ -278,6 +284,34 @@ const PostListingPage: NextPage = () => {
 		}
 	};
 
+	const handleTabChange = (newTab: "edit" | "preview") => {
+		if (newTab === tab) {
+			return;
+		}
+
+		if (newTab === "preview") {
+			const previewListing: FetchedListing = {
+				...formData,
+				price: parseFloat(formData.price) || 0,
+				ecoScore: calculateEcoScore(formData.ecoAttributes),
+				imageUrl: images.map((image) => image.uri),
+				sellerId: user?.id || "",
+				id: "",
+				createdAt: new Date().toISOString(),
+				location: user?.location || "",
+				sellerUsername: user?.name || "",
+				sellerBio: user?.bio || "",
+				sellerCreatedAt: user?.createdAt || new Date().toLocaleDateString(),
+				sellerRating: 0,
+				sellerVerified: false
+			};
+			setPreviewListing(previewListing);
+		};
+
+		setTab(newTab);
+		window.scrollTo({ top: 0, behavior: "smooth" });
+	};
+
 	return (
 		<ProtectedRoute>
 			<main className="pt-16 pb-16 bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -294,46 +328,93 @@ const PostListingPage: NextPage = () => {
 					<FormSuccessMessage successMessage={successMessage} />
 					<FormErrorDisplay formErrors={formErrors} errorMessage={errorMessage} />
 
-					<form onSubmit={handleSubmit} className="space-y-8">
-						{/* Item Details */}
-						<ItemDetailsForm
-							formData={formData}
-							handleChange={handleChange}
-							setFormData={setFormData}
-							formErrors={formErrors}
-						/>
+					<form onSubmit={handleSubmit}>
+						<Button variant={'ghost'} type="button" className="rounded-sm" onClick={() => handleTabChange("edit")}>Edit</Button>
+						<Button variant={'ghost'} type="button" className="rounded-sm" onClick={() => handleTabChange("preview")}>Preview</Button>
 
-						{/* Price & Location */}
-						<PriceLocationForm
-							formData={formData}
-							handleChange={handleChange}
-							setFormData={setFormData}
-							formErrors={formErrors}
-							user={user}
-						/>
+						{/* Tab content */}
+						{tab === "edit" && (
+							<>
+								{/* Item Details */}
+								<ItemDetailsForm
+									formData={formData}
+									handleChange={handleChange}
+									setFormData={setFormData}
+									formErrors={formErrors}
+								/>
 
-						{/* Images */}
-						<ImageUploadForm
-							images={images}
-							setImages={setImages}
-							imageFiles={imageFiles}
-							setImageFiles={setImageFiles}
-							uploading={uploading}
-							setUploading={setUploading}
-							formErrors={formErrors}
-						/>
+								{/* Price & Location */}
+								<PriceLocationForm
+									formData={formData}
+									handleChange={handleChange}
+									setFormData={setFormData}
+									formErrors={formErrors}
+									user={user}
+								/>
 
-						{/* Eco-friendly Attributes */}
-						<EcoAttributesForm
-							formData={formData}
-							setFormData={setFormData}
-							ecoScore={ecoScore}
-							setEcoScore={setEcoScore}
-							formErrors={formErrors}
-						/>
+								{/* Images */}
+								<ImageUploadForm
+									images={images}
+									setImages={setImages}
+									imageFiles={imageFiles}
+									setImageFiles={setImageFiles}
+									uploading={uploading}
+									setUploading={setUploading}
+									formErrors={formErrors}
+								/>
 
-						{/* Terms and Submit */}
-						<TermsAndSubmitForm onSubmit={handleSubmit} />
+								{/* Eco-friendly Attributes */}
+								<EcoAttributesForm
+									formData={formData}
+									setFormData={setFormData}
+									ecoScore={ecoScore}
+									setEcoScore={setEcoScore}
+									formErrors={formErrors}
+								/>
+
+								{/* Terms and Submit */}
+								<TermsAndSubmitForm onSubmit={handleSubmit} />
+							</>
+						)}
+
+						{/* Information Tab */}
+						{tab === "preview" && previewListing && (
+							<div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+								<h2 className="text-xl font-bold mb-4">Preview</h2>
+								<div className="flex justify-between mb-4 border-b border-gray-200 dark:border-gray-700 ">
+									<Button variant={'ghost'} type="button" className="rounded-sm" onClick={() => handleTabChange("edit")}>Edit</Button>
+									<div className="hidden sm:flex items-center gap-1 rounded-md p-0.5">
+										<button
+											onClick={() => setPreviewView("grid")}
+											className={`p-1.5 rounded ${previewViewmode === "grid"
+												? "bg-white dark:bg-gray-600 text-green-600 dark:text-green-300 shadow-sm"
+												: "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+												}`}
+											aria-label="Grid view"
+											type="button"
+										>
+											<FiGrid className="h-5 w-5" />
+										</button>
+										<button
+											onClick={() => setPreviewView("list")}
+											className={`p-1.5 rounded ${previewViewmode === "list"
+												? "bg-white dark:bg-gray-600 text-green-600 dark:text-green-300 shadow-sm"
+												: "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+												}`}
+											aria-label="List view"
+											type="button"
+										>
+											<FiList className="h-5 w-5" />
+										</button>
+									</div>
+								</div>
+								<ListingCard
+									listing={previewListing}
+									viewMode={previewViewmode}
+									className="mb-4 max-w-[300px] mx-auto"
+								/>
+							</div>
+						)}
 					</form>
 				</div>
 			</main>

@@ -24,12 +24,12 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
 	userListingsCount,
 	averageEcoScore,
 }) => {
-	// Common button classes
-	const baseButtonClasses = "w-full relative justify-start transition-colors";
+	/* Common button classes */
+	const baseButtonClasses = "w-full relative justify-start transition-all duration-200 rounded-md px-3 py-2 text-sm font-medium";
 
-	// Green button states
-	const activeGreenButtonClasses = "bg-green-50 border-green-500 text-green-700 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400";
-	const inactiveGreenButtonClasses = "hover:border-green-200 hover:bg-green-50 dark:hover:border-green-800 dark:hover:bg-green-950";
+	/* Green button states */
+	const activeGreenButtonClasses = "bg-green-50 text-green-600 dark:bg-green-950 dark:text-green-400 shadow-sm";
+	const inactiveGreenButtonClasses = "text-gray-600 dark:text-gray-400 hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-950 dark:hover:text-green-400";
 
 	// Red button states
 	const activeRedButtonClasses = "bg-red-50 border-red-500 text-red-700 dark:bg-red-900/20 dark:border-red-700 dark:text-red-400";
@@ -68,22 +68,23 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
 						</Badge>
 					)}
 
-					<div className="w-full mt-3 space-y-2">						<Button
-						variant="outline"
-						className={cn(
-							baseButtonClasses,
-							activeTab === "profile" ? activeGreenButtonClasses : inactiveGreenButtonClasses
-						)}
-						onClick={() => setActiveTab("profile")}
-					>
-						<FaUser className={greenIconClasses} />
-						Profile
-					</Button>
+					<div className="w-full mt-3 space-y-2">
+						<Button
+							variant="outline"
+							className={cn(
+								baseButtonClasses, "border-none",
+								activeTab === "profile" ? activeGreenButtonClasses : inactiveGreenButtonClasses
+							)}
+							onClick={() => setActiveTab("profile")}
+						>
+							<FaUser className={greenIconClasses} />
+							Profile
+						</Button>
 
 						<Button
 							variant="outline"
 							className={cn(
-								baseButtonClasses,
+								baseButtonClasses, "border-none",
 								activeTab === "security" ? activeGreenButtonClasses : inactiveGreenButtonClasses
 							)}
 							onClick={() => setActiveTab("security")}
@@ -92,10 +93,13 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
 							Security
 						</Button>
 
+						{/* Seperator */}
+						<div className="border-t border-gray-200 dark:border-gray-800" />
+
 						<Button
 							variant="outline"
 							className={cn(
-								baseButtonClasses,
+								baseButtonClasses, "mt-2 border-none",
 								activeTab === "delete" ? activeRedButtonClasses : inactiveRedButtonClasses
 							)}
 							onClick={() => setActiveTab("delete")}
@@ -106,7 +110,10 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
 
 						<Button
 							variant="outline"
-							className="w-full relative justify-start mt-4 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-950 dark:hover:text-red-400 dark:hover:border-red-900 transition-colors"
+							className={cn(
+								baseButtonClasses, "border-none",
+								inactiveRedButtonClasses
+							)}
 							onClick={handleLogout}
 						>
 							<FaSignOutAlt className="mr-3 h-4 w-4 text-red-500" />

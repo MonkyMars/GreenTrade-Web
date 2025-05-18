@@ -42,7 +42,7 @@ const ActivityTabs: React.FC<ActivityTabsProps> = ({ userListings, userReviews }
 				onValueChange={setActiveTab}
 				className="w-full"
 			>
-				<TabsList className="flex items-center overflow-x-auto border-b border-gray-200 dark:border-gray-700 mb-4 bg-transparent p-0 justify-start w-full sm:w-auto overflow-visible no-scrollbar">
+				<TabsList className="flex items-center overflow-x-auto border-b border-gray-200 dark:border-gray-700 mb-4 bg-transparent p-0 justify-start w-full sm:w-auto no-scrollbar">
 					<TabsTrigger
 						value="listings"
 						onClick={() => setActiveTab("listings")}
@@ -100,7 +100,6 @@ const ActivityTabs: React.FC<ActivityTabsProps> = ({ userListings, userReviews }
 							{userListings.map((listing) => (
 								<div key={listing.id}>
 									<ListingCard listing={listing} viewMode="grid" className="h-full border border-gray-200 dark:border-gray-800 hover:border-green-200 dark:hover:border-green-800 transition-colors" />
-
 								</div>
 							))}
 						</div>
