@@ -49,7 +49,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
 		<div className="md:w-72 flex-shrink-0 space-y-4">
 			<div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 rounded">
 				<div className="flex flex-col items-center">
-					<div className="relative h-24 w-24 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden mb-4 border-2 border-green-100 dark:border-green-900">
+					<div className="relative h-24 w-24 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden mb-4">
 						<Avatar user={user} />
 					</div>
 

@@ -349,7 +349,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 				try {
 					// Use retry operation for API call
 					const response = await retryOperation(
-						() => api.get(`/api/auth/user`),
+						() => api.get(`/api/auth/me`),
 						{
 							maxRetries: 3,
 							delayMs: 1000,
@@ -641,7 +641,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			// Use retry operation for API call
 			const response = await retryOperation(
-				() => api.get(`/api/auth/user`),
+				() => api.get(`/api/auth/me`),
 				{
 					maxRetries: 3,
 					delayMs: 800,

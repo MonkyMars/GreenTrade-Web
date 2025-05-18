@@ -9,7 +9,7 @@ import { AppError, retryOperation } from '@/lib/errorUtils';
 export const getUser = async (): Promise<User> => {
 	try {
 		// Use our type-safe retry utility
-		const response = await retryOperation(() => api.get('/api/auth/user'), {
+		const response = await retryOperation(() => api.get('/api/auth/me'), {
 			context: 'Fetching user data',
 			maxRetries: 3,
 		});
@@ -84,7 +84,7 @@ export const updateUser = async (
 	try {
 		// Use our type-safe retry utility
 		const response = await retryOperation(
-			() => api.put('/api/auth/user', userData),
+			() => api.put('/api/auth/me', userData),
 			{
 				context: 'Updating user profile',
 				maxRetries: 3,
