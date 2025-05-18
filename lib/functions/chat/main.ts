@@ -59,7 +59,7 @@ export async function fetchConversations(
 	}
 
 	try {
-		const response = await api.get(`/api/chat/conversation/${userId}`);
+		const response = await api.get(`/api/chat/conversation`);
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const conversations = response.data.data.map((conversation: any) => ({

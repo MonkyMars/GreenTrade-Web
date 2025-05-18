@@ -162,7 +162,7 @@ const AccountPage: NextPage = () => {
 		};
 
 		try {
-			const response = await api.patch(`/api/auth/user/${user.id}`, body);
+			const response = await api.patch(`/api/auth/user`, body);
 
 			if (!response.data.success) {
 				throw new Error("Failed to update user data");

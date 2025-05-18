@@ -58,7 +58,7 @@ const OAuthRedirectHandler: React.FC<{ onUserLoad: (user: User) => void }> = ({ 
 			localStorage.setItem("userId", userId);
 
 			try {
-				const user = await getUser(userId);
+				const user = await getUser();
 
 				if (!user) {
 					throw new AppError("User not found", { code: 'USER_NOT_FOUND' });
@@ -349,7 +349,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 				try {
 					// Use retry operation for API call
 					const response = await retryOperation(
-						() => api.get(`/api/auth/user/${userId}`),
+						() => api.get(`/api/auth/user`),
 						{
 							maxRetries: 3,
 							delayMs: 1000,
@@ -443,7 +443,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			}
 
 			// Set user data
-			const user = await getUser(userId);
+			const user = await getUser();
 
 			if (!user) {
 				throw new AppError("User not found", { code: 'USER_NOT_FOUND' });
@@ -537,7 +537,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			}
 
 			// Set user data
-			const user = await getUser(userId);
+			const user = await getUser();
 
 			if (!user) {
 				throw new AppError("User not found", { code: 'USER_NOT_FOUND' });
@@ -641,7 +641,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			// Use retry operation for API call
 			const response = await retryOperation(
-				() => api.get(`/api/auth/user/${userId}`),
+				() => api.get(`/api/auth/user`),
 				{
 					maxRetries: 3,
 					delayMs: 800,

@@ -6,16 +6,13 @@ import { AppError, retryOperation } from '@/lib/errorUtils';
 /**
  * Get user data with improved error handling and retries
  */
-export const getUser = async (uuid: string): Promise<User> => {
+export const getUser = async (): Promise<User> => {
 	try {
 		// Use our type-safe retry utility
-		const response = await retryOperation(
-			() => api.get(`/api/auth/user/${uuid}`),
-			{
-				context: 'Fetching user data',
-				maxRetries: 3,
-			}
-		);
+		const response = await retryOperation(() => api.get('/api/auth/user'), {
+			context: 'Fetching user data',
+			maxRetries: 3,
+		});
 
 		if (!response.data || !response.data.data || !response.data.data.user) {
 			throw new AppError('Invalid user data received', {
@@ -87,7 +84,7 @@ export const updateUser = async (
 	try {
 		// Use our type-safe retry utility
 		const response = await retryOperation(
-			() => api.put(`/api/auth/user/${uuid}`, userData),
+			() => api.put('/api/auth/user', userData),
 			{
 				context: 'Updating user profile',
 				maxRetries: 3,
