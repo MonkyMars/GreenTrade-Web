@@ -1,67 +1,14 @@
 @import 'tailwindcss';
 
-:root {
-	/* Light Mode Colors */
-	--background: #f5f1e3; /* Earthy Beige */
-	--foreground: #171717; /* Dark Gray for readability */
-
-	--primary: #2c6e49; /* Forest Green */
-	--primary-hover: #265b3f; /* Darker hover state */
-	--secondary: #4a7c59; /* Deep Olive */
-	--accent: #3aa76d; /* Emerald Green */
-	--accent-hover: #318f5d;
-
-	--muted: #8b9a8d; /* Muted Gray-Green */
-	--muted-foreground: #4a7c59;
-
-	--border: #d4a373; /* Warm Gold */
-	--card-bg: #ffffff; /* White card backgrounds */
-
-	--success: #3aa76d; /* Green for success states */
-	--warning: #e9a03d; /* Warm Orange for warnings */
-	--error: #c3423f; /* Muted Red for errors */
-}
-
 @theme inline {
-	--color-background: var(--background);
-	--color-foreground: var(--foreground);
-	--color-primary: var(--primary);
-	--color-secondary: var(--secondary);
 	--color-accent: var(--accent);
-	--color-muted: var(--muted);
-	--color-border: var(--border);
-	--color-card-bg: var(--card-bg);
 
 	--font-sans: var(--font-geist-sans);
 	--font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-	:root {
-		/* Dark Mode Colors */
-		--background: #2c3e50; /* Deep Black */
-		--foreground: #ededed; /* Soft White */
-
-		--primary: #1e3d2f; /* Dark Forest Green */
-		--primary-hover: #183027;
-		--secondary: #365a46; /* Muted Olive */
-		--accent: #3aa76d;
-		--accent-hover: #318f5d;
-
-		--muted: #8b9a8d;
-		--muted-foreground: #4a7c59;
-
-		--border: #b88b4a; /* Muted Clay */
-		--card-bg: #171717; /* Dark gray for cards */
-
-		--success: #3aa76d;
-		--warning: #e9a03d;
-		--error: #c3423f;
-	}
-}
-
 body {
-	@apply dark:bg-slate-900 bg-accent transition-colors duration-100;
+	@apply dark:bg-slate-900 bg-accent transition-colors duration-100 font-sans!;
 	color: var(--foreground);
 	font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
