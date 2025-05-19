@@ -1,10 +1,16 @@
-"use client";
+'use client';
 
-import { FaUser, FaCheck } from "react-icons/fa";
-import { Button } from "@/components/ui/button";
-import { User } from "@/lib/types/user";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { fetchCountriesInEurope } from "@/lib/functions/countries";
+import { FaUser, FaCheck } from 'react-icons/fa';
+import { Button } from '@/components/ui/button';
+import { User } from '@/lib/types/user';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
+import { fetchCountriesInEurope } from '@/lib/functions/countries';
 
 interface ProfileInfoProps {
 	user: User | null;
@@ -23,38 +29,43 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 	setUpdateSuccess,
 	location,
 	setLocation,
-	disabled
+	disabled,
 }) => {
 	const countries = fetchCountriesInEurope();
-
 	// Common classes
-	const formGroupClasses = "group";
-	const labelClasses = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors duration-200";
-	const inputClasses = "w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-white transition-all duration-200 hover:border-green-400 dark:hover:border-green-600";
-	const disabledInputClasses = "w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900 cursor-not-allowed dark:text-white";
-	const hintTextClasses = "mt-1 text-xs text-gray-500 dark:text-gray-400";
-	const sectionDividerClasses = "border-t border-gray-200 dark:border-gray-800 pt-4";
-	const updateButtonClasses = "bg-green-600 hover:bg-green-700 text-white dark:bg-green-700 dark:hover:bg-green-800 border border-green-600 dark:border-green-700 transition-colors";
+	const formGroupClasses = 'group';
+	const labelClasses =
+		'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors duration-200';
+	const inputClasses =
+		'w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-white transition-all duration-200 hover:border-green-400 dark:hover:border-green-600';
+	const disabledInputClasses =
+		'w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900 cursor-not-allowed dark:text-white';
+	const hintTextClasses = 'mt-1 text-xs text-gray-500 dark:text-gray-400';
+	const sectionDividerClasses =
+		'border-t border-gray-200 dark:border-gray-800 pt-4';
+	const updateButtonClasses =
+		'bg-green-600 hover:bg-green-700 text-white dark:bg-green-700 dark:hover:bg-green-800 border border-green-600 dark:border-green-700 transition-colors shadow-sm hover:shadow-md';
 
 	// Success message classes
-	const successBoxClasses = "bg-green-50 dark:bg-green-900/20 border border-green-200 text-green-700 dark:text-green-300 px-4 py-3 rounded-md mb-6";
-	const successCloseButtonClasses = "ml-auto text-green-700 dark:text-green-300 hover:text-green-900 flex items-center justify-center dark:hover:text-green-200 text-2xl";
-
+	const successBoxClasses =
+		'bg-green-50 dark:bg-green-900/20 border border-green-200 text-green-700 dark:text-green-300 px-4 py-3 rounded-md mb-6';
+	const successCloseButtonClasses =
+		'ml-auto text-green-700 dark:text-green-300 hover:text-green-900 flex items-center justify-center dark:hover:text-green-200 text-2xl';
 	return (
-		<div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 mb-6 rounded">
-			<h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-				<FaUser className="mr-3 h-5 w-5 text-green-600 dark:text-green-500" />
+		<div className='bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 mb-6 rounded-xl shadow-sm hover:shadow-md transition-shadow'>
+			<h2 className='text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center'>
+				<FaUser className='mr-3 h-5 w-5 text-green-600 dark:text-green-500' />
 				Profile Information
 			</h2>
 
 			{updateSuccess && (
 				<div className={successBoxClasses}>
-					<div className="flex items-center">
-						<FaCheck className="h-4 w-4 mr-2" />
+					<div className='flex items-center'>
+						<FaCheck className='h-4 w-4 mr-2' />
 						<span>{updateSuccess}</span>
 						<button
 							className={successCloseButtonClasses}
-							onClick={() => setUpdateSuccess("")}
+							onClick={() => setUpdateSuccess('')}
 						>
 							&times;
 						</button>
@@ -62,55 +73,44 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 				</div>
 			)}
 
-			<form className="space-y-6" onSubmit={handleUpdateUser}>
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+			<form className='space-y-6' onSubmit={handleUpdateUser}>
+				<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
 					<div className={formGroupClasses}>
-						<label
-							htmlFor="name"
-							className={labelClasses}
-						>
+						<label htmlFor='name' className={labelClasses}>
 							Full Name
 						</label>
 						<input
-							type="text"
-							id="name"
-							name="name"
+							type='text'
+							id='name'
+							name='name'
 							defaultValue={user?.name}
 							className={inputClasses}
 						/>
 					</div>
 
 					<div className={formGroupClasses}>
-						<label
-							htmlFor="email"
-							className={labelClasses}
-						>
+						<label htmlFor='email' className={labelClasses}>
 							Email Address
 						</label>
 						<input
-							type="email"
-							id="email"
-							name="email"
+							type='email'
+							id='email'
+							name='email'
 							defaultValue={user?.email}
 							className={disabledInputClasses}
 							disabled
 						/>
-						<p className={hintTextClasses}>
-							Email cannot be changed
-						</p>
+						<p className={hintTextClasses}>Email cannot be changed</p>
 					</div>
 
 					<div className={`block ${formGroupClasses}`}>
-						<label
-							htmlFor="city"
-							className={labelClasses}
-						>
+						<label htmlFor='city' className={labelClasses}>
 							City / Town
 						</label>
 						<input
-							type="text"
-							id="city"
-							name="city"
+							type='text'
+							id='city'
+							name='city'
 							value={location.city}
 							onChange={(e) =>
 								setLocation({ ...location, city: e.target.value })
@@ -120,10 +120,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 					</div>
 
 					<div className={`block ${formGroupClasses}`}>
-						<label
-							htmlFor="country"
-							className={labelClasses}
-						>
+						<label htmlFor='country' className={labelClasses}>
 							Country
 						</label>
 						<Select
@@ -133,12 +130,12 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 							}
 						>
 							<SelectTrigger
-								id="country"
-								className="w-full px-3 py-2 h-auto border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-white transition-all duration-200 hover:border-green-400 dark:hover:border-green-600"
+								id='country'
+								className='w-full px-3 py-2 h-auto border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-white transition-all duration-200 hover:border-green-400 dark:hover:border-green-600'
 							>
-								<SelectValue placeholder="Select a country" />
+								<SelectValue placeholder='Select a country' />
 							</SelectTrigger>
-							<SelectContent className="max-h-80">
+							<SelectContent className='max-h-80'>
 								{countries.map((country) => (
 									<SelectItem key={country.name} value={country.name}>
 										{country.name}
@@ -151,17 +148,14 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 
 				<div className={sectionDividerClasses}>
 					<div className={formGroupClasses}>
-						<label
-							htmlFor="bio"
-							className={labelClasses}
-						>
+						<label htmlFor='bio' className={labelClasses}>
 							Bio
 						</label>
 						<textarea
-							id="bio"
-							name="bio"
+							id='bio'
+							name='bio'
 							rows={4}
-							defaultValue={user?.bio || ""}
+							defaultValue={user?.bio || ''}
 							className={inputClasses}
 						/>
 						<p className={hintTextClasses}>
@@ -170,9 +164,9 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 					</div>
 				</div>
 
-				<div className="flex justify-end">
+				<div className='flex justify-end'>
 					<Button
-						type="submit"
+						type='submit'
 						disabled={disabled}
 						className={updateButtonClasses}
 					>

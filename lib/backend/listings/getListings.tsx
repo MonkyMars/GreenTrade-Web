@@ -1,7 +1,7 @@
-import { FetchedListing } from '@/lib/types/main'
-import api from '@/lib/backend/api/axiosConfig'
-import { toast } from 'sonner'
-import { AppError, retryOperation } from '@/lib/errorUtils'
+import { FetchedListing } from '@/lib/types/main';
+import api from '@/lib/backend/api/axiosConfig';
+import { toast } from 'sonner';
+import { AppError, retryOperation } from '@/lib/errorUtils';
 
 /**
  * Fetch a single listing or all listings with improved error handling and retry logic
@@ -15,7 +15,7 @@ export const getListings = async (
 			// Show loading state in production
 			let loadingToast;
 			if (process.env.NODE_ENV === 'production') {
-				loadingToast = toast.loading('Fetching listing details...')
+				loadingToast = toast.loading('Fetching listing details...');
 			}
 
 			try {
@@ -23,22 +23,26 @@ export const getListings = async (
 				const response = await retryOperation(
 					() => api.get(`/listings/${id}`),
 					{
-						context: "Fetching listing details",
+						context: 'Fetching listing details',
 						maxRetries: 3,
 						delayMs: 1000,
-						shouldRetry: (error) => !!error.isNetworkError || !!(error.status && error.status >= 500)
+						shouldRetry: (error) =>
+							!!error.isNetworkError || !!(error.status && error.status >= 500),
 					}
-				)
+				);
 
 				if (!response.data || !response.data.success) {
-					throw new AppError(response.data?.message || 'Failed to fetch listing', {
-						code: 'FETCH_FAILED',
-						status: response.status
-					})
+					throw new AppError(
+						response.data?.message || 'Failed to fetch listing',
+						{
+							code: 'FETCH_FAILED',
+							status: response.status,
+						}
+					);
 				}
 
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				const listing = response.data.data as any
+				const listing = response.data.data as any;
 
 				const validListing: FetchedListing = {
 					id: listing.id,
@@ -60,42 +64,45 @@ export const getListings = async (
 					sellerRating: listing.seller_rating,
 					sellerVerified: listing.seller_verified,
 					bids: listing.bids,
-				}
+				};
 
 				// Dismiss loading toast if we're in production
 				if (loadingToast && process.env.NODE_ENV === 'production') {
-					toast.dismiss(loadingToast)
+					toast.dismiss(loadingToast);
 				}
 
-				return validListing
+				return validListing;
 			} catch (error) {
 				// Dismiss loading toast if we're in production
 				if (loadingToast && process.env.NODE_ENV === 'production') {
-					toast.dismiss(loadingToast)
+					toast.dismiss(loadingToast);
 				}
-				throw error // Re-throw to be handled by the outer catch
+				throw error; // Re-throw to be handled by the outer catch
 			}
 		} else {
 			// Use our type-safe retry utility
 			const response = await retryOperation(
 				() => api.get(`/listings?limit=${limit || 50}`),
 				{
-					context: "Fetching listings",
-					maxRetries: 3
+					context: 'Fetching listings',
+					maxRetries: 3,
 				}
-			)
+			);
 
 			if (!response.data.success) {
-				throw new AppError(response.data?.message || 'Failed to fetch listings', {
-					code: 'FETCH_FAILED',
-					status: response.status
-				})
+				throw new AppError(
+					response.data?.message || 'Failed to fetch listings',
+					{
+						code: 'FETCH_FAILED',
+						status: response.status,
+					}
+				);
 			}
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const all = response.data.data as any[]
+			const all = response.data.data as any[];
 
-			const validListings: FetchedListing[] = all.map(listing => {
+			const validListings: FetchedListing[] = all.map((listing) => {
 				return {
 					id: listing.id,
 					title: listing.title,
@@ -116,22 +123,26 @@ export const getListings = async (
 					sellerRating: listing.seller_rating,
 					sellerVerified: listing.seller_verified,
 					bids: listing.bids,
-				}
-			})
+				};
+			});
 
 			if (validListings.length === 0) {
 				if (process.env.NODE_ENV === 'production') {
-					toast.info('No listings found.')
+					toast.info('No listings found.');
 				}
 			}
 
-			return validListings
+			return validListings;
 		}
 	} catch (error) {
 		// Convert to AppError if not already
-		const appError = error instanceof AppError
-			? error
-			: AppError.from(error, id ? 'Fetching listing details' : 'Fetching listings');
+		const appError =
+			error instanceof AppError
+				? error
+				: AppError.from(
+						error,
+						id ? 'Fetching listing details' : 'Fetching listings'
+					);
 
 		// Create a user-friendly error message based on the error details
 		let errorMessage: string;
@@ -141,11 +152,15 @@ export const getListings = async (
 				? 'Listing not found. It may have been removed.'
 				: 'No listings found.';
 		} else {
-			errorMessage = appError.message || 'Failed to fetch listings. Please try again later.';
+			errorMessage =
+				appError.message || 'Failed to fetch listings. Please try again later.';
 		}
 
 		// Show error to user in production if not already shown by retryOperation
-		if (process.env.NODE_ENV === 'production' && !appError.context?.includes('Fetching')) {
+		if (
+			process.env.NODE_ENV === 'production' &&
+			!appError.context?.includes('Fetching')
+		) {
 			toast.error(errorMessage);
 		}
 
@@ -160,18 +175,18 @@ export const getListings = async (
 		// Rethrow with improved message
 		throw appError;
 	}
-}
+};
 
 /**
  * Fetch listings from a specific seller with improved error handling
  */
 export const getSellerListings = async (
-	sellerId: string,
+	sellerId: string
 ): Promise<FetchedListing[]> => {
 	// Show loading state in production
 	let loadingToast;
 	if (process.env.NODE_ENV === 'production') {
-		loadingToast = toast.loading('Fetching seller listings...')
+		loadingToast = toast.loading('Fetching seller listings...');
 	}
 
 	try {
@@ -179,23 +194,26 @@ export const getSellerListings = async (
 		const response = await retryOperation(
 			() => api.get(`/listings/seller/${sellerId}`),
 			{
-				context: "Fetching seller listings",
+				context: 'Fetching seller listings',
 				maxRetries: 3,
-				showToastOnRetry: false // We have our own loading state
+				showToastOnRetry: false, // We have our own loading state
 			}
-		)
+		);
 
 		if (!response.data || !response.data.success) {
-			throw new AppError(response.data?.message || 'Failed to fetch seller listings', {
-				code: 'FETCH_FAILED',
-				status: response.status
-			})
+			throw new AppError(
+				response.data?.message || 'Failed to fetch seller listings',
+				{
+					code: 'FETCH_FAILED',
+					status: response.status,
+				}
+			);
 		}
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const all = response.data.data as any[]
+		const all = response.data.data as any[];
 
-		const validListings: FetchedListing[] = all.map(listing => {
+		const validListings: FetchedListing[] = all.map((listing) => {
 			return {
 				id: listing.id,
 				title: listing.title,
@@ -216,29 +234,30 @@ export const getSellerListings = async (
 				sellerRating: listing.seller_rating,
 				sellerVerified: listing.seller_verified,
 				bids: listing.bids,
-			}
-		})
+			};
+		});
 
 		// Dismiss loading toast if we're in production
 		if (loadingToast && process.env.NODE_ENV === 'production') {
-			toast.dismiss(loadingToast)
+			toast.dismiss(loadingToast);
 		}
 
 		if (validListings.length === 0 && process.env.NODE_ENV === 'production') {
-			toast.info('No listings found for this seller.')
+			toast.info('No listings found for this seller.');
 		}
 
-		return validListings
+		return validListings;
 	} catch (error) {
 		// Dismiss loading toast if we're in production
 		if (loadingToast && process.env.NODE_ENV === 'production') {
-			toast.dismiss(loadingToast)
+			toast.dismiss(loadingToast);
 		}
 
 		// Convert to AppError if not already
-		const appError = error instanceof AppError
-			? error
-			: AppError.from(error, 'Fetching seller listings');
+		const appError =
+			error instanceof AppError
+				? error
+				: AppError.from(error, 'Fetching seller listings');
 
 		// Create a user-friendly error message based on the error details
 		let errorMessage: string;
@@ -246,11 +265,16 @@ export const getSellerListings = async (
 		if (appError.status === 404) {
 			errorMessage = 'Seller not found or has no listings.';
 		} else {
-			errorMessage = appError.message || 'Failed to fetch seller listings. Please try again later.';
+			errorMessage =
+				appError.message ||
+				'Failed to fetch seller listings. Please try again later.';
 		}
 
 		// Show error to user in production if not already shown by retryOperation
-		if (process.env.NODE_ENV === 'production' && !appError.context?.includes('Fetching seller listings')) {
+		if (
+			process.env.NODE_ENV === 'production' &&
+			!appError.context?.includes('Fetching seller listings')
+		) {
 			toast.error(errorMessage);
 		}
 
@@ -265,4 +289,4 @@ export const getSellerListings = async (
 		// Rethrow with improved message
 		throw appError;
 	}
-}
+};

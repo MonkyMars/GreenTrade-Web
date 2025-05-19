@@ -1,62 +1,68 @@
-import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import Navigation from "../components/ui/Navigation";
-import { FooterWrapper } from "../components/ui/FooterWrapper";
-import { AuthProvider } from "@/lib/contexts/AuthContext";
-import { EmailConfirmationBar } from "@/components/ui/EmailConfirmationBar";
-import { Analytics } from "@vercel/analytics/react";
-import { Toaster } from "@/components/ui/sonner"
+import type { Metadata, Viewport } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+import Navigation from '../components/ui/Navigation';
+import { FooterWrapper } from '../components/ui/FooterWrapper';
+import { AuthProvider } from '@/lib/contexts/AuthContext';
+import { EmailConfirmationBar } from '@/components/ui/EmailConfirmationBar';
+import { Analytics } from '@vercel/analytics/react';
+import { Toaster } from '@/components/ui/sonner';
 
 const geistSans = Geist({
-	variable: "--font-geist-sans",
-	subsets: ["latin"],
+	variable: '--font-geist-sans',
+	subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-	variable: "--font-geist-mono",
-	subsets: ["latin"],
+	variable: '--font-geist-mono',
+	subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-	title: "GreenVue - Sustainable Trading Solutions",
-	description: "GreenVue offers eco-friendly trading solutions focused on sustainability and environmental responsibility.",
-	keywords: ["green trading", "sustainable finance", "eco-friendly investments", "environmental markets"],
-	authors: [{ name: "GreenVue Team" }],
-	creator: "GreenVue",
-	publisher: "GreenVue EU",
+	title: 'GreenVue - Sustainable Trading Solutions',
+	description:
+		'GreenVue offers eco-friendly trading solutions focused on sustainability and environmental responsibility.',
+	keywords: [
+		'green trading',
+		'sustainable finance',
+		'eco-friendly investments',
+		'environmental markets',
+	],
+	authors: [{ name: 'GreenVue Team' }],
+	creator: 'GreenVue',
+	publisher: 'GreenVue EU',
 	icons: {
 		icon: [
-			{ url: "/icon.png", sizes: "16x16" },
-			{ url: "/icon.png", sizes: "32x32" },
+			{ url: '/icon.png', sizes: '16x16' },
+			{ url: '/icon.png', sizes: '32x32' },
 		],
 		// apple: { url: "/apple-touch-icon.png" },
 		other: [
-			{ rel: "mask-icon", url: "/safari-pinned-tab.svg" },
-			{ rel: "msapplication-TileImage", url: "/mstile-150x150.png" }
+			{ rel: 'mask-icon', url: '/safari-pinned-tab.svg' },
+			{ rel: 'msapplication-TileImage', url: '/mstile-150x150.png' },
 		],
 	},
 	openGraph: {
-		title: "GreenVue - Sustainable Trading Solutions",
-		description: "Eco-friendly trading platform for environmentally conscious investors",
-		url: "https://greenvue.eu",
-		siteName: "GreenVue",
-		locale: "en_US",
-		images: [
-			"/images/logo.png"
-		],
-		type: "website",
+		title: 'GreenVue - Sustainable Trading Solutions',
+		description:
+			'Eco-friendly trading platform for environmentally conscious investors',
+		url: 'https://greenvue.eu',
+		siteName: 'GreenVue',
+		locale: 'en_US',
+		images: ['/images/logo.png'],
+		type: 'website',
 	},
 	twitter: {
-		card: "summary_large_image",
-		title: "GreenVue - Sustainable Trading Solutions",
-		description: "Eco-friendly trading platform for environmentally conscious investors",
+		card: 'summary_large_image',
+		title: 'GreenVue - Sustainable Trading Solutions',
+		description:
+			'Eco-friendly trading platform for environmentally conscious investors',
 	},
-	robots: "index, follow",
+	robots: 'index, follow',
 };
 
 export const viewport: Viewport = {
-	width: "device-width",
+	width: 'device-width',
 	initialScale: 1,
 	minimumScale: 1,
 	maximumScale: 1,
@@ -69,7 +75,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en">
+		<html lang='en'>
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
 			>
@@ -82,6 +88,6 @@ export default function RootLayout({
 					<FooterWrapper />
 				</AuthProvider>
 			</body>
-		</html >
+		</html>
 	);
 }

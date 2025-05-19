@@ -1,7 +1,7 @@
-import api from "@/lib/backend/api/axiosConfig";
-import { toast } from "sonner";
-import { AppError, retryOperation } from "@/lib/errorUtils";
-import { FetchedListing } from "@/lib/types/main";
+import api from '@/lib/backend/api/axiosConfig';
+import { toast } from 'sonner';
+import { AppError, retryOperation } from '@/lib/errorUtils';
+import { FetchedListing } from '@/lib/types/main';
 
 /**
  * Fetch user's favorite listings with proper error handling
@@ -11,8 +11,8 @@ export const getFavorites = async (
 ): Promise<FetchedListing[]> => {
 	// Show loading state in production
 	let loadingToast;
-	if (process.env.NODE_ENV === "production") {
-		loadingToast = toast.loading("Fetching your favorites...");
+	if (process.env.NODE_ENV === 'production') {
+		loadingToast = toast.loading('Fetching your favorites...');
 	}
 
 	try {
@@ -20,7 +20,7 @@ export const getFavorites = async (
 		const response = await retryOperation(
 			() => api.get(`/api/favorites/${userId}`),
 			{
-				context: "Fetching favorites",
+				context: 'Fetching favorites',
 				maxRetries: 3,
 				delayMs: 800,
 				shouldRetry: (error) =>
@@ -30,9 +30,9 @@ export const getFavorites = async (
 
 		if (!response.data || !response.data.success) {
 			throw new AppError(
-				response.data?.message || "Failed to fetch favorites",
+				response.data?.message || 'Failed to fetch favorites',
 				{
-					code: "FETCH_FAILED",
+					code: 'FETCH_FAILED',
 					status: response.status,
 				}
 			);
@@ -66,18 +66,18 @@ export const getFavorites = async (
 		});
 
 		// Dismiss loading toast if in production
-		if (loadingToast && process.env.NODE_ENV === "production") {
+		if (loadingToast && process.env.NODE_ENV === 'production') {
 			toast.dismiss(loadingToast);
 		}
 
-		if (favorites.length === 0 && process.env.NODE_ENV === "production") {
+		if (favorites.length === 0 && process.env.NODE_ENV === 'production') {
 			toast.info("You don't have any favorites yet.");
 		}
 
 		return favorites;
 	} catch (error) {
 		// Dismiss loading toast if in production
-		if (loadingToast && process.env.NODE_ENV === "production") {
+		if (loadingToast && process.env.NODE_ENV === 'production') {
 			toast.dismiss(loadingToast);
 		}
 
@@ -85,24 +85,24 @@ export const getFavorites = async (
 		const appError =
 			error instanceof AppError
 				? error
-				: AppError.from(error, "Fetching favorites");
+				: AppError.from(error, 'Fetching favorites');
 
 		// Create a user-friendly error message
 		const errorMessage =
 			appError.message ||
-			"Failed to fetch your favorites. Please try again later.";
+			'Failed to fetch your favorites. Please try again later.';
 
 		// Show error to user in production if not already shown by retryOperation
 		if (
-			process.env.NODE_ENV === "production" &&
-			!appError.context?.includes("Fetching favorites")
+			process.env.NODE_ENV === 'production' &&
+			!appError.context?.includes('Fetching favorites')
 		) {
 			toast.error(errorMessage);
 		}
 
 		// Log in development, use proper error tracking in production
-		if (process.env.NODE_ENV !== "production") {
-			console.error("Error fetching favorites:", appError);
+		if (process.env.NODE_ENV !== 'production') {
+			console.error('Error fetching favorites:', appError);
 		} else {
 			// In production, use proper error tracking
 			// Example: Sentry.captureException(appError)
@@ -118,12 +118,14 @@ export const isFavorite = async (
 	userId: string
 ): Promise<boolean> => {
 	try {
-		const response = await api.get(`/api/favorites/check/${listingId}/${userId}`);
+		const response = await api.get(
+			`/api/favorites/check/${listingId}/${userId}`
+		);
 		if (!response.data || !response.data.success) {
 			throw new AppError(
-				response.data?.message || "Failed to check favorite status",
+				response.data?.message || 'Failed to check favorite status',
 				{
-					code: "CHECK_FAILED",
+					code: 'CHECK_FAILED',
 					status: response.status,
 				}
 			);
@@ -135,23 +137,23 @@ export const isFavorite = async (
 		const appError =
 			error instanceof AppError
 				? error
-				: AppError.from(error, "Checking favorite status");
+				: AppError.from(error, 'Checking favorite status');
 
 		// Create a user-friendly error message
 		const errorMessage =
-			appError.message || "Failed to check favorite status. Please try again.";
+			appError.message || 'Failed to check favorite status. Please try again.';
 
 		// Show error to user in production if not already shown by retryOperation
 		if (
-			process.env.NODE_ENV === "production" &&
-			!appError.context?.includes("Checking favorite status")
+			process.env.NODE_ENV === 'production' &&
+			!appError.context?.includes('Checking favorite status')
 		) {
 			toast.error(errorMessage);
 		}
 
 		// Log in development, use proper error tracking in production
-		if (process.env.NODE_ENV !== "production") {
-			console.error("Error checking favorite status:", appError);
+		if (process.env.NODE_ENV !== 'production') {
+			console.error('Error checking favorite status:', appError);
 		} else {
 			// In production, use proper error tracking
 			// Example: Sentry.captureException(appError)
