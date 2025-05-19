@@ -297,16 +297,17 @@ const PostListingPage: NextPage = () => {
 				imageUrl: images.map((image) => image.uri),
 				sellerId: user?.id || "",
 				id: "",
-				createdAt: new Date().toISOString(),
+				createdAt: new Date(),
 				location: user?.location || "",
 				sellerUsername: user?.name || "",
 				sellerBio: user?.bio || "",
-				sellerCreatedAt: user?.createdAt || new Date().toLocaleDateString(),
+				sellerCreatedAt: user?.createdAt || new Date(),
 				sellerRating: 0,
-				sellerVerified: false
+				sellerVerified: false,
+				bids: []
 			};
 			setPreviewListing(previewListing);
-		};
+		}
 
 		setTab(newTab);
 		window.scrollTo({ top: 0, behavior: "smooth" });

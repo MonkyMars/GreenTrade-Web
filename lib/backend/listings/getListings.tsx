@@ -59,6 +59,7 @@ export const getListings = async (
 					sellerBio: listing.seller_bio,
 					sellerRating: listing.seller_rating,
 					sellerVerified: listing.seller_verified,
+					bids: listing.bids,
 				}
 
 				// Dismiss loading toast if we're in production
@@ -114,6 +115,7 @@ export const getListings = async (
 					sellerBio: listing.seller_bio,
 					sellerRating: listing.seller_rating,
 					sellerVerified: listing.seller_verified,
+					bids: listing.bids,
 				}
 			})
 
@@ -213,6 +215,7 @@ export const getSellerListings = async (
 				sellerBio: listing.seller_bio,
 				sellerRating: listing.seller_rating,
 				sellerVerified: listing.seller_verified,
+				bids: listing.bids,
 			}
 		})
 

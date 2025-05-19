@@ -10,7 +10,8 @@ export interface Review {
 
 export interface FetchedReview extends Review {
 	id: string;
-	createdAt: string;
-	updatedAt: string;
+	createdAt: Date;
+	updatedAt: Date;
 	userName: string;
+	userPicture: string; // TODO: add user picture to the review
 }

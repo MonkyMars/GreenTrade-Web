@@ -130,6 +130,7 @@ export default function ListingPage() {
 							sellerBio: listing.seller_bio,
 							sellerRating: listing.seller_rating,
 							sellerVerified: listing.seller_verified,
+							bids: listing.bids,
 						};
 					});
 
@@ -566,10 +567,10 @@ export default function ListingPage() {
 												<FaStar
 													key={i}
 													className={`w-4 h-4 ${i < Math.floor(listing.sellerRating)
+														? "text-yellow-400"
+														: i < listing.sellerRating
 															? "text-yellow-400"
-															: i < listing.sellerRating
-																? "text-yellow-400"
-																: "text-gray-300 dark:text-gray-600"
+															: "text-gray-300 dark:text-gray-600"
 														}`}
 												/>
 											))}

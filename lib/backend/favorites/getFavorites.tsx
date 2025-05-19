@@ -61,6 +61,7 @@ export const getFavorites = async (
 				sellerBio: listing.seller_bio,
 				sellerRating: listing.seller_rating,
 				sellerVerified: listing.seller_verified,
+				bids: listing.bids,
 			};
 		});
 

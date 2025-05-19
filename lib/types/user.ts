@@ -3,7 +3,7 @@ export interface User {
 	name: string;
 	email: string;
 	location: string;
-	createdAt: string;
+	createdAt: Date;
 	emailVerified: boolean;
 	phone?: string;
 	picture?: string;
