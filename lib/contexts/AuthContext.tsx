@@ -365,22 +365,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 						});
 					}
 
-					const mappedUser: User = {
-						...response.data.data.user,
-						createdAt: response.data.data.user.created_at,
-						emailVerified: response.data.data.user.email_verified,
-					};
-
-					setUser({
-						id: mappedUser.id,
-						name: mappedUser.name,
-						email: mappedUser.email,
-						location: mappedUser.location,
-						picture: mappedUser.picture,
-						createdAt: mappedUser.createdAt,
-						emailVerified: mappedUser.emailVerified,
-						bio: mappedUser.bio,
-					});
+					setUser(response.data.data.user);
 				} catch (apiError) {
 					// If retries fail, handle it gracefully
 					handleError(apiError, 'Authentication validation');

@@ -1,7 +1,9 @@
 import api from '@/lib/backend/api/axiosConfig';
 import { toast } from 'sonner';
 import { AppError, retryOperation } from '@/lib/errorUtils';
-import { FetchedListing } from '@/lib/types/main';
+import { FetchedListing, FetchedListingSchema } from '@/lib/types/main';
+import camelcaseKeys from 'camelcase-keys';
+import snakecaseKeys from 'snakecase-keys';
 
 /**
  * Fetch user's favorite listings with proper error handling
@@ -16,9 +18,12 @@ export const getFavorites = async (
 	}
 
 	try {
+		// Prepare snake_case params
+		const params = snakecaseKeys({ userId });
+
 		// Use type-safe retry utility
 		const response = await retryOperation(
-			() => api.get(`/api/favorites/${userId}`),
+			() => api.get(`/api/favorites/${userId}`, { params }),
 			{
 				context: 'Fetching favorites',
 				maxRetries: 3,
@@ -38,32 +43,14 @@ export const getFavorites = async (
 			);
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const favoritesData = response.data.data as any[];
+		// Convert snake_case to camelCase and validate with Zod
+		const rawData = response.data.data;
+		const camelCaseData = camelcaseKeys(rawData, { deep: true });
 
-		const favorites: FetchedListing[] = favoritesData.map((listing) => {
-			return {
-				id: listing.id,
-				title: listing.title,
-				description: listing.description,
-				category: listing.category,
-				condition: listing.condition,
-				location: listing.location,
-				price: listing.price,
-				negotiable: listing.negotiable,
-				ecoScore: listing.ecoScore,
-				ecoAttributes: listing.ecoAttributes,
-				imageUrl: listing.imageUrl,
-				createdAt: listing.created_at,
-				sellerId: listing.seller_id,
-				sellerCreatedAt: listing.seller_created_at,
-				sellerUsername: listing.seller_username,
-				sellerBio: listing.seller_bio,
-				sellerRating: listing.seller_rating,
-				sellerVerified: listing.seller_verified,
-				bids: listing.bids,
-			};
-		});
+		// Validate each listing with Zod schema
+		const favorites = camelCaseData.map((listing: unknown) =>
+			FetchedListingSchema.parse(listing)
+		);
 
 		// Dismiss loading toast if in production
 		if (loadingToast && process.env.NODE_ENV === 'production') {

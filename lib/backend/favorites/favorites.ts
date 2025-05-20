@@ -1,6 +1,7 @@
 import api from '@/lib/backend/api/axiosConfig';
 import { toast } from 'sonner';
 import { AppError, retryOperation } from '@/lib/errorUtils';
+import snakecaseKeys from 'snakecase-keys';
 
 /**
  * Toggle a listing as favorite/unfavorite with proper error handling
@@ -12,14 +13,16 @@ export const toggleFavorite = async (
 ): Promise<boolean> => {
 	try {
 		// Use type-safe retry utility with the appropriate HTTP method
+		const data = snakecaseKeys({
+			listingId,
+			userId,
+		})
+
 		const response = await retryOperation(
 			() =>
 				state
 					? api.delete(`/api/favorites/${listingId}/${userId}`)
-					: api.post(`/api/favorites`, {
-							listing_id: listingId,
-							user_id: userId,
-						}),
+					: api.post(`/api/favorites`, data),
 			{
 				context: 'Updating favorites',
 				maxRetries: 2,

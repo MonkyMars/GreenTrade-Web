@@ -22,10 +22,7 @@ const BrowserComponent: NextPage = () => {
 	const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 	const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
 	const [currentPage, setCurrentPage] = useState<number>(1);
-	const [allListings, setAllListings] = useState<FetchedListing[]>([]);
-	const [filteredListings, setFilteredListings] = useState<FetchedListing[]>(
-		[]
-	);
+	const [filteredListings, setFilteredListings] = useState<FetchedListing[]>([]);
 	const [isInitialLoad, setIsInitialLoad] = useState<boolean>(true);
 
 	// Filter state
@@ -40,22 +37,15 @@ const BrowserComponent: NextPage = () => {
 		sortBy: 'newest',
 	});
 
-	const useListings = () => {
-		return useQuery<FetchedListing[]>({
-			queryKey: ['listings'],
-			queryFn: () => getListings('', 50) as Promise<FetchedListing[]>,
-			staleTime: 1000 * 60 * 5, // 5 mins
-		});
-	};
-
-	// In your component
-	const { data: listingsData, isLoading, isSuccess } = useListings();
-
-	useEffect(() => {
-		if (!isLoading && listingsData) {
-			setAllListings(listingsData);
-		}
-	}, [isLoading, listingsData]);
+	// Use React Query directly without useEffect
+	const {
+		data: allListings = [],
+		isSuccess
+	} = useQuery<FetchedListing[]>({
+		queryKey: ['listings'],
+		queryFn: () => getListings('', 50) as Promise<FetchedListing[]>,
+		staleTime: 1000 * 60 * 5, // 5 mins
+	});
 
 	useEffect(() => {
 		if (isSuccess) {
@@ -231,11 +221,10 @@ const BrowserComponent: NextPage = () => {
 				<button
 					key={i}
 					onClick={() => goToPage(i)}
-					className={`relative inline-flex items-center px-4 py-2 border ${
-						currentPage === i
+					className={`relative inline-flex items-center px-4 py-2 border ${currentPage === i
 							? 'z-10 bg-green-50 dark:bg-green-900/30 border-green-500 text-green-600 dark:text-green-200'
 							: 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
-					} text-sm font-medium`}
+						} text-sm font-medium`}
 					aria-current={currentPage === i ? 'page' : undefined}
 				>
 					{i}
@@ -293,22 +282,20 @@ const BrowserComponent: NextPage = () => {
 							<div className='hidden sm:flex items-center bg-gray-100 dark:bg-gray-800 rounded-md p-0.5'>
 								<button
 									onClick={() => setViewMode('grid')}
-									className={`p-1.5 rounded ${
-										viewMode === 'grid'
+									className={`p-1.5 rounded ${viewMode === 'grid'
 											? 'bg-white dark:bg-gray-600 text-green-600 dark:text-green-300 shadow-sm'
 											: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-									}`}
+										}`}
 									aria-label='Grid view'
 								>
 									<FiGrid className='h-5 w-5' />
 								</button>
 								<button
 									onClick={() => setViewMode('list')}
-									className={`p-1.5 rounded ${
-										viewMode === 'list'
+									className={`p-1.5 rounded ${viewMode === 'list'
 											? 'bg-white dark:bg-gray-600 text-green-600 dark:text-green-300 shadow-sm'
 											: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-									}`}
+										}`}
 									aria-label='List view'
 								>
 									<FiList className='h-5 w-5' />

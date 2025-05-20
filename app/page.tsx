@@ -2,7 +2,7 @@
 import { getListings } from '@/lib/backend/listings/getListings';
 import { FetchedListing } from '@/lib/types/main';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { BiUser } from 'react-icons/bi';
 import { FaLeaf, FaHandshake, FaRecycle } from 'react-icons/fa';
 import { FiSearch, FiArrowRight } from 'react-icons/fi';
@@ -25,30 +25,20 @@ import {
 import ListingCard from '@/components/ui/ListingCard';
 
 const Home: NextPage = () => {
-	const [featuredListings, setFeaturedListings] = useState<FetchedListing[]>(
-		[]
-	);
 	const [selectedCategory, setSelectedCategory] =
 		useState<Categories['name']>('All Categories');
 	const [searchQuery, setSearchQuery] = useState<string>('');
 	const router = useRouter();
 
-	const useListings = () => {
-		return useQuery<FetchedListing[]>({
-			queryKey: ['listings'],
-			queryFn: () => getListings('', 4) as Promise<FetchedListing[]>,
-			staleTime: 1000 * 60 * 5, // 5 mins
-		});
-	};
-
-	// In your component
-	const { data: listingsData, isLoading } = useListings();
-
-	useEffect(() => {
-		if (!isLoading && listingsData) {
-			setFeaturedListings(listingsData);
-		}
-	}, [isLoading, listingsData]);
+	// Use React Query directly without useEffect
+	const {
+		data: featuredListings = [],
+		isLoading
+	} = useQuery<FetchedListing[]>({
+		queryKey: ['listings', 'featured'],
+		queryFn: () => getListings('', 4) as Promise<FetchedListing[]>,
+		staleTime: 1000 * 60 * 5, // 5 mins
+	});
 
 	const handleNavigate = () => {
 		console.log(selectedCategory);
@@ -254,7 +244,7 @@ const Home: NextPage = () => {
 			</section>
 
 			{/* Featured listings */}
-			{featuredListings.length > 0 ? (
+			{!isLoading && featuredListings.length > 0 ? (
 				<section className='py-16 bg-white dark:bg-gray-900'>
 					<div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
 						<div className='flex justify-between items-center mb-12'>

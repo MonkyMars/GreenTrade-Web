@@ -1,17 +1,22 @@
-export interface Review {
-	rating: number;
-	userId: string;
-	sellerId: string;
-	title: string;
-	content: string;
-	helpfulCount: number;
-	verifiedPurchase: boolean;
-}
+import { z } from 'zod';
 
-export interface FetchedReview extends Review {
-	id: string;
-	createdAt: Date;
-	updatedAt: Date;
-	userName: string;
-	userPicture: string; // TODO: add user picture to the review
-}
+export const ReviewSchema = z.object({
+	rating: z.number().min(1).max(5),
+	userId: z.string(),
+	sellerId: z.string(),
+	title: z.string(),
+	content: z.string(),
+	helpfulCount: z.number().nonnegative(),
+	verifiedPurchase: z.boolean(),
+});
+
+export const FetchedReviewSchema = ReviewSchema.extend({
+	id: z.string(),
+	createdAt: z.date().or(z.string().pipe(z.coerce.date())),
+	updatedAt: z.date().or(z.string().pipe(z.coerce.date())),
+	userName: z.string(),
+	userPicture: z.string(), // TODO: add user picture to the review
+});
+
+export type Review = z.infer<typeof ReviewSchema>;
+export type FetchedReview = z.infer<typeof FetchedReviewSchema>;

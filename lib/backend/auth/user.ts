@@ -22,12 +22,7 @@ export const getUser = async (): Promise<User> => {
 		}
 
 		const user = response.data.data.user;
-		const mappedUser: User = {
-			...user,
-			emailVerified: response.data.data.user.email_verified,
-			createdAt: response.data.data.user.created_at,
-		};
-		return mappedUser;
+		return user as User;
 	} catch (error) {
 		// Convert to AppError if not already
 		const appError =
