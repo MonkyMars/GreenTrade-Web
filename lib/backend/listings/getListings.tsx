@@ -1,7 +1,9 @@
-import { FetchedListing } from '@/lib/types/main';
+import { FetchedListing, FetchedListingSchema } from '@/lib/types/main';
 import api from '@/lib/backend/api/axiosConfig';
 import { toast } from 'sonner';
 import { AppError, retryOperation } from '@/lib/errorUtils';
+import camelcaseKeys from 'camelcase-keys';
+import snakecaseKeys from 'snakecase-keys';
 
 /**
  * Fetch a single listing or all listings with improved error handling and retry logic
@@ -41,30 +43,9 @@ export const getListings = async (
 					);
 				}
 
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				const listing = response.data.data as any;
-
-				const validListing: FetchedListing = {
-					id: listing.id,
-					title: listing.title,
-					description: listing.description,
-					category: listing.category,
-					condition: listing.condition,
-					location: listing.location,
-					price: listing.price,
-					negotiable: listing.negotiable,
-					ecoScore: listing.ecoScore,
-					ecoAttributes: listing.ecoAttributes,
-					imageUrl: listing.imageUrl,
-					createdAt: listing.created_at,
-					sellerId: listing.seller_id,
-					sellerCreatedAt: listing.seller_created_at,
-					sellerUsername: listing.seller_username,
-					sellerBio: listing.seller_bio,
-					sellerRating: listing.seller_rating,
-					sellerVerified: listing.seller_verified,
-					bids: listing.bids,
-				};
+				// Convert snake_case to camelCase and validate with Zod
+				const camelCaseData = camelcaseKeys(response.data.data, { deep: true });
+				const validListing = FetchedListingSchema.parse(camelCaseData);
 
 				// Dismiss loading toast if we're in production
 				if (loadingToast && process.env.NODE_ENV === 'production') {
@@ -80,9 +61,12 @@ export const getListings = async (
 				throw error; // Re-throw to be handled by the outer catch
 			}
 		} else {
+			// Prepare query parameters using snake_case
+			const params = snakecaseKeys({ limit: limit || 50 });
+
 			// Use our type-safe retry utility
 			const response = await retryOperation(
-				() => api.get(`/listings?limit=${limit || 50}`),
+				() => api.get('/listings', { params }),
 				{
 					context: 'Fetching listings',
 					maxRetries: 3,
@@ -99,36 +83,27 @@ export const getListings = async (
 				);
 			}
 
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const all = response.data.data as any[];
+			// Convert snake_case to camelCase
+			const rawData = response.data.data;
+			const camelCaseData = camelcaseKeys(rawData, { deep: true });
 
-			const validListings: FetchedListing[] = all.map((listing) => {
-				return {
-					id: listing.id,
-					title: listing.title,
-					description: listing.description,
-					category: listing.category,
-					condition: listing.condition,
-					location: listing.location,
-					price: listing.price,
-					negotiable: listing.negotiable,
-					ecoScore: listing.ecoScore,
-					ecoAttributes: listing.ecoAttributes,
-					imageUrl: listing.imageUrl,
-					createdAt: listing.created_at,
-					sellerId: listing.seller_id,
-					sellerCreatedAt: listing.seller_created_at,
-					sellerUsername: listing.seller_username,
-					sellerBio: listing.seller_bio,
-					sellerRating: listing.seller_rating,
-					sellerVerified: listing.seller_verified,
-					bids: listing.bids,
-				};
+			// Validate each listing with Zod schema and filter out invalid ones
+			const validListings: FetchedListing[] = [];
+
+			camelCaseData.forEach((listing: unknown) => {
+				try {
+					const validListing = FetchedListingSchema.parse(listing);
+					validListings.push(validListing);
+				} catch (error) {
+					if (process.env.NODE_ENV !== 'production') {
+						console.error('Invalid listing detected:', error);
+					}
+				}
 			});
 
 			if (validListings.length === 0) {
 				if (process.env.NODE_ENV === 'production') {
-					toast.info('No listings found.');
+					toast.info('No valid listings found.');
 				}
 			}
 
@@ -140,9 +115,9 @@ export const getListings = async (
 			error instanceof AppError
 				? error
 				: AppError.from(
-						error,
-						id ? 'Fetching listing details' : 'Fetching listings'
-					);
+					error,
+					id ? 'Fetching listing details' : 'Fetching listings'
+				);
 
 		// Create a user-friendly error message based on the error details
 		let errorMessage: string;
@@ -190,9 +165,12 @@ export const getSellerListings = async (
 	}
 
 	try {
+		// Prepare query parameters using snake_case
+		const params = snakecaseKeys({ sellerId });
+
 		// Use our type-safe retry utility
 		const response = await retryOperation(
-			() => api.get(`/listings/seller/${sellerId}`),
+			() => api.get(`/listings/seller/${sellerId}`, { params }),
 			{
 				context: 'Fetching seller listings',
 				maxRetries: 3,
@@ -210,31 +188,24 @@ export const getSellerListings = async (
 			);
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const all = response.data.data as any[];
+		// Convert snake_case to camelCase
+		const rawData = response.data.data;
+		const camelCaseData = camelcaseKeys(rawData, { deep: true });
 
-		const validListings: FetchedListing[] = all.map((listing) => {
-			return {
-				id: listing.id,
-				title: listing.title,
-				description: listing.description,
-				category: listing.category,
-				condition: listing.condition,
-				location: listing.location,
-				price: listing.price,
-				negotiable: listing.negotiable,
-				ecoScore: listing.ecoScore,
-				ecoAttributes: listing.ecoAttributes,
-				imageUrl: listing.imageUrl,
-				createdAt: listing.created_at,
-				sellerId: listing.seller_id,
-				sellerCreatedAt: listing.seller_created_at,
-				sellerUsername: listing.seller_username,
-				sellerBio: listing.seller_bio,
-				sellerRating: listing.seller_rating,
-				sellerVerified: listing.seller_verified,
-				bids: listing.bids,
-			};
+		// Validate each listing with Zod schema and filter out invalid ones
+		const validListings: FetchedListing[] = [];
+		let invalidCount = 0;
+
+		camelCaseData.forEach((listing: unknown) => {
+			try {
+				const validListing = FetchedListingSchema.parse(listing);
+				validListings.push(validListing);
+			} catch (error) {
+				invalidCount++;
+				if (process.env.NODE_ENV !== 'production') {
+					console.error('Invalid seller listing detected:', error);
+				}
+			}
 		});
 
 		// Dismiss loading toast if we're in production
@@ -242,8 +213,16 @@ export const getSellerListings = async (
 			toast.dismiss(loadingToast);
 		}
 
+		// Show notification if invalid listings were found
+		if (invalidCount > 0 && process.env.NODE_ENV === 'production') {
+			toast.warning(
+				`${invalidCount} invalid listing${invalidCount > 1 ? 's' : ''
+				} skipped.`
+			);
+		}
+
 		if (validListings.length === 0 && process.env.NODE_ENV === 'production') {
-			toast.info('No listings found for this seller.');
+			toast.info('No valid listings found for this seller.');
 		}
 
 		return validListings;

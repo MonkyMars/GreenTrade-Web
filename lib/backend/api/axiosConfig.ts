@@ -1,4 +1,5 @@
 import axios from 'axios';
+import camelcaseKeys from 'camelcase-keys';
 
 export const BASE_URL =
 	process.env.NODE_ENV === 'production'
@@ -13,5 +14,11 @@ const api = axios.create({
 	timeout: 10000,
 	withCredentials: true,
 });
+
+axios.interceptors.response.use((response) => {
+  response.data = camelcaseKeys(response.data.data, { deep: true });
+  return response;
+});
+
 
 export default api;

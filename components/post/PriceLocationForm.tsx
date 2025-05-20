@@ -2,16 +2,16 @@ import { z } from 'zod';
 import { FaMapMarkerAlt } from 'react-icons/fa';
 import { Checkbox } from '@/components/ui/checkbox';
 import { User } from '@/lib/types/user';
-import { ListingFormType } from '@/app/post/page';
+import { UploadListing } from '@/lib/types/main';
 
 interface PriceLocationFormProps {
-	formData: ListingFormType;
+	formData: UploadListing;
 	handleChange: (
 		e: React.ChangeEvent<
 			HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
 		>
 	) => void;
-	setFormData: React.Dispatch<React.SetStateAction<ListingFormType>>;
+	setFormData: React.Dispatch<React.SetStateAction<UploadListing>>;
 	formErrors: z.ZodIssue[];
 	user: User | null;
 }
@@ -56,16 +56,15 @@ const PriceLocationForm = ({
 								if (value === '' || /^\d+(\.\d{0,2})?$/.test(value)) {
 									setFormData((prev) => ({
 										...prev,
-										price: value,
+										price: value === '' ? 0 : parseFloat(value),
 									}));
 								}
 							}}
 							className={`pl-6 block w-full px-4 py-3 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out focus:ring-0 focus:border-transparent focus:outline-none
-                        ${
-													formErrors.find((error) => error.path[0] === 'price')
-														? 'border-2 border-red-300 focus:ring-1 focus:ring-green-400'
-														: 'border border-gray-300 dark:border-gray-600 hover:border-green-300'
-												}
+                        ${formErrors.find((error) => error.path[0] === 'price')
+									? 'border-2 border-red-300 focus:ring-1 focus:ring-green-400'
+									: 'border border-gray-300 dark:border-gray-600 hover:border-green-300'
+								}
                         dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
 							placeholder='0.00'
 						/>
@@ -120,11 +119,10 @@ const PriceLocationForm = ({
 							onChange={handleChange}
 							placeholder='e.g., Berlin, Germany'
 							className={`pl-8 block w-full px-4 py-3 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out focus:ring-0 focus:border-transparent focus:outline-none
-                  ${
-										formErrors.find((error) => error.path[0] === 'location')
-											? 'border-2 border-red-300 focus:ring-1 focus:ring-green-400'
-											: 'border border-gray-300 dark:border-gray-600 hover:border-green-300'
-									}
+                  ${formErrors.find((error) => error.path[0] === 'location')
+									? 'border-2 border-red-300 focus:ring-1 focus:ring-green-400'
+									: 'border border-gray-300 dark:border-gray-600 hover:border-green-300'
+								}
                   dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
 						/>
 					</div>

@@ -15,7 +15,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FetchedListing } from '@/lib/types/main';
+import { FetchedListing, FetchedListingSchema } from '@/lib/types/main';
 import { findCategory } from '@/lib/functions/categories';
 import { useEffect, useState } from 'react';
 import api from '@/lib/backend/api/axiosConfig';
@@ -28,6 +28,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { isFavorite } from '@/lib/backend/favorites/getFavorites';
 import { findCondition } from '@/lib/functions/conditions';
 import ListingCard from '@/components/ui/ListingCard';
+import camelcaseKeys from 'camelcase-keys';
 
 export default function ListingPage() {
 	const router = useRouter();
@@ -67,7 +68,52 @@ export default function ListingPage() {
 					return [];
 				}
 
-				return response.data.data;
+				// Convert the data to the expected format and validate
+				const rawListings = response.data.data;
+
+				console.log(rawListings)
+
+				if (!rawListings || !Array.isArray(rawListings)) {
+					if (process.env.NODE_ENV !== 'production') {
+						console.error('Invalid data format for similar listings:', rawListings);
+					}
+					return [];
+				}
+
+				const validListings: FetchedListing[] = [];
+				let invalidCount = 0;
+
+				// Process each listing with proper validation
+				for (const rawListing of rawListings) {
+					try {
+						// Convert snake_case to camelCase for field names that need it
+						const listing = camelcaseKeys(rawListing, { deep: true });
+
+						if (listing.id === params.id) {
+							// Skip the current listing
+							continue;
+						}
+
+						// Validate with Zod schema
+						const validListing = FetchedListingSchema.parse(listing);
+						validListings.push(validListing);
+					} catch (error) {
+						invalidCount++;
+						if (process.env.NODE_ENV !== 'production') {
+							console.error('Invalid similar listing detected:', error);
+						}
+					}
+				}
+
+				// Show notification if invalid listings were found
+				if (invalidCount > 0 && process.env.NODE_ENV === 'production') {
+					toast.warning(
+						`${invalidCount} invalid similar listing${invalidCount > 1 ? 's' : ''
+						} skipped.`
+					);
+				}
+
+				return validListings;
 			} catch (error) {
 				// Convert to AppError if not already
 				const appError =
@@ -106,34 +152,7 @@ export default function ListingPage() {
 
 				// Fetch similar listings after we have the listing data
 				if (listingData && listingData.category) {
-					const similarItems = await fetchSimilarListings(listingData.category);
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					const all = similarItems as any[];
-
-					const validListings: FetchedListing[] = all.map((listing) => {
-						return {
-							id: listing.id,
-							title: listing.title,
-							description: listing.description,
-							category: listing.category,
-							condition: listing.condition,
-							location: listing.location,
-							price: listing.price,
-							negotiable: listing.negotiable,
-							ecoScore: listing.ecoScore,
-							ecoAttributes: listing.ecoAttributes,
-							imageUrl: listing.imageUrl,
-							createdAt: listing.created_at,
-							sellerId: listing.seller_id,
-							sellerCreatedAt: listing.seller_created_at,
-							sellerUsername: listing.seller_username,
-							sellerBio: listing.seller_bio,
-							sellerRating: listing.seller_rating,
-							sellerVerified: listing.seller_verified,
-							bids: listing.bids,
-						};
-					});
-
+					const validListings = await fetchSimilarListings(listingData.category);
 					setSimilarListings(validListings);
 				}
 
@@ -270,9 +289,9 @@ export default function ListingPage() {
 							{/* Main image content */}
 							<TabsContent value='0' className='m-0'>
 								<div className='relative h-[400px] md:h-[500px]'>
-									{listing.imageUrl.length > 0 ? (
+									{listing.imageUrls.length > 0 ? (
 										<Image
-											src={listing.imageUrl[0]}
+											src={listing.imageUrls[0]}
 											alt={listing.title}
 											fill
 											priority
@@ -289,7 +308,7 @@ export default function ListingPage() {
 								</div>
 							</TabsContent>
 
-							{listing.imageUrl.slice(1).map((img: string, index: number) => (
+							{listing.imageUrls.slice(1).map((img: string, index: number) => (
 								<TabsContent
 									key={index + 1}
 									value={(index + 1).toString()}
@@ -311,7 +330,7 @@ export default function ListingPage() {
 							{/* Image thumbnails */}
 							<div className='p-4 border-t border-gray-100 dark:border-gray-800'>
 								<TabsList className='flex justify-start overflow-x-auto space-x-2 py-1 px-0 h-auto bg-gray-50 dark:bg-gray-800 rounded-lg'>
-									{listing.imageUrl.map((img: string, index: number) => (
+									{listing.imageUrls.map((img: string, index: number) => (
 										<TabsTrigger
 											key={index}
 											value={index.toString()}
@@ -596,13 +615,12 @@ export default function ListingPage() {
 											{[...Array(5)].map((_, i) => (
 												<FaStar
 													key={i}
-													className={`w-4 h-4 ${
-														i < Math.floor(listing.sellerRating)
+													className={`w-4 h-4 ${i < Math.floor(listing.sellerRating)
+														? 'text-yellow-400'
+														: i < listing.sellerRating
 															? 'text-yellow-400'
-															: i < listing.sellerRating
-																? 'text-yellow-400'
-																: 'text-gray-300 dark:text-gray-600'
-													}`}
+															: 'text-gray-300 dark:text-gray-600'
+														}`}
 												/>
 											))}
 										</div>
@@ -650,7 +668,7 @@ export default function ListingPage() {
 						</div>
 
 						<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
-							{similarListings.map((listing: FetchedListing) => (
+							{similarListings.slice(0, 4).map((listing: FetchedListing) => (
 								<ListingCard
 									key={listing.id}
 									listing={listing}

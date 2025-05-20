@@ -1,36 +1,23 @@
-import { UploadListing } from '@/lib/types/main';
+import { UploadListing, UploadListingSchema } from '@/lib/types/main';
 import api from '@/lib/backend/api/axiosConfig';
 import { toast } from 'sonner';
 import { AppError, retryOperation } from '@/lib/errorUtils';
+import snakecaseKeys from 'snakecase-keys';
 
 export const uploadListing = async (listing: UploadListing) => {
 	try {
-		// Authentication is handled by HTTP-only cookies
-		// No need to manually check for tokens as the cookies will be sent automatically
+		// Validate listing data with Zod schema
+		const validListing = UploadListingSchema.parse(listing);
 
-		// Format the data to match the backend's expected structure
-		const formattedListing = {
-			title: listing.title,
-			description: listing.description,
-			category: listing.category,
-			condition: listing.condition,
-			price: listing.price,
-			negotiable: listing.negotiable,
-			ecoScore: listing.ecoScore,
-			ecoAttributes: listing.ecoAttributes,
-			imageUrl: {
-				urls: listing.imageUrl,
-			},
-			seller_id: listing.sellerId,
-		};
+		// Convert to snake_case for API request
+		const snakeCaseListing = snakecaseKeys(validListing, { deep: true });
 
 		// Use our new strongly-typed retry function
 		const response = await retryOperation(
 			() =>
-				api.post('/api/listings', formattedListing, {
+				api.post('/api/listings', snakeCaseListing, {
 					headers: {
 						'Content-Type': 'application/json',
-						// No need to include Authorization header with cookies
 					},
 				}),
 			{

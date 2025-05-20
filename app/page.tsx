@@ -2,7 +2,7 @@
 import { getListings } from '@/lib/backend/listings/getListings';
 import { FetchedListing } from '@/lib/types/main';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { BiUser } from 'react-icons/bi';
 import { FaLeaf, FaHandshake, FaRecycle } from 'react-icons/fa';
 import { FiSearch, FiArrowRight } from 'react-icons/fi';
@@ -25,30 +25,20 @@ import {
 import ListingCard from '@/components/ui/ListingCard';
 
 const Home: NextPage = () => {
-	const [featuredListings, setFeaturedListings] = useState<FetchedListing[]>(
-		[]
-	);
 	const [selectedCategory, setSelectedCategory] =
 		useState<Categories['name']>('All Categories');
 	const [searchQuery, setSearchQuery] = useState<string>('');
 	const router = useRouter();
 
-	const useListings = () => {
-		return useQuery<FetchedListing[]>({
-			queryKey: ['listings'],
-			queryFn: () => getListings('', 4) as Promise<FetchedListing[]>,
-			staleTime: 1000 * 60 * 5, // 5 mins
-		});
-	};
-
-	// In your component
-	const { data: listingsData, isLoading } = useListings();
-
-	useEffect(() => {
-		if (!isLoading && listingsData) {
-			setFeaturedListings(listingsData);
-		}
-	}, [isLoading, listingsData]);
+	// Use React Query directly without useEffect
+	const {
+		data: featuredListings = [],
+		isLoading
+	} = useQuery<FetchedListing[]>({
+		queryKey: ['listings', 'featured'],
+		queryFn: () => getListings('', 4) as Promise<FetchedListing[]>,
+		staleTime: 1000 * 60 * 5, // 5 mins
+	});
 
 	const handleNavigate = () => {
 		console.log(selectedCategory);
@@ -254,7 +244,7 @@ const Home: NextPage = () => {
 			</section>
 
 			{/* Featured listings */}
-			{featuredListings.length > 0 ? (
+			{!isLoading && featuredListings.length > 0 ? (
 				<section className='py-16 bg-white dark:bg-gray-900'>
 					<div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
 						<div className='flex justify-between items-center mb-12'>
@@ -271,40 +261,7 @@ const Home: NextPage = () => {
 						</div>
 
 						<div className='grid md:grid-cols-2 lg:grid-cols-4 gap-8'>
-							{featuredListings.map((listing) => (
-								// <div
-								// 	key={listing.id}
-								// 	className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-								// >
-								// 	<div className="relative h-48">
-								// 		<Image
-								// 			src={listing.imageUrl[0]}
-								// 			alt={listing.title}
-								// 			fill
-								// 			style={{ objectFit: "cover" }}
-								// 		/>
-								// 		<div className="absolute top-2 right-2 bg-green-600 text-white text-sm font-medium px-2 py-1 rounded-md flex items-center">
-								// 			<FaLeaf className="mr-1" /> {listing.ecoScore.toFixed(1)}
-								// 		</div>
-								// 	</div>
-								// 	<div className="p-5">
-								// 		<h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">
-								// 			{listing.title}
-								// 		</h3>
-								// 		<p className="text-green-600 dark:text-green-400 font-bold mb-2">
-								// 			€{listing.price}
-								// 		</p>
-								// 		<div className="flex items-center text-gray-500 dark:text-gray-400 text-sm">
-								// 			<FaMapMarkedAlt className="mr-1" /> {listing.location}
-								// 		</div>
-								// 		<Link
-								// 			href={`/listings/${listing.id}`}
-								// 			className="mt-4 w-full block text-center bg-gray-100 dark:bg-gray-700 hover:bg-green-100 dark:hover:bg-green-900 text-gray-800 dark:text-white py-2 rounded-md transition-colors"
-								// 		>
-								// 			View Details
-								// 		</Link>
-								// 	</div>
-								// </div>
+							{featuredListings.slice(0, 4).map((listing) => (
 								<ListingCard
 									key={listing.id}
 									listing={listing}

@@ -34,9 +34,9 @@ const ListingCard: React.FC<ListingCardProps> = ({
 				className={`bg-white dark:bg-gray-900 rounded-xl overflow-hidden transition-all duration-300 h-full border border-gray-200 dark:border-gray-800 hover:border-green-200 dark:hover:border-green-800 ${className}`}
 			>
 				<div className='relative h-48 overflow-hidden'>
-					{listing.imageUrl && listing.imageUrl.length > 0 ? (
+					{listing.imageUrls && listing.imageUrls.length > 0 ? (
 						<Image
-							src={listing.imageUrl[0]}
+							src={listing.imageUrls[0]}
 							alt={listing.title}
 							fill
 							priority
@@ -127,9 +127,9 @@ const ListingCard: React.FC<ListingCardProps> = ({
 			<div className='bg-white dark:bg-gray-900 rounded-xl overflow-hidden transition-all duration-300 h-full border border-gray-200 dark:border-gray-800 hover:border-green-200 dark:hover:border-green-800'>
 				<div className='flex flex-col sm:flex-row'>
 					<div className='relative h-40 sm:h-auto sm:w-40 flex-shrink-0 overflow-hidden'>
-						{listing.imageUrl && listing.imageUrl.length > 0 ? (
+						{listing.imageUrls && listing.imageUrls.length > 0 ? (
 							<Image
-								src={listing.imageUrl[0]}
+								src={listing.imageUrls[0]}
 								alt={listing.title}
 								fill
 								priority
