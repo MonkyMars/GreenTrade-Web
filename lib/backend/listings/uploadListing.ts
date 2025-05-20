@@ -3,23 +3,14 @@ import api from '@/lib/backend/api/axiosConfig';
 import { toast } from 'sonner';
 import { AppError, retryOperation } from '@/lib/errorUtils';
 import snakecaseKeys from 'snakecase-keys';
-import camelcaseKeys from 'camelcase-keys';
 
 export const uploadListing = async (listing: UploadListing) => {
 	try {
 		// Validate listing data with Zod schema
 		const validListing = UploadListingSchema.parse(listing);
 
-		// Format the data to match the backend's expected structure
-		const formattedListing = {
-			...validListing,
-			imageUrl: {
-				urls: validListing.imageUrl,
-			},
-		};
-
 		// Convert to snake_case for API request
-		const snakeCaseListing = snakecaseKeys(formattedListing, { deep: true });
+		const snakeCaseListing = snakecaseKeys(validListing, { deep: true });
 
 		// Use our new strongly-typed retry function
 		const response = await retryOperation(
@@ -46,12 +37,9 @@ export const uploadListing = async (listing: UploadListing) => {
 			});
 		}
 
-		// Convert response data from snake_case to camelCase
-		const responseData = camelcaseKeys(response.data.data, { deep: true });
-
 		// Show success message
 		toast.success('Your listing has been successfully uploaded!');
-		return responseData;
+		return response.data.data;
 	} catch (error) {
 		// Our retryOperation will handle most errors and convert them to AppError,
 		// but we can also handle them here to provide more specific error information

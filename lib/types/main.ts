@@ -1,16 +1,54 @@
 import { z } from 'zod';
+import { Condition, conditions } from '../functions/conditions';
+import { EcoAttributes } from '../functions/ecoAttributes';
+import { Categories, categories } from '../functions/categories';
 
 // Zod schemas
+type CategoryName = Exclude<Categories['name'], 'All Categories'>;
+
 export const UploadListingSchema = z.object({
-	title: z.string().min(3, 'Title must be at least 3 characters'),
-	description: z.string().min(10, 'Description must be at least 10 characters'),
-	category: z.string(),
-	condition: z.string(),
-	price: z.number().positive('Price must be positive'),
-	negotiable: z.boolean(),
-	ecoScore: z.number().min(0).max(10),
-	ecoAttributes: z.array(z.string()),
-	imageUrl: z.array(z.string().url()),
+	title: z
+		.string()
+		.min(5, { message: 'Title must be at least 5 characters' })
+		.max(100, { message: 'Title must be at most 100 characters' }),
+	description: z
+		.string()
+		.min(20, { message: 'Description must be at least 20 characters' })
+		.max(1000, { message: 'Description must be at most 1000 characters' }),
+	category: z.custom<CategoryName>(
+		(val) => {
+			return categories.some(
+				(category) =>
+					category.name === val &&
+					category.name !== 'All Categories' &&
+					val !== ''
+			);
+		},
+		{
+			message: 'Please select a valid category',
+		}
+	),
+	condition: z.custom<Condition['name']>(
+		(val) => {
+			return conditions.some((condition) => condition.name === val);
+		},
+		{
+			message: 'Please select a valid condition',
+		}
+	),
+	price: z
+		.number()
+		.refine((val) => val !== null, { message: 'Price is required' })
+		.refine((val) => !isNaN(Number(val)), { message: 'Price must be a number' })
+		.refine((val) => Number(val) > 0, {
+			message: 'Price must be greater than 0',
+		}),
+	negotiable: z.boolean().default(false),
+	ecoAttributes: z.array(z.custom<EcoAttributes>()).default([]),
+	ecoScore: z.number().min(0).max(1000000).default(0),
+	imageUrls: z.array(z.string()).min(1, {
+		message: 'At least one image is required',
+	}),
 	sellerId: z.string(),
 });
 

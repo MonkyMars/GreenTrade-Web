@@ -10,16 +10,16 @@ import {
 } from '@/components/ui/select';
 import { Categories, categories } from '@/lib/functions/categories';
 import { Condition, conditions } from '@/lib/functions/conditions';
-import { ListingFormType } from '@/app/post/page';
+import { UploadListing } from '@/lib/types/main';
 
 interface ItemDetailsFormProps {
-	formData: ListingFormType;
+	formData: UploadListing;
 	handleChange: (
 		e: React.ChangeEvent<
 			HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
 		>
 	) => void;
-	setFormData: React.Dispatch<React.SetStateAction<ListingFormType>>;
+	setFormData: React.Dispatch<React.SetStateAction<UploadListing>>;
 	formErrors: z.ZodIssue[];
 }
 
@@ -56,11 +56,10 @@ const ItemDetailsForm = ({
 						onChange={handleChange}
 						placeholder='e.g., Handmade Wooden Coffee Table'
 						className={`block w-full px-4 py-3 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out
-                    ${
-											formErrors.find((error) => error.path[0] === 'title')
-												? 'border-2 border-red-300 focus:ring-1 focus:ring-green-400'
-												: 'border border-gray-300 dark:border-gray-600 hover:border-green-300'
-										}
+                    ${formErrors.find((error) => error.path[0] === 'title')
+								? 'border-2 border-red-300 focus:ring-1 focus:ring-green-400'
+								: 'border border-gray-300 dark:border-gray-600 hover:border-green-300'
+							}
                     focus:ring-0 focus:border-transparent focus:outline-none
                     dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
 					/>
@@ -88,11 +87,10 @@ const ItemDetailsForm = ({
 						onChange={handleChange}
 						placeholder='Describe your item, including details about its condition, history, and sustainability aspects'
 						className={`block w-full px-4 py-3 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out focus:ring-0 focus:border-transparent focus:outline-none
-            ${
-							formErrors.find((error) => error.path[0] === 'description')
+            ${formErrors.find((error) => error.path[0] === 'description')
 								? 'border-2 border-red-300 focus:ring-1 focus:ring-green-400'
 								: 'border border-gray-300 dark:border-gray-600 hover:border-green-300'
-						}
+							}
             dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
 					/>
 					{formErrors.find((error) => error.path[0] === 'description') && (
@@ -134,11 +132,10 @@ const ItemDetailsForm = ({
 						>
 							<SelectTrigger
 								className={`w-full px-4 py-6 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out
-                ${
-									formErrors.find((error) => error.path[0] === 'category')
+                ${formErrors.find((error) => error.path[0] === 'category')
 										? 'border-2 border-red-300 focus:ring-2 focus:ring-red-500 focus:border-red-500'
 										: 'border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300'
-								}
+									}
                 dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
 							>
 								<SelectValue
@@ -155,7 +152,7 @@ const ItemDetailsForm = ({
 							</SelectTrigger>
 							<SelectContent className='mt-1 w-full bg-slate-100 dark:bg-gray-700 rounded-md shadow-lg border-green-500'>
 								{categories.slice(1).map((category) => (
-									<SelectItem value={category.name} key={category.id}>
+									<SelectItem value={category.name} key={category.id} className='hover:bg-green-100 dark:hover:bg-green-600 text-black dark:text-white'>
 										<div className='flex items-center'>
 											<category.icon className='h-5 w-5 mr-2' />
 											<span className='text-[1em]'>{category.name}</span>
@@ -196,11 +193,10 @@ const ItemDetailsForm = ({
 					>
 						<SelectTrigger
 							className={`w-full px-4 py-6 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out
-            ${
-							formErrors.find((error) => error.path[0] === 'condition')
-								? 'border-2 border-red-300 focus:ring-2 focus:ring-red-500 focus:border-red-500'
-								: 'border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300'
-						}
+            ${formErrors.find((error) => error.path[0] === 'condition')
+									? 'border-2 border-red-300 focus:ring-2 focus:ring-red-500 focus:border-red-500'
+									: 'border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300'
+								}
             dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
 						>
 							<SelectValue
@@ -217,7 +213,7 @@ const ItemDetailsForm = ({
 						</SelectTrigger>
 						<SelectContent className='mt-1 w-full bg-slate-100 dark:bg-gray-700 rounded-md shadow-lg border-green-500'>
 							{conditions.map((condition) => (
-								<SelectItem value={condition.name} key={condition.name}>
+								<SelectItem value={condition.name} key={condition.name} className='hover:bg-green-100 dark:hover:bg-green-600 text-black dark:text-white'>
 									<div className='flex items-center'>
 										<condition.icon className='h-5 w-5 mr-2' />
 										<span className='text-[1em]'>{condition.name}</span>

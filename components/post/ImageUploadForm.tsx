@@ -3,6 +3,7 @@ import { FiX } from 'react-icons/fi';
 import { z } from 'zod';
 import Image from 'next/image';
 import React from 'react';
+import { UploadListing } from '@/lib/types/main';
 
 interface ImageUploadFormProps {
 	images: { uri: string; type?: string; name?: string }[];
@@ -14,6 +15,8 @@ interface ImageUploadFormProps {
 	uploading: boolean;
 	setUploading: React.Dispatch<React.SetStateAction<boolean>>;
 	formErrors: z.ZodIssue[];
+	setFormData: React.Dispatch<React.SetStateAction<UploadListing>>;
+	formData: UploadListing;
 }
 
 const ImageUploadForm = ({
@@ -24,6 +27,8 @@ const ImageUploadForm = ({
 	uploading,
 	setUploading,
 	formErrors,
+	setFormData,
+	formData,
 }: ImageUploadFormProps) => {
 	// Handle image upload
 	const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,6 +50,12 @@ const ImageUploadForm = ({
 		}
 
 		setImageFiles(newImageFiles);
+
+		// Update formData with new image files
+		setFormData({
+			...formData,
+			imageUrls: newImageFiles.map((file) => file.name),
+		});
 		setImages(newImages);
 		setUploading(false);
 	};

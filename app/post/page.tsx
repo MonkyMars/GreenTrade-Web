@@ -7,15 +7,15 @@ import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { uploadImage } from '@/lib/backend/listings/uploadImage';
 import { uploadListing } from '@/lib/backend/listings/uploadListing';
-import { FetchedListing, type UploadListing } from '@/lib/types/main';
+import { FetchedListing, UploadListingSchema, type UploadListing } from '@/lib/types/main';
 import { calculateEcoScore } from '@/lib/functions/calculateEcoScore';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { type Categories, categories } from '@/lib/functions/categories';
+import { type Categories } from '@/lib/functions/categories';
 import { AppError, retryOperation } from '@/lib/errorUtils';
 import { toast } from 'sonner';
 import { NextPage } from 'next';
-import { type Condition, conditions } from '@/lib/functions/conditions';
+import { type Condition } from '@/lib/functions/conditions';
 import { FiGrid, FiList } from 'react-icons/fi';
 
 // Import components
@@ -26,66 +26,25 @@ import PriceLocationForm from '@/components/post/PriceLocationForm';
 import ImageUploadForm from '@/components/post/ImageUploadForm';
 import EcoAttributesForm from '@/components/post/EcoAttributesForm';
 import TermsAndSubmitForm from '@/components/post/TermsAndSubmitForm';
-import { type EcoAttributes } from '@/lib/functions/ecoAttributes';
 import { Button } from '@/components/ui/button';
 import ListingCard from '@/components/ui/ListingCard';
 
 // Create a more specific type for category that excludes "All Categories"
 type CategoryName = Exclude<Categories['name'], 'All Categories'>;
 
-const listingSchema = z.object({
-	title: z
-		.string()
-		.min(5, { message: 'Title must be at least 5 characters' })
-		.max(100, { message: 'Title must be at most 100 characters' }),
-	description: z
-		.string()
-		.min(20, { message: 'Description must be at least 20 characters' })
-		.max(1000, { message: 'Description must be at most 1000 characters' }),
-	category: z.custom<CategoryName>(
-		(val) => {
-			return categories.some(
-				(category) =>
-					category.name === val &&
-					category.name !== 'All Categories' &&
-					val !== ''
-			);
-		},
-		{
-			message: 'Please select a valid category',
-		}
-	),
-	condition: z.custom<Condition['name']>(
-		(val) => {
-			return conditions.some((condition) => condition.name === val);
-		},
-		{
-			message: 'Please select a valid condition',
-		}
-	),
-	price: z
-		.string()
-		.refine((val) => val !== '', { message: 'Price is required' })
-		.refine((val) => !isNaN(Number(val)), { message: 'Price must be a number' })
-		.refine((val) => Number(val) > 0, {
-			message: 'Price must be greater than 0',
-		}),
-	negotiable: z.boolean().default(false),
-	ecoAttributes: z.array(z.custom<EcoAttributes>()).default([]),
-});
-
-export type ListingFormType = z.infer<typeof listingSchema>;
-
 const PostListingPage: NextPage = () => {
 	const { user } = useAuth();
-	const [formData, setFormData] = useState<ListingFormType>({
+	const [formData, setFormData] = useState<UploadListing>({
 		title: '',
 		description: '',
 		category: '' as CategoryName,
 		condition: '' as Condition['name'],
-		price: '',
+		price: 0,
 		ecoAttributes: [],
 		negotiable: false,
+		ecoScore: 0,
+		imageUrls: [],
+		sellerId: user?.id || '',
 	});
 	const [images, setImages] = useState<
 		{ uri: string; type?: string; name?: string }[]
@@ -138,7 +97,7 @@ const PostListingPage: NextPage = () => {
 
 	// Form validation
 	const validateForm = () => {
-		const result = listingSchema.safeParse(formData);
+		const result = UploadListingSchema.safeParse(formData);
 		if (!result.success) {
 			setFormErrors(result.error.issues);
 			return false;
@@ -152,9 +111,12 @@ const PostListingPage: NextPage = () => {
 			description: '',
 			category: '' as CategoryName,
 			condition: '' as Condition['name'],
-			price: '',
+			price: 0,
 			ecoAttributes: [],
 			negotiable: false,
+			ecoScore: 0,
+			imageUrls: [],
+			sellerId: user?.id || '',
 		});
 		setImages([]);
 		setImageFiles([]);
@@ -189,7 +151,7 @@ const PostListingPage: NextPage = () => {
 			}
 
 			// Use retryOperation for image upload with proper error handling
-			const imageUrls = await retryOperation(
+			const imageUrlss = await retryOperation(
 				() => uploadImage(images, formData.title),
 				{
 					context: 'Image Upload',
@@ -198,23 +160,25 @@ const PostListingPage: NextPage = () => {
 				}
 			);
 
-			if (!imageUrls) {
+			if (!imageUrlss) {
 				throw new AppError('Failed to upload images', {
 					code: 'IMAGE_UPLOAD_FAILED',
 					context: 'Post Listing',
 				});
 			}
 
+			console.log('Image URLs:', imageUrlss.urls);
+
 			const listing: UploadListing = {
 				title: formData.title,
 				description: formData.description,
 				category: formData.category,
 				condition: formData.condition as Condition['name'],
-				price: parseFloat(formData.price),
+				price: formData.price,
 				negotiable: formData.negotiable,
 				ecoAttributes: formData.ecoAttributes,
 				ecoScore: calculateEcoScore(formData.ecoAttributes),
-				imageUrl: imageUrls.urls,
+				imageUrls: imageUrlss.urls,
 				sellerId: user.id,
 			};
 
@@ -305,9 +269,9 @@ const PostListingPage: NextPage = () => {
 		if (newTab === 'preview') {
 			const previewListing: FetchedListing = {
 				...formData,
-				price: parseFloat(formData.price) || 0,
+				price: formData.price,
 				ecoScore: calculateEcoScore(formData.ecoAttributes),
-				imageUrl: images.map((image) => image.uri),
+				imageUrls: images.map((image) => image.uri),
 				sellerId: user?.id || '',
 				id: '',
 				createdAt: new Date(),
@@ -392,6 +356,8 @@ const PostListingPage: NextPage = () => {
 									uploading={uploading}
 									setUploading={setUploading}
 									formErrors={formErrors}
+									setFormData={setFormData}
+									formData={formData}
 								/>
 
 								{/* Eco-friendly Attributes */}
@@ -424,11 +390,10 @@ const PostListingPage: NextPage = () => {
 									<div className='hidden sm:flex items-center gap-1 rounded-md p-0.5'>
 										<button
 											onClick={() => setPreviewView('grid')}
-											className={`p-1.5 rounded ${
-												previewViewmode === 'grid'
-													? 'bg-white dark:bg-gray-600 text-green-600 dark:text-green-300 shadow-sm'
-													: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-											}`}
+											className={`p-1.5 rounded ${previewViewmode === 'grid'
+												? 'bg-white dark:bg-gray-600 text-green-600 dark:text-green-300 shadow-sm'
+												: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+												}`}
 											aria-label='Grid view'
 											type='button'
 										>
@@ -436,11 +401,10 @@ const PostListingPage: NextPage = () => {
 										</button>
 										<button
 											onClick={() => setPreviewView('list')}
-											className={`p-1.5 rounded ${
-												previewViewmode === 'list'
-													? 'bg-white dark:bg-gray-600 text-green-600 dark:text-green-300 shadow-sm'
-													: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-											}`}
+											className={`p-1.5 rounded ${previewViewmode === 'list'
+												? 'bg-white dark:bg-gray-600 text-green-600 dark:text-green-300 shadow-sm'
+												: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+												}`}
 											aria-label='List view'
 											type='button'
 										>

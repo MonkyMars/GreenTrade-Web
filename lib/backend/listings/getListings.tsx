@@ -83,18 +83,27 @@ export const getListings = async (
 				);
 			}
 
-			// Convert snake_case to camelCase and validate with Zod
+			// Convert snake_case to camelCase
 			const rawData = response.data.data;
 			const camelCaseData = camelcaseKeys(rawData, { deep: true });
 
-			// Validate each listing with Zod schema
-			const validListings = camelCaseData.map((listing: unknown) =>
-				FetchedListingSchema.parse(listing)
-			);
+			// Validate each listing with Zod schema and filter out invalid ones
+			const validListings: FetchedListing[] = [];
+
+			camelCaseData.forEach((listing: unknown) => {
+				try {
+					const validListing = FetchedListingSchema.parse(listing);
+					validListings.push(validListing);
+				} catch (error) {
+					if (process.env.NODE_ENV !== 'production') {
+						console.error('Invalid listing detected:', error);
+					}
+				}
+			});
 
 			if (validListings.length === 0) {
 				if (process.env.NODE_ENV === 'production') {
-					toast.info('No listings found.');
+					toast.info('No valid listings found.');
 				}
 			}
 
@@ -179,22 +188,41 @@ export const getSellerListings = async (
 			);
 		}
 
-		// Convert snake_case to camelCase and validate with Zod
+		// Convert snake_case to camelCase
 		const rawData = response.data.data;
 		const camelCaseData = camelcaseKeys(rawData, { deep: true });
 
-		// Validate each listing with Zod schema
-		const validListings = camelCaseData.map((listing: unknown) =>
-			FetchedListingSchema.parse(listing)
-		);
+		// Validate each listing with Zod schema and filter out invalid ones
+		const validListings: FetchedListing[] = [];
+		let invalidCount = 0;
+
+		camelCaseData.forEach((listing: unknown) => {
+			try {
+				const validListing = FetchedListingSchema.parse(listing);
+				validListings.push(validListing);
+			} catch (error) {
+				invalidCount++;
+				if (process.env.NODE_ENV !== 'production') {
+					console.error('Invalid seller listing detected:', error);
+				}
+			}
+		});
 
 		// Dismiss loading toast if we're in production
 		if (loadingToast && process.env.NODE_ENV === 'production') {
 			toast.dismiss(loadingToast);
 		}
 
+		// Show notification if invalid listings were found
+		if (invalidCount > 0 && process.env.NODE_ENV === 'production') {
+			toast.warning(
+				`${invalidCount} invalid listing${invalidCount > 1 ? 's' : ''
+				} skipped.`
+			);
+		}
+
 		if (validListings.length === 0 && process.env.NODE_ENV === 'production') {
-			toast.info('No listings found for this seller.');
+			toast.info('No valid listings found for this seller.');
 		}
 
 		return validListings;

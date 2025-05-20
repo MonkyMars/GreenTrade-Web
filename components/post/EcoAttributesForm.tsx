@@ -2,12 +2,12 @@ import { FaLeaf } from 'react-icons/fa';
 import { z } from 'zod';
 import { Checkbox } from '@/components/ui/checkbox';
 import { calculateEcoScore } from '@/lib/functions/calculateEcoScore';
-import { ListingFormType } from '@/app/post/page';
+import { UploadListing } from '@/lib/types/main';
 import { EcoAttributes, ecoAttributes } from '@/lib/functions/ecoAttributes';
 
 interface EcoAttributesFormProps {
-	formData: ListingFormType;
-	setFormData: React.Dispatch<React.SetStateAction<ListingFormType>>;
+	formData: UploadListing;
+	setFormData: React.Dispatch<React.SetStateAction<UploadListing>>;
 	ecoScore: number;
 	setEcoScore: React.Dispatch<React.SetStateAction<number>>;
 	formErrors: z.ZodIssue[];

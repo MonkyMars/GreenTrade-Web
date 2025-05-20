@@ -5,7 +5,7 @@ import { AppError, retryOperation } from '@/lib/errorUtils';
 
 export const uploadImage = async (
 	images: { uri: string; type?: string; name?: string }[],
-	listing_title: UploadListing['title']
+	listingTitle: UploadListing['title']
 ) => {
 	if (!images || images.length === 0) {
 		const errorMessage = 'No images provided';
@@ -22,7 +22,7 @@ export const uploadImage = async (
 
 		// Create a single FormData object for all images
 		const formData = new FormData();
-		formData.append('listing_title', listing_title);
+		formData.append('listing_title', listingTitle);
 
 		// The backend expects files with the key "file" (not "file0", "file1", etc.)
 		await Promise.all(
