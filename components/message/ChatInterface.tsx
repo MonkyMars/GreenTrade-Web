@@ -18,7 +18,7 @@ interface ChatInterfaceProps {
 	conversation: Conversation | null;
 	messages: ChatMessage[];
 	onSendMessage: (text: string) => void;
-	userId: string;
+	userId: string | undefined;
 	isLoading?: boolean;
 }
 
@@ -66,9 +66,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 				// Messages within 10 minutes are grouped together
 				Math.abs(
 					new Date(message.timestamp).getTime() -
-						new Date(messages[i - 1].timestamp).getTime()
+					new Date(messages[i - 1].timestamp).getTime()
 				) <
-					10 * 60 * 1000
+				10 * 60 * 1000
 			) {
 				// Add to the existing group
 				const allFilled = Object.values(message).every(
@@ -105,6 +105,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 		// Focus input when conversation changes
 		inputRef.current?.focus();
 	}, [conversation]);
+
+	if (!userId) return null;
 
 	if (!conversation) {
 		return (

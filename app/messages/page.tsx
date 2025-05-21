@@ -16,8 +16,9 @@ import {
 } from '@/lib/functions/chat/main';
 import { sendMessage } from '@/lib/functions/chat/sendMessage';
 import { cn } from '@/lib/functions/cn';
+import { NextPage } from 'next';
 
-const MessagesPage = () => {
+const MessagesPageContent: NextPage = () => {
 	const { user } = useAuth();
 	const [conversations, setConversations] = useState<Conversation[]>([]);
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -109,10 +110,6 @@ const MessagesPage = () => {
 	const activeConversation =
 		conversations.find((c) => c.id === activeConversationId) || null;
 
-	if (!user) {
-		return null; // Protected route will handle this
-	}
-
 	if (isLoading && !refreshing) {
 		return (
 			<div className='flex items-center justify-center py-22 min-h-screen bg-white dark:bg-gray-900'>
@@ -127,63 +124,70 @@ const MessagesPage = () => {
 	}
 
 	return (
-		<ProtectedRoute>
-			<div className='min-h-screen flex flex-col pt-16 bg-white dark:bg-gray-900'>
-				{/* Error message banner if present */}
-				{error && (
-					<div className='bg-red-500 dark:bg-red-600 text-white p-3 mb-2 mx-4 mt-4 rounded-md shadow-sm'>
-						<p className='text-sm font-medium'>{error}</p>
-						<button
-							onClick={() => setError(null)}
-							className='text-xs underline hover:no-underline mt-1 text-white/90 hover:text-white'
-						>
-							Dismiss
-						</button>
-					</div>
-				)}
 
-				{/* Mobile conversation toggle button - only visible on mobile */}
-				<button
-					onClick={toggleMobileSidebar}
+		<div className='min-h-screen flex flex-col pt-16 bg-white dark:bg-gray-900'>
+			{/* Error message banner if present */}
+			{error && (
+				<div className='bg-red-500 dark:bg-red-600 text-white p-3 mb-2 mx-4 mt-4 rounded-md shadow-sm'>
+					<p className='text-sm font-medium'>{error}</p>
+					<button
+						onClick={() => setError(null)}
+						className='text-xs underline hover:no-underline mt-1 text-white/90 hover:text-white'
+					>
+						Dismiss
+					</button>
+				</div>
+			)}
+
+			{/* Mobile conversation toggle button - only visible on mobile */}
+			<button
+				onClick={toggleMobileSidebar}
+				className={cn(
+					'md:hidden fixed z-20 bottom-4 left-4 bg-accent hover:bg-accent-hover text-white p-3 rounded-full shadow-lg',
+					activeConversationId && !isMobileSidebarOpen ? 'flex' : 'hidden'
+				)}
+			>
+				<FiMessageSquare className='h-6 w-6' />
+			</button>
+
+			<div className='flex flex-row h-[calc(100vh-4rem)] overflow-hidden'>
+				{/* Conversation list sidebar - conditionally shown on mobile */}
+				<div
 					className={cn(
-						'md:hidden fixed z-20 bottom-4 left-4 bg-accent hover:bg-accent-hover text-white p-3 rounded-full shadow-lg',
-						activeConversationId && !isMobileSidebarOpen ? 'flex' : 'hidden'
+						'fixed md:relative inset-0 bg-white dark:bg-gray-900 z-10 md:z-auto',
+						'md:w-80 lg:w-96 flex-shrink-0 transition-transform duration-300 ease-in-out',
+						isMobileSidebarOpen
+							? 'translate-x-0'
+							: '-translate-x-full md:translate-x-0'
 					)}
 				>
-					<FiMessageSquare className='h-6 w-6' />
-				</button>
+					<ConversationList
+						conversations={conversations}
+						activeConversationId={activeConversationId}
+						onSelectConversation={handleSelectConversation}
+						userId={user?.id}
+					/>
+				</div>
 
-				<div className='flex flex-row h-[calc(100vh-4rem)] overflow-hidden'>
-					{/* Conversation list sidebar - conditionally shown on mobile */}
-					<div
-						className={cn(
-							'fixed md:relative inset-0 bg-white dark:bg-gray-900 z-10 md:z-auto',
-							'md:w-80 lg:w-96 flex-shrink-0 transition-transform duration-300 ease-in-out',
-							isMobileSidebarOpen
-								? 'translate-x-0'
-								: '-translate-x-full md:translate-x-0'
-						)}
-					>
-						<ConversationList
-							conversations={conversations}
-							activeConversationId={activeConversationId}
-							onSelectConversation={handleSelectConversation}
-							userId={user.id}
-						/>
-					</div>
-
-					{/* Chat interface */}
-					<div className='flex-grow bg-white dark:bg-gray-900'>
-						<ChatInterface
-							conversation={activeConversation}
-							messages={messages}
-							onSendMessage={handleSendMessage}
-							userId={user.id}
-							isLoading={isMessagesLoading}
-						/>
-					</div>
+				{/* Chat interface */}
+				<div className='flex-grow bg-white dark:bg-gray-900'>
+					<ChatInterface
+						conversation={activeConversation}
+						messages={messages}
+						onSendMessage={handleSendMessage}
+						userId={user?.id}
+						isLoading={isMessagesLoading}
+					/>
 				</div>
 			</div>
+		</div>
+	);
+};
+
+const MessagesPage = () => {
+	return (
+		<ProtectedRoute>
+			<MessagesPageContent />
 		</ProtectedRoute>
 	);
 };

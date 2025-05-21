@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
 interface ProtectedRouteProps {
@@ -7,42 +7,19 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-	const { loading, isAuthenticated, user } = useAuth();
+	const { loading, isAuthenticated } = useAuth();
 	const router = useRouter();
-	const [redirecting, setRedirecting] = useState(false);
-	const [waitingForAuth, setWaitingForAuth] = useState(true);
 
 	useEffect(() => {
-		// Track if we're waiting for authentication
-		let authCheckTimer: NodeJS.Timeout;
-
-		if (loading) {
-			// Give some grace period for authentication to complete
-			authCheckTimer = setTimeout(() => {
-				setWaitingForAuth(false);
-			}, 2000); // 2 seconds grace period
-		} else {
-			setWaitingForAuth(false);
-		}
-
-		return () => {
-			if (authCheckTimer) {
-				clearTimeout(authCheckTimer);
-			}
-		};
-	}, [loading, isAuthenticated]);
-
-	useEffect(() => {
-		// Only redirect if auth check is complete, not authenticated, and not already redirecting
-		if (!loading && !waitingForAuth && !isAuthenticated && !redirecting) {
-			setRedirecting(true);
+		// Check if user is authenticated and redirect if not
+		if (!loading && !isAuthenticated) {
 			const path = window.location.pathname;
 			router.push(`/login?redirect=${path}`);
 		}
-	}, [loading, isAuthenticated, user, router, redirecting, waitingForAuth]);
+	}, [loading, isAuthenticated, router]);
 
-	// Show loading if still checking auth or waiting for auth
-	if (loading || waitingForAuth) {
+	// Show loading if still checking auth
+	if (loading) {
 		return (
 			<div className='min-h-screen flex items-center justify-center'>
 				<div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500'></div>

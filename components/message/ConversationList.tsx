@@ -9,7 +9,7 @@ interface ConversationListProps {
 	conversations: Conversation[];
 	activeConversationId: string | null;
 	onSelectConversation: (conversationId: string) => void;
-	userId: string;
+	userId: string | undefined;
 }
 
 export const ConversationList: React.FC<ConversationListProps> = ({
@@ -18,6 +18,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
 	onSelectConversation,
 	userId,
 }) => {
+	if (!userId) return null;
 	return (
 		<div className='w-full h-full flex flex-col bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800'>
 			<div className='p-5.5 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 shadow-sm'>

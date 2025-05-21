@@ -1,5 +1,4 @@
 import { NextPage } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { FaLeaf, FaHandshake } from 'react-icons/fa';
 import { IoEarthOutline } from 'react-icons/io5';
@@ -24,42 +23,24 @@ const About: NextPage = () => {
 
 			{/* Our story */}
 			<section className='py-16 md:py-24 bg-white dark:bg-gray-900'>
-				<div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-					<div className='lg:grid lg:grid-cols-2 lg:gap-12 items-center'>
-						<div>
-							<h2 className='text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6 flex items-center'>
-								<FaHandshake className='mr-3 h-6 w-6 text-green-600 dark:text-green-500' />
-								Our Story
-							</h2>
-							<p className='text-lg text-gray-700 dark:text-gray-300 mb-6'>
-								GreenVue.eu was born from a simple observation: across Europe,
-								we have too many things that could be reused instead of
-								discarded, and too few accessible platforms to connect people
-								who want to trade sustainably.
-							</p>
-							<p className='text-lg text-gray-700 dark:text-gray-300 mb-6'>
-								Founded in 2025 by a team of environmentalists and tech
-								enthusiasts, we set out to create a marketplace that makes
-								sustainable choices simple, transparent, and community-driven.
-							</p>
-							<p className='text-lg text-gray-700 dark:text-gray-300'>
-								Today, we&apos;re proud to connect thousands of Europeans in a
-								shared mission to reduce waste, minimize carbon footprints, and
-								build a more sustainable future—one trade at a time.
-							</p>
-						</div>
-						<div className='mt-10 lg:mt-0'>
-							<div className='relative h-96 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-800'>
-								<Image
-									src='/images/handshake_background.webp'
-									alt='GreenVue team collaboration'
-									fill
-									style={{ objectFit: 'cover' }}
-									className='rounded-xl'
-								/>
-							</div>
-						</div>
-					</div>
+				<div className='max-w-2xl mx-auto px-4 sm:px-6 lg:px-8'>
+					<header className='w-full flex items-center justify-center'>
+						<h2 className='text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 flex items-center'>
+							<FaHandshake className='mr-3 h-6 w-6 text-green-600 dark:text-green-500' />
+							Our Story
+						</h2>
+					</header>
+					<p className='text-lg text-gray-700 dark:text-gray-300 mb-6'>
+						GreenVue.eu was born from a simple observation: across Europe,
+						we have too many things that could be reused instead of
+						discarded, and too few accessible platforms to connect people
+						who want to trade sustainably.
+					</p>
+					<p className='text-lg text-gray-700 dark:text-gray-300 mb-6'>
+						Founded in 2025 by a single developer with a passion for sustainability
+						and community, GreenVue started as a small project to help
+						friends and family trade their unwanted items.
+					</p>
 				</div>
 			</section>
 
@@ -188,7 +169,7 @@ const About: NextPage = () => {
 			</section>
 
 			{/* Impact stats */}
-			<section className='py-16 md:py-24 bg-green-600 text-white'>
+			{/* <section className='py-16 md:py-24 bg-green-600 text-white'>
 				<div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
 					<div className='text-center mb-16'>
 						<h2 className='text-3xl md:text-4xl font-bold flex items-center justify-center'>
@@ -224,7 +205,7 @@ const About: NextPage = () => {
 						</div>
 					</div>
 				</div>
-			</section>
+			</section> */}
 
 			{/* FAQ section */}
 			<section className='py-16 md:py-24 bg-gray-50 dark:bg-gray-900'>
@@ -247,7 +228,7 @@ const About: NextPage = () => {
 							</h3>
 							<p className='text-gray-600 dark:text-gray-300'>
 								Yes! GreenVue is available across all EU member states, as well
-								as the UK, Norway, and Switzerland. Our platform automatically
+								as the UK and Switzerland. Our platform automatically
 								translates listings to make cross-border trading seamless.
 							</p>
 						</div>
