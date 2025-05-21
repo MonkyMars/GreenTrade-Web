@@ -112,7 +112,7 @@ const ImageUploadForm = ({
 						<div className='relative h-32'>
 							<label
 								htmlFor='image-upload'
-								className='h-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer'
+								className='h-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-green-300 hover:border-solid hover:border-1 cursor-pointer'
 							>
 								<div className='flex flex-col items-center justify-center pt-5 pb-6'>
 									<FaCamera className='mx-auto h-12 w-12 text-gray-400' />

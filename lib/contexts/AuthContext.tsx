@@ -51,9 +51,6 @@ const OAuthRedirectHandler: React.FC<{ onUserLoad: (user: User) => void }> = ({
 			expiresIn = expiresIn ? parseInt(expiresIn) : null;
 
 			if (!userId || !accessToken || !refreshToken || !expiresIn) {
-				if (process.env.NODE_ENV !== 'production') {
-					console.log('No tokens found in URL');
-				}
 				return;
 			}
 

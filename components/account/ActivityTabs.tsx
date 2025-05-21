@@ -14,11 +14,13 @@ import { cn } from '@/lib/functions/cn';
 interface ActivityTabsProps {
 	userListings: FetchedListing[];
 	userReviews: FetchedReview[];
+	userFavorites: FetchedListing[];
 }
 
 const ActivityTabs: React.FC<ActivityTabsProps> = ({
 	userListings,
 	userReviews,
+	userFavorites,
 }) => {
 	const [activeTab, setActiveTab] = useState('listings');
 
@@ -149,17 +151,23 @@ const ActivityTabs: React.FC<ActivityTabsProps> = ({
 				</TabsContent>
 
 				<TabsContent value='favorites' className='pt-2'>
-					<div className='text-center py-10 border border-dashed border-gray-200 dark:border-gray-800 rounded-md bg-gray-50 dark:bg-gray-900/50'>
+					{userFavorites && userFavorites.length > 0 ? (
+						<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+							{userFavorites.map((favorite) => (
+								<div key={favorite.id}>
+									<ListingCard
+										listing={favorite}
+										viewMode='grid'
+										className='h-full border border-gray-200 dark:border-gray-800 hover:border-green-200 dark:hover:border-green-800 transition-colors shadow-sm hover:shadow-md'
+									/>
+								</div>
+							))}
+						</div>
+					) : (
 						<p className='text-gray-500 dark:text-gray-400'>
-							Your favorites will appear here.
-						</p>{' '}
-						<Button
-							variant='outline'
-							className='mt-4 border border-gray-300 dark:border-gray-700 hover:border-green-500 hover:text-green-600 dark:hover:border-green-700 dark:hover:text-green-500 transition-colors shadow-sm hover:shadow-md'
-						>
-							<Link href='/browse'>Browse Listings</Link>
-						</Button>
-					</div>
+							No favorites yet.
+						</p>
+					)}
 				</TabsContent>
 
 				<TabsContent value='purchases' className='pt-2'>

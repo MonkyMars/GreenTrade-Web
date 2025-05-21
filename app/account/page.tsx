@@ -21,6 +21,7 @@ import SecuritySettings from '@/components/account/SecuritySettings';
 import DeleteAccount from '@/components/account/DeleteAccount';
 import ActivityTabs from '@/components/account/ActivityTabs';
 import { AppError } from '@/lib/errorUtils';
+import { getFavorites } from '@/lib/backend/favorites/getFavorites';
 
 interface ActiveTab {
 	activeTab: 'profile' | 'seller' | 'security' | 'delete';
@@ -45,6 +46,7 @@ const AccountPage: NextPage = () => {
 	const [userListings, setUserListings] = useState<FetchedListing[]>([]);
 	const [userReviews, setUserReviews] = useState<FetchedReview[]>([]);
 	const [disabled, setDisabled] = useState<boolean>(false);
+	const [userFavorites, setUserFavorites] = useState<FetchedListing[]>([]);
 
 	// Initialize location from user data
 	useEffect(() => {
@@ -95,7 +97,7 @@ const AccountPage: NextPage = () => {
 
 	// Handle logout
 	const handleLogout = async () => {
-		logout();
+		await logout();
 	};
 
 	// Handle account deletion
@@ -107,7 +109,7 @@ const AccountPage: NextPage = () => {
 				throw new Error('Failed to delete account');
 			}
 
-			logout();
+			await logout();
 			router.push('/?deleted=true');
 		} catch (error) {
 			console.error('Error deleting account:', error);
@@ -140,8 +142,21 @@ const AccountPage: NextPage = () => {
 			}
 		};
 
+		const fetchUserFavorites = async () => {
+			try {
+				const response: FetchedListing[] = await getFavorites();
+				console.log('Fetched favorites:', response);
+				if (response.length > 0) {
+					setUserFavorites(response);
+				}
+			} catch (error) {
+				console.error('Error fetching user favorites:', error);
+			}
+		};
+
 		fetchUserListings();
 		fetchUserReviews();
+		fetchUserFavorites();
 	}, [user?.id]);
 
 	// Handle user data update
@@ -289,6 +304,7 @@ const AccountPage: NextPage = () => {
 										<ActivityTabs
 											userListings={userListings}
 											userReviews={userReviews}
+											userFavorites={userFavorites}
 										/>
 									</motion.div>
 								)}

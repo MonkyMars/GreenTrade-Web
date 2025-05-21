@@ -20,6 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+	metadataBase: new URL('https://greenvue.eu'),
 	title: 'GreenVue - Sustainable Trading Solutions',
 	description:
 		'GreenVue offers eco-friendly trading solutions focused on sustainability and environmental responsibility.',

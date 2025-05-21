@@ -3,14 +3,11 @@ import { toast } from 'sonner';
 import { AppError, retryOperation } from '@/lib/errorUtils';
 import { FetchedListing, FetchedListingSchema } from '@/lib/types/main';
 import camelcaseKeys from 'camelcase-keys';
-import snakecaseKeys from 'snakecase-keys';
 
 /**
  * Fetch user's favorite listings with proper error handling
  */
-export const getFavorites = async (
-	userId: string
-): Promise<FetchedListing[]> => {
+export const getFavorites = async (): Promise<FetchedListing[]> => {
 	// Show loading state in production
 	let loadingToast;
 	if (process.env.NODE_ENV === 'production') {
@@ -18,12 +15,9 @@ export const getFavorites = async (
 	}
 
 	try {
-		// Prepare snake_case params
-		const params = snakecaseKeys({ userId });
-
 		// Use type-safe retry utility
 		const response = await retryOperation(
-			() => api.get(`/api/favorites/${userId}`, { params }),
+			() => api.get(`/api/favorites`),
 			{
 				context: 'Fetching favorites',
 				maxRetries: 3,

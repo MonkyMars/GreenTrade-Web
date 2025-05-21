@@ -24,7 +24,7 @@ const FavoritesPage: NextPage = () => {
 			if (!user) return; // Ensure user is available before fetching
 			try {
 				setLoading(true);
-				const data = await getFavorites(user.id);
+				const data = await getFavorites();
 				setFavorites(data);
 			} catch (error) {
 				console.error('Error loading favorites:', error);
@@ -67,31 +67,28 @@ const FavoritesPage: NextPage = () => {
 					<div className='flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-md p-0.5 shadow-sm'>
 						<button
 							onClick={() => setViewMode('list')}
-							className={`p-1.5 cursor-pointer rounded ${
-								viewMode === 'list'
-									? 'bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 shadow-sm'
-									: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-							}`}
+							className={`p-1.5 cursor-pointer rounded ${viewMode === 'list'
+								? 'bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 shadow-sm'
+								: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+								}`}
 							aria-label='List view'
 						>
-							<FaList className='h-5 w-5' />
+							<FaList className='h-4 w-4' />
 						</button>
 						<button
 							onClick={() => setViewMode('grid')}
-							className={`p-1.5 cursor-pointer rounded ${
-								viewMode === 'grid'
-									? 'bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 shadow-sm'
-									: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-							}`}
+							className={`p-1.5 cursor-pointer rounded ${viewMode === 'grid'
+								? 'bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 shadow-sm'
+								: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+								}`}
 							aria-label='Grid view'
 						>
-							<FaThLarge className='h-5 w-5' />
+							<FaThLarge className='h-4 w-4' />
 						</button>
 					</div>{' '}
 					<Button
-						variant='outline'
-						className='bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 group border border-gray-200 dark:border-gray-800 shadow-sm transition-colors'
-						size='sm'
+						size={'sm'}
+						className='py-4'
 						onClick={() => router.push('/browse')}
 					>
 						Browse more listings

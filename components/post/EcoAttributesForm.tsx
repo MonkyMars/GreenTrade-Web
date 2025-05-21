@@ -57,7 +57,7 @@ const EcoAttributesForm = ({
 								id={`eco-${attribute}`}
 								checked={formData.ecoAttributes.includes(attribute)}
 								onClick={() => toggleEcoAttribute(attribute)}
-								className='h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded'
+								className='h-5 w-5 text-green-600 focus:ring-green-500 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-green-500 cursor-pointer'
 							/>
 							<label
 								htmlFor={`eco-${attribute}`}

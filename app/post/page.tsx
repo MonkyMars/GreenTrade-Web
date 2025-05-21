@@ -22,7 +22,7 @@ import { FiGrid, FiList } from 'react-icons/fi';
 import FormErrorDisplay from '@/components/post/FormErrorDisplay';
 import FormSuccessMessage from '@/components/post/FormSuccessMessage';
 import ItemDetailsForm from '@/components/post/ItemDetailsForm';
-import PriceLocationForm from '@/components/post/PriceLocationForm';
+import PriceForm from '@/components/post/PriceForm';
 import ImageUploadForm from '@/components/post/ImageUploadForm';
 import EcoAttributesForm from '@/components/post/EcoAttributesForm';
 import TermsAndSubmitForm from '@/components/post/TermsAndSubmitForm';
@@ -309,7 +309,7 @@ const PostListingPage: NextPage = () => {
 						errorMessage={errorMessage}
 					/>
 
-					<form onSubmit={handleSubmit}>
+					<form onSubmit={handleSubmit} className='space-y-4'>
 						<Button
 							variant={'ghost'}
 							type='button'
@@ -338,13 +338,11 @@ const PostListingPage: NextPage = () => {
 									formErrors={formErrors}
 								/>
 
-								{/* Price & Location */}
-								<PriceLocationForm
+								{/* Price */}
+								<PriceForm
 									formData={formData}
-									handleChange={handleChange}
 									setFormData={setFormData}
 									formErrors={formErrors}
-									user={user}
 								/>
 
 								{/* Images */}
