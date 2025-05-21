@@ -7,7 +7,6 @@ export const UserSchema = z.object({
 	location: z.string(),
 	createdAt: z.date().or(z.string().pipe(z.coerce.date())),
 	emailVerified: z.boolean(),
-	phone: z.string().optional(),
 	picture: z.string().optional(),
 	bio: z.string(),
 	ecoScore: z.number().min(0).max(10).optional(),
