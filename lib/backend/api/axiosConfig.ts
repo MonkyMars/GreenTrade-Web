@@ -3,7 +3,7 @@ import camelcaseKeys from 'camelcase-keys';
 
 export const BASE_URL =
 	process.env.NODE_ENV === 'production'
-		? 'https://api.greenvue.eu'
+		? 'https://greenvue-api-production.up.railway.app'
 		: 'http://localhost:8080';
 
 const api = axios.create({
