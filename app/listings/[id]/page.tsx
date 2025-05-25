@@ -193,7 +193,7 @@ export default function ListingPage() {
 		const fetchFavoriteStatus = async () => {
 			if (!listing || !user) return;
 			try {
-				const isFavorited = await isFavorite(listing.id, user.id);
+				const isFavorited = await isFavorite(listing.id);
 
 				if (isFavorited) {
 					setListing((prevListing) => {
@@ -211,6 +211,8 @@ export default function ListingPage() {
 		};
 
 		fetchFavoriteStatus();
+
+		// Disable to prevent infinite loop
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [listing?.id, user]);
 

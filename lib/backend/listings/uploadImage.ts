@@ -70,7 +70,22 @@ export const uploadImage = async (
 		const loadingToast = toast.loading('Uploading images...');
 
 		// Use our new strongly-typed retry function
-		const response = await retryOperation(
+		const response: {
+			data: {
+				success: boolean;
+				data?: {
+					image_count: number;
+					images: {
+						id: string;
+						url: string;
+						file_name: string;
+						status: string;
+					}[];
+				};
+				message?: string;
+			};
+			status: number;
+		} = await retryOperation(
 			() =>
 				api.post('/api/upload/listing_image', formData, {
 					headers: {
@@ -102,27 +117,26 @@ export const uploadImage = async (
 				status: response.status,
 			});
 		}
-
 		// Extract URLs from the response
 		let urls: string[] = [];
 
 		// If the response data is empty but success is true, use the original image URIs
-		if (!response.data.data || response.data.data.length === 0) {
+		if (
+			!response.data.data ||
+			!response.data.data.images ||
+			response.data.data.images.length === 0
+		) {
 			if (process.env.NODE_ENV !== 'production') {
 				console.log('No URLs returned from server, using original image URIs');
 			}
 			urls = images.map((img) => img.uri);
 		}
-		// If we have URLs in the response as an array
-		else if (Array.isArray(response.data.data)) {
-			urls = response.data.data;
-		}
-		// If we have a different format with urls property
+		// If we have images array in the response (standard format)
 		else if (
-			response.data.data.urls &&
-			Array.isArray(response.data.data.urls)
+			response.data.data.images &&
+			Array.isArray(response.data.data.images)
 		) {
-			urls = response.data.data.urls;
+			urls = response.data.data.images.map((img) => img.url);
 		}
 		// If we have a single URL string
 		else if (typeof response.data.data === 'string') {

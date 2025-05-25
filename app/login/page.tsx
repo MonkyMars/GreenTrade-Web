@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { AppError } from '@/lib/errorUtils';
 import { NextPage } from 'next';
 import { BASE_URL } from '@/lib/backend/api/axiosConfig';
+import LoginSkeleton from '@/components/login/pageSkeleton';
 
 const loginSchema = z.object({
 	email: z.string().email('Please enter a valid email address'),
@@ -197,9 +198,8 @@ const Login: NextPage = () => {
 									type='email'
 									autoComplete='email'
 									required
-									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${
-										errors.email ? 'border-red-300' : 'border-gray-300'
-									} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
+									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.email ? 'border-red-300' : 'border-gray-300'
+										} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
 									placeholder='Email address'
 									value={formData.email}
 									onChange={handleChange}
@@ -226,9 +226,8 @@ const Login: NextPage = () => {
 									type='password'
 									autoComplete='current-password'
 									required
-									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${
-										errors.password ? 'border-red-300' : 'border-gray-300'
-									} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
+									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'
+										} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
 									placeholder='Password'
 									value={formData.password}
 									onChange={handleChange}
@@ -319,7 +318,7 @@ const Login: NextPage = () => {
 
 const LoginPage = () => {
 	return (
-		<Suspense>
+		<Suspense fallback={<LoginSkeleton />}>
 			<Login />
 		</Suspense>
 	);

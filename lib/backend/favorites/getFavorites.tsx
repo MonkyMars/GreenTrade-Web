@@ -96,11 +96,10 @@ export const getFavorites = async (): Promise<FetchedListing[]> => {
 
 export const isFavorite = async (
 	listingId: string,
-	userId: string
 ): Promise<boolean> => {
 	try {
 		const response = await api.get(
-			`/api/favorites/check/${listingId}/${userId}`
+			`/api/favorites/check/${listingId}`
 		);
 		if (!response.data || !response.data.success) {
 			throw new AppError(
