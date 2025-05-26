@@ -14,15 +14,25 @@ const ALLOWED_IMAGE_FORMATS: Record<string, boolean> = {
 	'image/webp': true
 };
 
+// Maximum total image size (20MB in bytes)
+const MAX_TOTAL_IMAGE_SIZE = 20 * 1024 * 1024;
+
+// Format file size for display
+const formatFileSize = (bytes: number): string => {
+	if (bytes < 1024) return bytes + ' bytes';
+	if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+	return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+};
+
 // Helper function to validate image format
 const isValidImageFormat = (type: string): boolean => {
 	return ALLOWED_IMAGE_FORMATS[type] === true;
 };
 
 interface ImageUploadFormProps {
-	images: { uri: string; type?: string; name?: string }[];
+	images: { uri: string; type?: string; name?: string; size?: number }[];
 	setImages: React.Dispatch<
-		React.SetStateAction<{ uri: string; type?: string; name?: string }[]>
+		React.SetStateAction<{ uri: string; type?: string; name?: string; size?: number }[]>
 	>;
 	imageFiles: File[];
 	setImageFiles: React.Dispatch<React.SetStateAction<File[]>>;
@@ -43,7 +53,15 @@ const ImageUploadForm = ({
 	formErrors,
 	setFormData,
 	formData,
-}: ImageUploadFormProps) => {	// Handle image upload
+}: ImageUploadFormProps) => {
+	// Maximum total image size (20MB in bytes) - defined at module level
+
+	// Calculate current total image size
+	const getCurrentTotalSize = (): number => {
+		return imageFiles.reduce((total, file) => total + file.size, 0);
+	};
+	// Note: formatFileSize is defined at module level
+	// Handle image upload
 	const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const files = e.target.files;
 		if (!files || files.length === 0) return;
@@ -56,6 +74,11 @@ const ImageUploadForm = ({
 
 		// Check for invalid file types
 		const invalidFiles: File[] = [];
+		// Track files skipped due to size limit
+		const skippedDueToSize: File[] = [];
+
+		// Calculate current total size before adding new files
+		let totalSize = getCurrentTotalSize();
 
 		for (let i = 0; i < files.length; i++) {
 			const file = files[i];
@@ -67,13 +90,21 @@ const ImageUploadForm = ({
 				continue;
 			}
 
+			// Check if adding this file would exceed the size limit
+			if (totalSize + file.size > MAX_TOTAL_IMAGE_SIZE) {
+				skippedDueToSize.push(file);
+				continue;
+			}
+
 			if (newImages.length < 5) {
 				// Limit to 5 images
+				totalSize += file.size;
 				newImageFiles.push(file);
 				newImages.push({
 					uri: URL.createObjectURL(file),
 					type: file.type,
-					name: file.name
+					name: file.name,
+					size: file.size
 				});
 			}
 		}
@@ -81,6 +112,11 @@ const ImageUploadForm = ({
 		// Show error message if invalid files were found
 		if (invalidFiles.length > 0) {
 			toast.error(`${invalidFiles.length} file(s) skipped. Only JPEG, PNG, and WebP formats are supported.`);
+		}
+
+		// Show error message if files were skipped due to size limit
+		if (skippedDueToSize.length > 0) {
+			toast.error(`${skippedDueToSize.length} file(s) skipped. Total image size must be under 20MB.`);
 		}
 
 		setImageFiles(newImageFiles);
@@ -106,6 +142,11 @@ const ImageUploadForm = ({
 		setImages(newImages);
 		setImageFiles(newImageFiles);
 	};
+
+	// Calculate total size of all images
+	const totalSize = getCurrentTotalSize();
+	const totalSizeFormatted = formatFileSize(totalSize);
+	const sizePercentage = Math.min(100, (totalSize / MAX_TOTAL_IMAGE_SIZE) * 100);
 
 	return (
 		<section className='bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg'>
@@ -172,12 +213,33 @@ const ImageUploadForm = ({
 					<p className='text-sm text-red-600 dark:text-red-400'>
 						{formErrors.find((error) => error.path[0] === 'images')?.message}
 					</p>
-				)}				<p className='text-sm text-gray-500 dark:text-gray-400'>
+				)}				{/* Size indicator */}
+				<div className="mt-3 mb-4">
+					<div className="flex justify-between items-center mb-1">
+						<span className="text-sm text-gray-500 dark:text-gray-400">
+							Total size: {totalSizeFormatted} / 20 MB
+						</span>
+						<span className="text-sm text-gray-500 dark:text-gray-400">
+							{sizePercentage.toFixed(0)}%
+						</span>
+					</div>
+					<div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+						<div
+							className={`h-2.5 rounded-full ${sizePercentage > 80 ? 'bg-yellow-400' : 'bg-green-500'}`}
+							style={{ width: `${sizePercentage}%` }}
+						></div>
+					</div>
+				</div>
+
+				<p className='text-sm text-gray-500 dark:text-gray-400'>
 					First image will be the featured image. Clear, well-lit photos from
 					multiple angles help items sell faster.
 				</p>
 				<p className='text-sm text-gray-500 dark:text-gray-400 mt-2'>
 					Supported formats: JPEG, PNG, WebP
+				</p>
+				<p className='text-sm text-gray-500 dark:text-gray-400 mt-2'>
+					Total image size must be under 20MB
 				</p>
 			</div>
 		</section>

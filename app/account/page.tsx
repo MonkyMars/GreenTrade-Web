@@ -22,6 +22,7 @@ import DeleteAccount from '@/components/account/DeleteAccount';
 import ActivityTabs from '@/components/account/ActivityTabs';
 import { AppError } from '@/lib/errorUtils';
 import { getFavorites } from '@/lib/backend/favorites/getFavorites';
+import { fetchCountriesInEurope } from '@/lib/functions/countries';
 
 interface ActiveTab {
 	activeTab: 'profile' | 'seller' | 'security' | 'delete';
@@ -35,11 +36,6 @@ const AccountPage: NextPage = () => {
 		loading: authLoading,
 		isAuthenticated,
 	} = useAuth();
-
-	const [location, setLocation] = useState<{ city: string; country: string }>({
-		city: '',
-		country: '',
-	});
 	const [user, setUser] = useState<User | null>(null);
 	const [activeTab, setActiveTab] = useState<ActiveTab['activeTab']>('profile');
 	const [updateSuccess, setUpdateSuccess] = useState<string>('');
@@ -47,53 +43,17 @@ const AccountPage: NextPage = () => {
 	const [userReviews, setUserReviews] = useState<FetchedReview[]>([]);
 	const [disabled, setDisabled] = useState<boolean>(false);
 	const [userFavorites, setUserFavorites] = useState<FetchedListing[]>([]);
-
-	// Initialize location from user data
-	useEffect(() => {
-		if (authUser?.location) {
-			const [cityPart = '', countryPart = ''] = authUser.location.split(', ');
-			if (cityPart || countryPart) {
-				setLocation({
-					city: cityPart,
-					country: countryPart,
-				});
-			}
-		}
-	}, [authUser?.location]);
+	const [error, setError] = useState<string | null>(null);
 
 	// Update user data when auth state changes
 	useEffect(() => {
 		if (!authLoading) {
 			if (authUser) {
-				const cityFromAuth = authUser.location?.split(', ')[0] || '';
-				const countryFromAuth = authUser.location?.split(', ')[1] || '';
-
-				setLocation({
-					city: cityFromAuth,
-					country: countryFromAuth,
-				});
-
 				setUser(authUser);
 			}
 		}
 	}, [authUser, authLoading, isAuthenticated]);
-	// Update user location when city/country change
-	useEffect(() => {
-		if (!location.city || !location.country) return;
-		if (!user) return;
-
-		setUser((prevUser) => {
-			if (!prevUser) return prevUser;
-
-			const newLocation = `${location.city}, ${location.country}`;
-			if (prevUser.location === newLocation) return prevUser;
-
-			return {
-				...prevUser,
-				location: newLocation,
-			};
-		});
-	}, [location.city, location.country, user]);
+	// We removed the "Update user location" effect as it was causing an infinite loop
 
 	// Handle logout
 	const handleLogout = async () => {
@@ -145,7 +105,6 @@ const AccountPage: NextPage = () => {
 		const fetchUserFavorites = async () => {
 			try {
 				const response: FetchedListing[] = await getFavorites();
-				console.log('Fetched favorites:', response);
 				if (response.length > 0) {
 					setUserFavorites(response);
 				}
@@ -163,45 +122,102 @@ const AccountPage: NextPage = () => {
 	const handleUpdateUser = async (e: React.FormEvent) => {
 		e.preventDefault();
 
+		// Clear previous messages
+		setError(null);
+		setUpdateSuccess('');
+
 		if (!user) return;
 
 		const form = e.target as HTMLFormElement;
-		const nameInput = form.querySelector('#name') as HTMLInputElement;
-		const bioTextarea = form.querySelector('#bio') as HTMLTextAreaElement;
+		const formData = new FormData(form);
 
-		const body = {
+		// Extract form values
+		const name = (formData.get('name') as string)?.trim();
+		const bio = (formData.get('bio') as string)?.trim();
+		const city = (formData.get('city') as string)?.trim();
+		const country = (formData.get('country') as string)?.trim();
+
+		const errors: string[] = [];
+
+		// Name validations
+		if (!name) {
+			errors.push('Name is required');
+		} else {
+			if (name.length < 2) errors.push('Name must be at least 2 characters long');
+			if (name.length > 40) errors.push('Name cannot exceed 40 characters');
+			if (!/^[a-zA-Z\s]+$/.test(name)) errors.push('Name can only contain letters and spaces');
+		}
+
+		// Bio validations
+		if (bio) {
+			if (bio.length < 10) errors.push('Bio must be at least 10 characters long');
+			if (bio.length > 500) errors.push('Bio cannot exceed 500 characters');
+			if (!/^[a-zA-Z0-9\s.,!?'"-]*$/.test(bio)) {
+				errors.push('Bio can only contain letters, numbers, spaces, and basic punctuation');
+			}
+		}
+
+		// City validations
+		if (city) {
+			if (city.length < 2) errors.push('City must be at least 2 characters long');
+			if (city.length > 50) errors.push('City cannot exceed 50 characters');
+			if (!/^[a-zA-Z\s]+$/.test(city)) {
+				errors.push('City can only contain letters and spaces');
+			}
+		}
+
+		// Country validation
+		try {
+			const countries = fetchCountriesInEurope();
+			const isValidCountry = countries.some(
+				(countryObj) => countryObj.name.toLowerCase() === country.toLowerCase()
+			);
+
+			if (country && !isValidCountry) {
+				errors.push('Please select a valid country from the list');
+			}
+		} catch (err) {
+			console.error('Error fetching countries:', err);
+			errors.push('Error validating country');
+		}
+
+		// Stop if there are any validation errors
+		if (errors.length > 0) {
+			setError(errors.join(' '));
+			return;
+		}
+
+		// Construct request body using updated values or fallbacks
+		const updatedUserData = {
 			id: user.id,
-			name: nameInput.value,
-			bio: bioTextarea.value || '',
-			location: `${location.city}, ${location.country}`,
+			name,
+			bio: bio || '',
+			location: {
+				city: city || user.location?.city || '',
+				country: country || user.location?.country || '',
+			},
 		};
 
 		try {
-			const response = await api.patch(`/api/auth/user`, body);
+			console.log('Updating user data:', updatedUserData);
+			const response = await api.patch(`/api/auth/user`, updatedUserData);
+			console.log('Update response:', response.data);
 
 			if (!response.data.success) {
-				throw new Error('Failed to update user data');
+				setError(response.data.message || 'Failed to update user data');
+				throw new Error(response.data.message || 'Failed to update user data');
 			}
 
-			const { id, name, bio, location } = response.data.data;
-
-			// Update user state with the new data
-			setUser((prevUser) => {
-				if (!prevUser) return prevUser;
-				return {
-					...prevUser,
-					id,
-					name,
-					bio,
-					location,
-				} as User;
-			});
-
 			setUpdateSuccess('User data updated successfully!');
-		} catch (error) {
-			console.error('Error updating user data:', error);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		} catch (error: any) {
+			setError(error.response?.data?.message || 'An error occurred while updating user data');
+			if (process.env.NODE_ENV !== 'production') {
+				console.error('Error updating user data:', error);
+			}
 		}
 	};
+
 
 	// Update disabled state for Save button
 	useEffect(() => {
@@ -260,17 +276,16 @@ const AccountPage: NextPage = () => {
 			// Clean up
 			a.remove();
 			window.URL.revokeObjectURL(url);
-
-			console.log('User data downloaded successfully');
 		} catch (error) {
-			console.error('Download error:', error);
+			if (process.env.NODE_ENV !== 'production') {
+				console.error('Download error:', error);
+			}
 			throw new AppError('Failed to download user data: ' + error);
 		}
 	};
 
 	return (
 		<ProtectedRoute>
-			{' '}
 			<div className='min-h-screen bg-gray-50 dark:bg-gray-900 py-16'>
 				<div className='container mx-auto px-4 py-8'>
 					<div className='flex flex-col md:flex-row gap-6'>
@@ -295,9 +310,10 @@ const AccountPage: NextPage = () => {
 											user={user}
 											handleUpdateUser={handleUpdateUser}
 											updateSuccess={updateSuccess}
+											error={error}
+											setError={setError}
 											setUpdateSuccess={setUpdateSuccess}
-											location={location}
-											setLocation={setLocation}
+											setUser={setUser}
 											disabled={disabled}
 										/>
 

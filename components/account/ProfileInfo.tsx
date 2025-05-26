@@ -3,23 +3,19 @@
 import { FaUser, FaCheck } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { User } from '@/lib/types/user';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
 import { fetchCountriesInEurope } from '@/lib/functions/countries';
+import { cn } from '@/lib/utils';
+import { useMemo } from 'react';
 
 interface ProfileInfoProps {
 	user: User | null;
 	handleUpdateUser: (e: React.FormEvent) => Promise<void>;
 	updateSuccess: string;
 	setUpdateSuccess: (message: string) => void;
-	location: { city: string; country: string };
-	setLocation: (location: { city: string; country: string }) => void;
+	error: string | null;
+	setError: (message: string | null) => void;
 	disabled: boolean;
+	setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
 const ProfileInfo: React.FC<ProfileInfoProps> = ({
@@ -27,11 +23,12 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 	handleUpdateUser,
 	updateSuccess,
 	setUpdateSuccess,
-	location,
-	setLocation,
+	error,
+	setError,
 	disabled,
+	setUser,
 }) => {
-	const countries = fetchCountriesInEurope();
+	const countries = useMemo(() => fetchCountriesInEurope(), []);
 	// Common classes
 	const formGroupClasses = 'group';
 	const labelClasses =
@@ -51,6 +48,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 		'bg-green-50 dark:bg-green-900/20 border border-green-200 text-green-700 dark:text-green-300 px-4 py-3 rounded-md mb-6';
 	const successCloseButtonClasses =
 		'ml-auto text-green-700 dark:text-green-300 hover:text-green-900 flex items-center justify-center dark:hover:text-green-200 text-2xl';
+
 	return (
 		<div className='bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 mb-6 rounded-xl shadow-sm hover:shadow-md transition-shadow'>
 			<h2 className='text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center'>
@@ -66,6 +64,20 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 						<button
 							className={successCloseButtonClasses}
 							onClick={() => setUpdateSuccess('')}
+						>
+							&times;
+						</button>
+					</div>
+				</div>
+			)}
+
+			{error && (
+				<div className='bg-red-50 dark:bg-red-900/20 border border-red-200 text-red-700 dark:text-red-300 px-4 py-3 rounded-md mb-6'>
+					<div className='flex items-center'>
+						<span className='text-sm'>{error}</span>
+						<button
+							className='ml-auto text-red-700 dark:text-red-300 hover:text-red-900 flex items-center justify-center dark:hover:text-red-200 text-2xl'
+							onClick={() => setError(null)}
 						>
 							&times;
 						</button>
@@ -103,7 +115,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 						<p className={hintTextClasses}>Email cannot be changed</p>
 					</div>
 
-					<div className={`block ${formGroupClasses}`}>
+					<div className={cn(formGroupClasses, 'block')}>
 						<label htmlFor='city' className={labelClasses}>
 							City / Town
 						</label>
@@ -111,10 +123,21 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 							type='text'
 							id='city'
 							name='city'
-							value={location.city}
-							onChange={(e) =>
-								setLocation({ ...location, city: e.target.value })
-							}
+							key={`city-${user?.id}`}
+							defaultValue={user?.location?.city || ''}
+							onChange={(e) => {
+								if (!user) return;
+								setUser((prevUser) => {
+									if (!prevUser) return prevUser;
+									return {
+										...prevUser,
+										location: {
+											...prevUser.location,
+											city: e.target.value,
+										}
+									} as User;
+								});
+							}}
 							className={inputClasses}
 						/>
 					</div>
@@ -123,26 +146,36 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 						<label htmlFor='country' className={labelClasses}>
 							Country
 						</label>
-						<Select
-							value={location.country}
-							onValueChange={(value) =>
-								setLocation({ ...location, country: value })
-							}
-						>
-							<SelectTrigger
-								id='country'
-								className='w-full px-3 py-2 h-auto border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-white transition-all duration-200 hover:border-green-400 dark:hover:border-green-600'
-							>
-								<SelectValue placeholder='Select a country' />
-							</SelectTrigger>
-							<SelectContent className='max-h-80'>
-								{countries.map((country) => (
-									<SelectItem key={country.name} value={country.name}>
-										{country.name}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+						<input
+							type="text"
+							name="country"
+							value={user?.location?.country || ''}
+							onChange={(e) => {
+								if (!user) return;
+								setUser((prevUser) => {
+									if (!prevUser) return prevUser;
+									return {
+										...prevUser,
+										location: {
+											...prevUser.location,
+											country: e.target.value,
+										}
+									} as User;
+								});
+							}}
+							list='countries'
+							className={inputClasses}
+							placeholder='Select your country'
+							autoComplete='on'
+						/>
+						<datalist id='countries'>
+							{countries.map((country, index) => (
+								<option
+									key={index}
+									value={country.name}
+								/>
+							))}
+						</datalist>
 					</div>
 				</div>
 

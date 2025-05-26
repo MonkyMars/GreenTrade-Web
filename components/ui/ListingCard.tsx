@@ -78,7 +78,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 						<div className='flex items-center text-xs text-gray-500 dark:text-gray-400'>
 							<FaMapMarkedAlt className='mr-1.5 h-3 w-3 flex-shrink-0' />
 							<span className='truncate max-w-[120px] text-sm'>
-								{listing.location}
+								{listing.location?.city || 'Unknown City'}
 							</span>
 						</div>
 					</div>
@@ -173,7 +173,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
 						<div className='mt-3 flex items-center text-xs text-gray-500 dark:text-gray-400'>
 							<FaMapMarkedAlt className='mr-1.5 h-3 w-3 flex-shrink-0' />
-							<span className='truncate'>{listing.location}</span>
+							<span className='truncate'>{listing.location?.city || 'Unknown City'}</span>
 							<span className='mx-2 text-gray-300 dark:text-gray-600'>•</span>
 							<span>{formattedDate}</span>
 						</div>

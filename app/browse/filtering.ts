@@ -14,19 +14,6 @@ export interface FilterOptions {
 }
 
 /**
- * Extract country from location string (assumes format "City, Country")
- */
-export const extractCountry = (location: string): string | null => {
-	if (!location) return null;
-
-	const parts = location.split(',');
-	if (parts.length > 1) {
-		return parts[1].trim();
-	}
-	return null;
-};
-
-/**
  * Find category details by ID or Name (case-insensitive)
  */
 const findCategoryDetails = (identifier: string): Categories | undefined => {
@@ -79,7 +66,7 @@ export const filterListings = (
 	// Filter by country (extracted from location)
 	if (filters.country && filters.country !== 'all') {
 		filteredListings = filteredListings.filter((listing) => {
-			const country = extractCountry(listing.location);
+			const country = listing.location?.country;
 			return (
 				country && country.toLowerCase() === filters.country?.toLowerCase()
 			);

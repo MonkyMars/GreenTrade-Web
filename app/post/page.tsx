@@ -32,6 +32,27 @@ import ListingCard from '@/components/ui/ListingCard';
 // Create a more specific type for category that excludes "All Categories"
 type CategoryName = Exclude<Categories['name'], 'All Categories'>;
 
+// Helper functions
+const MAX_TOTAL_IMAGE_SIZE = 20 * 1024 * 1024; // 20MB in bytes
+
+// Helper function to validate total image size
+const validateImageSize = (files: File[]): { valid: boolean; message?: string; totalSize: number } => {
+	const totalSize = files.reduce((total, file) => total + file.size, 0);
+
+	if (totalSize > MAX_TOTAL_IMAGE_SIZE) {
+		const sizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+		return {
+			valid: false,
+			message: `Images exceed the 20MB size limit. Current total: ${sizeMB}MB`,
+			totalSize,
+		};
+	}
+
+	return { valid: true, totalSize };
+};
+
+// formatFileSize function is already defined in ImageUploadForm.tsx
+
 const PostListingPage: NextPage = () => {
 	const { user } = useAuth();
 	const [formData, setFormData] = useState<UploadListing>({
@@ -47,7 +68,7 @@ const PostListingPage: NextPage = () => {
 		sellerId: user?.id || '',
 	});
 	const [images, setImages] = useState<
-		{ uri: string; type?: string; name?: string }[]
+		{ uri: string; type?: string; name?: string; size?: number }[]
 	>([]);
 	const [imageFiles, setImageFiles] = useState<File[]>([]);
 	const [uploading, setUploading] = useState(false);
@@ -104,7 +125,6 @@ const PostListingPage: NextPage = () => {
 		}
 		return true;
 	};
-
 	const resetForm = () => {
 		setFormData({
 			title: '',
@@ -117,6 +137,10 @@ const PostListingPage: NextPage = () => {
 			ecoScore: 0,
 			imageUrls: [],
 			sellerId: user?.id || '',
+		});
+		// Clear any object URLs to prevent memory leaks
+		images.forEach((image) => {
+			if (image.uri) URL.revokeObjectURL(image.uri);
 		});
 		setImages([]);
 		setImageFiles([]);
@@ -136,6 +160,22 @@ const PostListingPage: NextPage = () => {
 			window.scrollTo({ top: 0, behavior: 'smooth' });
 			return;
 		}
+		// Check total image size
+		const sizeValidation = validateImageSize(imageFiles);
+		if (!sizeValidation.valid) {
+			setErrorMessage(sizeValidation.message || 'Images are too large');
+			toast.error('Images are too large');
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+			return;
+		}
+
+		// Check if we have any images
+		if (imageFiles.length === 0) {
+			setErrorMessage('Please add at least one image of your item');
+			toast.error('Images required');
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+			return;
+		}
 
 		// Show loading toast
 		const loadingToast = toast.loading('Creating your listing...');
@@ -150,24 +190,27 @@ const PostListingPage: NextPage = () => {
 				});
 			}
 
-			// Use retryOperation for image upload with proper error handling
-			const imageUrls = await retryOperation(
-				() => uploadImage(images, formData.title),
-				{
-					context: 'Image Upload',
-					maxRetries: 2,
-					showToastOnRetry: true,
-				}
-			);
-
-			if (!imageUrls) {
+			// Upload images with proper error handling
+			let imageUrls: string[] = [];
+			try {
+				const result = await uploadImage(images, formData.title);
+				imageUrls = result.urls;
+			} catch (error) {
+				console.error('Image upload error:', error);
 				throw new AppError('Failed to upload images', {
 					code: 'IMAGE_UPLOAD_FAILED',
 					context: 'Post Listing',
 				});
 			}
 
-			console.log('Image URLs:', imageUrls.urls);
+			if (imageUrls.length === 0) {
+				throw new AppError('No image URLs returned from server', {
+					code: 'IMAGE_UPLOAD_FAILED',
+					context: 'Post Listing',
+				});
+			}
+
+			console.log('Image URLs:', imageUrls);
 
 			const listing: UploadListing = {
 				title: formData.title,
@@ -178,7 +221,7 @@ const PostListingPage: NextPage = () => {
 				negotiable: formData.negotiable,
 				ecoAttributes: formData.ecoAttributes,
 				ecoScore: calculateEcoScore(formData.ecoAttributes),
-				imageUrls: imageUrls.urls,
+				imageUrls: imageUrls,
 				sellerId: user.id,
 			};
 
@@ -260,22 +303,31 @@ const PostListingPage: NextPage = () => {
 			window.scrollTo({ top: 0, behavior: 'smooth' });
 		}
 	};
-
 	const handleTabChange = (newTab: 'edit' | 'preview') => {
 		if (newTab === tab) {
 			return;
 		}
 
 		if (newTab === 'preview') {
+			// Verify we have valid images
+			const validImages = images.filter((img) => !!img.uri);
+
 			const previewListing: FetchedListing = {
 				...formData,
 				price: formData.price,
 				ecoScore: calculateEcoScore(formData.ecoAttributes),
-				imageUrls: images.map((image) => image.uri),
+				imageUrls: validImages.map((image) => image.uri),
 				sellerId: user?.id || '',
 				id: '',
 				createdAt: new Date(),
-				location: user?.location || '',
+				location: user?.location
+					? {
+						city: user.location.city || '',
+						country: user.location.country || '',
+						latitude: user.location.latitude || 0,
+						longitude: user.location.longitude || 0,
+					}
+					: undefined,
 				sellerUsername: user?.name || '',
 				sellerBio: user?.bio || '',
 				sellerCreatedAt: user?.createdAt || new Date(),
@@ -375,7 +427,7 @@ const PostListingPage: NextPage = () => {
 						{/* Information Tab */}
 						{tab === 'preview' && previewListing && (
 							<div className='bg-white dark:bg-gray-800 shadow rounded-lg p-6'>
-								<h2 className='text-xl font-bold mb-4'>Preview</h2>
+								<h2 className='text-lg font-medium text-gray-900 dark:text-white'>Preview</h2>
 								<div className='flex justify-between mb-4 border-b border-gray-200 dark:border-gray-700 '>
 									<Button
 										variant={'ghost'}

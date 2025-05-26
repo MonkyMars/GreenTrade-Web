@@ -9,7 +9,7 @@ import { getListings } from '@/lib/backend/listings/getListings';
 import { Categories, categories } from '@/lib/functions/categories';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ListingCard from '../../components/ui/ListingCard';
-import { FilterOptions, filterListings, extractCountry } from './filtering';
+import { FilterOptions, filterListings } from './filtering';
 import { NextPage } from 'next';
 import { Button } from '@/components/ui/button';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -126,7 +126,10 @@ const BrowserComponent: NextPage = () => {
 	const availableCountries = Array.from(
 		new Set(
 			allListings
-				.map((listing) => extractCountry(listing.location))
+				.map((listing) => {
+					const country = listing.location?.country
+					return country ? country.trim() : null;
+				})
 				.filter(Boolean) as string[]
 		)
 	).sort();
@@ -222,8 +225,8 @@ const BrowserComponent: NextPage = () => {
 					key={i}
 					onClick={() => goToPage(i)}
 					className={`relative inline-flex items-center px-4 py-2 border ${currentPage === i
-							? 'z-10 bg-green-50 dark:bg-green-900/30 border-green-500 text-green-600 dark:text-green-200'
-							: 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+						? 'z-10 bg-green-50 dark:bg-green-900/30 border-green-500 text-green-600 dark:text-green-200'
+						: 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
 						} text-sm font-medium`}
 					aria-current={currentPage === i ? 'page' : undefined}
 				>
@@ -283,8 +286,8 @@ const BrowserComponent: NextPage = () => {
 								<button
 									onClick={() => setViewMode('grid')}
 									className={`p-1.5 rounded ${viewMode === 'grid'
-											? 'bg-white dark:bg-gray-600 text-green-600 dark:text-green-300 shadow-sm'
-											: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+										? 'bg-white dark:bg-gray-600 text-green-600 dark:text-green-300 shadow-sm'
+										: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
 										}`}
 									aria-label='Grid view'
 								>
@@ -293,8 +296,8 @@ const BrowserComponent: NextPage = () => {
 								<button
 									onClick={() => setViewMode('list')}
 									className={`p-1.5 rounded ${viewMode === 'list'
-											? 'bg-white dark:bg-gray-600 text-green-600 dark:text-green-300 shadow-sm'
-											: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+										? 'bg-white dark:bg-gray-600 text-green-600 dark:text-green-300 shadow-sm'
+										: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
 										}`}
 									aria-label='List view'
 								>

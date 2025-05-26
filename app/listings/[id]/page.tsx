@@ -43,10 +43,6 @@ export default function ListingPage() {
 			category: string
 		): Promise<FetchedListing[]> => {
 			try {
-				if (process.env.NODE_ENV !== 'production') {
-					console.log('Fetching similar listings');
-				}
-
 				if (!category) {
 					return [];
 				}
@@ -70,8 +66,6 @@ export default function ListingPage() {
 
 				// Convert the data to the expected format and validate
 				const rawListings = response.data.data;
-
-				console.log(rawListings)
 
 				if (!rawListings || !Array.isArray(rawListings)) {
 					if (process.env.NODE_ENV !== 'production') {
@@ -281,6 +275,7 @@ export default function ListingPage() {
 	const timeAgo = listing.createdAt
 		? formatDistanceToNow(listing.createdAt, { addSuffix: true })
 		: 'Recently';
+
 	return (
 		<main className='mx-auto px-4 py-22 max-w-7xl'>
 			<div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
@@ -570,7 +565,7 @@ export default function ListingPage() {
 											Location
 										</span>
 										<p className='font-medium text-gray-900 dark:text-gray-100'>
-											{listing.location}
+											{`${listing.location?.city || ''}, ${listing.location?.country || ''}` || 'Unknown City'}
 										</p>
 									</div>
 								</div>

@@ -68,7 +68,14 @@ export const FetchedBidSchema = BidSchema.extend({
 export const FetchedListingSchema = UploadListingSchema.extend({
 	id: z.string(),
 	createdAt: z.date().or(z.string().pipe(z.coerce.date())),
-	location: z.string(),
+	location: z
+		.object({
+			city: z.string().min(0).max(100),
+			country: z.string().min(0).max(100),
+			latitude: z.number().min(-90).max(90).optional(),
+			longitude: z.number().min(-180).max(180).optional(),
+		})
+		.optional(),
 	sellerUsername: z.string(),
 	sellerBio: z.string(),
 	sellerCreatedAt: z.date().or(z.string().pipe(z.coerce.date())),

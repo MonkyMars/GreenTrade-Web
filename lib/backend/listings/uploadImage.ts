@@ -11,6 +11,16 @@ const ALLOWED_IMAGE_FORMATS: Record<string, boolean> = {
 	'image/webp': true,
 };
 
+// Maximum total image size (20MB in bytes)
+const MAX_TOTAL_IMAGE_SIZE = 20 * 1024 * 1024;
+
+// Helper function to format file size for display (used in error messages)
+const formatFileSize = (bytes: number): string => {
+	if (bytes < 1024) return bytes + ' bytes';
+	if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+	return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+};
+
 // Helper function to validate image format
 const isValidImageFormat = (type: string): boolean => {
 	return ALLOWED_IMAGE_FORMATS[type] === true;
@@ -21,10 +31,15 @@ const getFileExtension = (filename: string): string => {
 	return filename.split('.').pop()?.toLowerCase() || '';
 };
 
+// Define the return type for uploadImage
+interface UploadImageResult {
+	urls: string[];
+}
+
 export const uploadImage = async (
-	images: { uri: string; type?: string; name?: string }[],
+	images: { uri: string; type?: string; name?: string; size?: number }[],
 	listingTitle: UploadListing['title']
-) => {
+): Promise<UploadImageResult> => {
 	if (!images || images.length === 0) {
 		const errorMessage = 'No images provided';
 		toast.error(errorMessage);
@@ -34,13 +49,32 @@ export const uploadImage = async (
 		});
 	}
 
+	// Check total image size - this will be more accurate after actual File objects are created below
+	let estimatedTotalSize = 0;
+	images.forEach((image) => {
+		if (image.size) {
+			estimatedTotalSize += image.size;
+		}
+	});
+	if (estimatedTotalSize > MAX_TOTAL_IMAGE_SIZE) {
+		const formattedSize = formatFileSize(estimatedTotalSize);
+		const errorMessage = `Total image size exceeds limit of 20MB. Current total: ${formattedSize}`;
+		toast.error(errorMessage);
+		throw new AppError(errorMessage, {
+			code: 'IMAGE_SIZE_EXCEEDED',
+			status: 400,
+		});
+	}
+
 	try {
 		// Authentication is handled by HTTP-only cookies
 		// No need to manually check for tokens as the cookies will be sent automatically
-
 		// Create a single FormData object for all images
 		const formData = new FormData();
 		formData.append('listing_title', listingTitle);
+
+		// Will track actual file sizes as they're processed
+		let actualTotalSize = 0;
 
 		// Validate all images first
 		const invalidImages = images.filter((image) => {
@@ -80,6 +114,17 @@ export const uploadImage = async (
 						if (!isValidImageFormat(image.type)) {
 							throw new Error(`Unsupported image format: ${image.type}`);
 						}
+						// Track size
+						actualTotalSize += image.size;
+
+						// Check if adding this file would exceed the size limit
+						if (actualTotalSize > MAX_TOTAL_IMAGE_SIZE) {
+							const formattedSize = formatFileSize(actualTotalSize);
+							throw new Error(
+								`Adding this image would exceed the 20MB size limit. Total: ${formattedSize}`
+							);
+						}
+
 						// If it's already a File object, just append it
 						formData.append('file', image);
 					} else if (image.uri) {
@@ -91,6 +136,16 @@ export const uploadImage = async (
 						// Validate file type
 						if (!isValidImageFormat(fileType)) {
 							throw new Error(`Unsupported image format: ${fileType}`);
+						}
+
+						// Track size
+						actualTotalSize += blob.size;
+						// Check if adding this file would exceed the size limit
+						if (actualTotalSize > MAX_TOTAL_IMAGE_SIZE) {
+							const formattedSize = formatFileSize(actualTotalSize);
+							throw new Error(
+								`Adding this image would exceed the 20MB size limit. Total: ${formattedSize}`
+							);
 						}
 
 						// Create a File object from the blob

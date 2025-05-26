@@ -111,7 +111,7 @@ const Home: NextPage = () => {
 										</SelectTrigger>
 										<SelectContent className='bg-white dark:bg-gray-900 rounded-lg shadow-sm border-gray-200 dark:border-gray-800 mt-3'>
 											{categories.map((category, index) => (
-												<SelectItem key={index} value={category.name}>
+												<SelectItem key={index} value={category.name} className='text-black dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-800'>
 													{category.name}
 												</SelectItem>
 											))}

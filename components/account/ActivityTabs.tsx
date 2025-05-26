@@ -38,6 +38,7 @@ const ActivityTabs: React.FC<ActivityTabsProps> = ({
 			'h-4 w-4',
 			activeTab === tab ? 'text-green-600 dark:text-green-400' : 'text-gray-500'
 		);
+
 	return (
 		<div className='bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow'>
 			<h2 className='text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center'>

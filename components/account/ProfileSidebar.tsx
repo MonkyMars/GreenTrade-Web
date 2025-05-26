@@ -60,6 +60,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
 		'font-medium text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded';
 	const ecoScoreClasses =
 		'font-medium border border-green-200 dark:border-green-900 bg-green-50 text-green-700 dark:bg-green-900/40 dark:text-green-300 px-2 py-1 rounded';
+
 	return (
 		<div className='md:w-72 flex-shrink-0 space-y-4'>
 			<div className='bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow'>
