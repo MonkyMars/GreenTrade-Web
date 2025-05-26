@@ -3,6 +3,24 @@ import api from '@/lib/backend/api/axiosConfig';
 import { toast } from 'sonner';
 import { AppError, retryOperation } from '@/lib/errorUtils';
 
+// Define allowed image formats
+const ALLOWED_IMAGE_FORMATS: Record<string, boolean> = {
+	'image/jpeg': true,
+	'image/jpg': true,
+	'image/png': true,
+	'image/webp': true,
+};
+
+// Helper function to validate image format
+const isValidImageFormat = (type: string): boolean => {
+	return ALLOWED_IMAGE_FORMATS[type] === true;
+};
+
+// Helper function to get file extension from name or mime type
+const getFileExtension = (filename: string): string => {
+	return filename.split('.').pop()?.toLowerCase() || '';
+};
+
 export const uploadImage = async (
 	images: { uri: string; type?: string; name?: string }[],
 	listingTitle: UploadListing['title']
@@ -24,12 +42,44 @@ export const uploadImage = async (
 		const formData = new FormData();
 		formData.append('listing_title', listingTitle);
 
+		// Validate all images first
+		const invalidImages = images.filter((image) => {
+			// Check file extension if name is provided
+			if (image.name) {
+				const ext = getFileExtension(image.name);
+				if (ext && !['jpeg', 'jpg', 'png', 'webp'].includes(ext)) {
+					return true;
+				}
+			}
+
+			// Check mime type if provided
+			if (image.type && !isValidImageFormat(image.type)) {
+				return true;
+			}
+
+			return false;
+		});
+
+		// If invalid images found, reject the upload
+		if (invalidImages.length > 0) {
+			const errorMessage = `Unsupported image format(s). Only JPEG, PNG, and WebP are allowed.`;
+			toast.error(errorMessage);
+			throw new AppError(errorMessage, {
+				code: 'INVALID_IMAGE_FORMAT',
+				status: 400,
+			});
+		}
+
 		// The backend expects files with the key "file" (not "file0", "file1", etc.)
 		await Promise.all(
 			images.map(async (image, index) => {
 				try {
 					// Check if we have a URL/URI or a File object
 					if (image instanceof File) {
+						// Validate file type
+						if (!isValidImageFormat(image.type)) {
+							throw new Error(`Unsupported image format: ${image.type}`);
+						}
 						// If it's already a File object, just append it
 						formData.append('file', image);
 					} else if (image.uri) {
@@ -37,11 +87,17 @@ export const uploadImage = async (
 						const response = await fetch(image.uri);
 						const blob = await response.blob();
 
+						const fileType = image.type || blob.type;
+						// Validate file type
+						if (!isValidImageFormat(fileType)) {
+							throw new Error(`Unsupported image format: ${fileType}`);
+						}
+
 						// Create a File object from the blob
 						const file = new File(
 							[blob],
 							image.name || `image-${Date.now()}-${index}.jpg`,
-							{ type: image.type || 'image/jpeg' }
+							{ type: fileType }
 						);
 
 						// Append the file to the FormData
@@ -49,7 +105,7 @@ export const uploadImage = async (
 
 						if (process.env.NODE_ENV !== 'production') {
 							console.log(
-								`Converted image URI to File: ${file.name}, size: ${file.size}`
+								`Converted image URI to File: ${file.name}, size: ${file.size}, type: ${file.type}`
 							);
 						}
 					} else {
@@ -57,6 +113,13 @@ export const uploadImage = async (
 					}
 				} catch (err) {
 					console.error(`Error processing image ${index}:`, err);
+					// Show user-friendly error message
+					if (
+						err instanceof Error &&
+						err.message.includes('Unsupported image format')
+					) {
+						toast.error(err.message);
+					}
 					// Continue with other images even if one fails
 				}
 			})

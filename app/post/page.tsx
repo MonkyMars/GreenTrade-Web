@@ -151,7 +151,7 @@ const PostListingPage: NextPage = () => {
 			}
 
 			// Use retryOperation for image upload with proper error handling
-			const imageUrlss = await retryOperation(
+			const imageUrls = await retryOperation(
 				() => uploadImage(images, formData.title),
 				{
 					context: 'Image Upload',
@@ -160,14 +160,14 @@ const PostListingPage: NextPage = () => {
 				}
 			);
 
-			if (!imageUrlss) {
+			if (!imageUrls) {
 				throw new AppError('Failed to upload images', {
 					code: 'IMAGE_UPLOAD_FAILED',
 					context: 'Post Listing',
 				});
 			}
 
-			console.log('Image URLs:', imageUrlss.urls);
+			console.log('Image URLs:', imageUrls.urls);
 
 			const listing: UploadListing = {
 				title: formData.title,
@@ -178,7 +178,7 @@ const PostListingPage: NextPage = () => {
 				negotiable: formData.negotiable,
 				ecoAttributes: formData.ecoAttributes,
 				ecoScore: calculateEcoScore(formData.ecoAttributes),
-				imageUrls: imageUrlss.urls,
+				imageUrls: imageUrls.urls,
 				sellerId: user.id,
 			};
 

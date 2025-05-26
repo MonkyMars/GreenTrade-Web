@@ -4,6 +4,20 @@ import { z } from 'zod';
 import Image from 'next/image';
 import React from 'react';
 import { UploadListing } from '@/lib/types/main';
+import { toast } from 'sonner';
+
+// Define allowed image formats
+const ALLOWED_IMAGE_FORMATS: Record<string, boolean> = {
+	'image/jpeg': true,
+	'image/jpg': true,
+	'image/png': true,
+	'image/webp': true
+};
+
+// Helper function to validate image format
+const isValidImageFormat = (type: string): boolean => {
+	return ALLOWED_IMAGE_FORMATS[type] === true;
+};
 
 interface ImageUploadFormProps {
 	images: { uri: string; type?: string; name?: string }[];
@@ -29,8 +43,7 @@ const ImageUploadForm = ({
 	formErrors,
 	setFormData,
 	formData,
-}: ImageUploadFormProps) => {
-	// Handle image upload
+}: ImageUploadFormProps) => {	// Handle image upload
 	const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const files = e.target.files;
 		if (!files || files.length === 0) return;
@@ -41,12 +54,33 @@ const ImageUploadForm = ({
 		const newImageFiles = [...imageFiles];
 		const newImages = [...images];
 
+		// Check for invalid file types
+		const invalidFiles: File[] = [];
+
 		for (let i = 0; i < files.length; i++) {
+			const file = files[i];
+			const fileType = file.type;
+
+			// Validate file type
+			if (!isValidImageFormat(fileType)) {
+				invalidFiles.push(file);
+				continue;
+			}
+
 			if (newImages.length < 5) {
 				// Limit to 5 images
-				newImageFiles.push(files[i]);
-				newImages.push({ uri: URL.createObjectURL(files[i]) });
+				newImageFiles.push(file);
+				newImages.push({
+					uri: URL.createObjectURL(file),
+					type: file.type,
+					name: file.name
+				});
 			}
+		}
+
+		// Show error message if invalid files were found
+		if (invalidFiles.length > 0) {
+			toast.error(`${invalidFiles.length} file(s) skipped. Only JPEG, PNG, and WebP formats are supported.`);
 		}
 
 		setImageFiles(newImageFiles);
@@ -124,7 +158,7 @@ const ImageUploadForm = ({
 									id='image-upload'
 									name='image-upload'
 									type='file'
-									accept='image/jpeg, image/jpg, image/png, image/webp'
+									accept='.jpeg, .jpg, .png, .webp, image/jpeg, image/jpg, image/png, image/webp'
 									onChange={handleImageUpload}
 									multiple={true}
 									disabled={uploading}
@@ -138,10 +172,12 @@ const ImageUploadForm = ({
 					<p className='text-sm text-red-600 dark:text-red-400'>
 						{formErrors.find((error) => error.path[0] === 'images')?.message}
 					</p>
-				)}
-				<p className='text-sm text-gray-500 dark:text-gray-400'>
+				)}				<p className='text-sm text-gray-500 dark:text-gray-400'>
 					First image will be the featured image. Clear, well-lit photos from
 					multiple angles help items sell faster.
+				</p>
+				<p className='text-sm text-gray-500 dark:text-gray-400 mt-2'>
+					Supported formats: JPEG, PNG, WebP
 				</p>
 			</div>
 		</section>
