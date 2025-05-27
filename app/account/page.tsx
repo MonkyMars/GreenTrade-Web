@@ -183,7 +183,7 @@ const AccountPage: NextPage = () => {
 
 		// Stop if there are any validation errors
 		if (errors.length > 0) {
-			setError(errors.join(' '));
+			setError(errors.join('\n  - '));
 			return;
 		}
 

@@ -85,7 +85,7 @@ const PostListingPage: NextPage = () => {
 	// Check if user has set their location for posting
 	useEffect(() => {
 		if (user && user.id) {
-			if (!user.location) {
+			if (!user.location?.city || !user.location?.country) {
 				setErrorMessage(
 					'Location required: Please update your profile with a location before posting.'
 				);
