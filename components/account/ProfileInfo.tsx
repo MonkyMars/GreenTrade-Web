@@ -190,6 +190,16 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 							rows={4}
 							defaultValue={user?.bio || ''}
 							className={inputClasses}
+							onChange={(e) => {
+								if (!user) return;
+								setUser((prevUser) => {
+									if (!prevUser) return prevUser;
+									return {
+										...prevUser,
+										bio: e.target.value,
+									} as User;
+								});
+							}}
 						/>
 						<p className={hintTextClasses}>
 							Write a short bio to tell others about yourself

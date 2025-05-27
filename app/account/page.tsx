@@ -231,7 +231,9 @@ const AccountPage: NextPage = () => {
 			user.bio === authUser.bio;
 
 		setDisabled(isSameUser);
-	}, [user, authUser]); // Calculate average eco score
+	}, [user, authUser]);
+
+	// Calculate average eco score
 	const averageEcoScore =
 		userListings.length > 0
 			? Number(calculateAverageEcoScore(userListings))
