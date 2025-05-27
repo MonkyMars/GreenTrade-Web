@@ -2,10 +2,8 @@
 
 // This is a client-side page that allows authorized users to post a new listing to GreenVue.
 // It includes a form for entering item details, uploading images, and selecting eco-friendly attributes.
-
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
-import { uploadImage } from '@/lib/backend/listings/uploadImage';
 import { uploadListing } from '@/lib/backend/listings/uploadListing';
 import { FetchedListing, UploadListingSchema, type UploadListing } from '@/lib/types/main';
 import { calculateEcoScore } from '@/lib/functions/calculateEcoScore';
@@ -125,6 +123,7 @@ const PostListingPage: NextPage = () => {
 		}
 		return true;
 	};
+
 	const resetForm = () => {
 		setFormData({
 			title: '',
@@ -190,11 +189,38 @@ const PostListingPage: NextPage = () => {
 				});
 			}
 
-			// Upload images with proper error handling
-			let imageUrls: string[] = [];
+			// Upload listing
 			try {
-				const result = await uploadImage(images, formData.title);
-				imageUrls = result.urls;
+				setUploading(true);
+				const uploadData: UploadListing = {
+					...formData,
+					ecoScore,
+					sellerId: user.id,
+				}
+				const response = await retryOperation(
+					() => uploadListing(images, uploadData),
+					{
+						maxRetries: 3,
+						delayMs: 1000,
+						onRetry: (attempt) => {
+							if (process.env.NODE_ENV !== 'production') {
+								console.log(`Retrying upload (attempt ${attempt})...`);
+							} else {
+								toast.loading(`Retrying upload (attempt ${attempt})...`);
+							}
+						}
+					}
+				);
+				setUploading(false);
+
+				// Show success message
+				setSuccessMessage('Your listing has been posted successfully!');
+				if (!response) {
+					throw new AppError('Failed to upload listing', {
+						code: 'LISTING_UPLOAD_FAILED',
+						context: 'Post Listing',
+					});
+				}
 			} catch (error) {
 				console.error('Image upload error:', error);
 				throw new AppError('Failed to upload images', {
@@ -202,51 +228,6 @@ const PostListingPage: NextPage = () => {
 					context: 'Post Listing',
 				});
 			}
-
-			if (imageUrls.length === 0) {
-				throw new AppError('No image URLs returned from server', {
-					code: 'IMAGE_UPLOAD_FAILED',
-					context: 'Post Listing',
-				});
-			}
-
-			console.log('Image URLs:', imageUrls);
-
-			const listing: UploadListing = {
-				title: formData.title,
-				description: formData.description,
-				category: formData.category,
-				condition: formData.condition as Condition['name'],
-				price: formData.price,
-				negotiable: formData.negotiable,
-				ecoAttributes: formData.ecoAttributes,
-				ecoScore: calculateEcoScore(formData.ecoAttributes),
-				imageUrls: imageUrls,
-				sellerId: user.id,
-			};
-
-			// Use retryOperation for listing upload with proper error handling
-			const uploadResponse = await retryOperation(
-				() => uploadListing(listing),
-				{
-					context: 'Upload Listing',
-					maxRetries: 1,
-					showToastOnRetry: true,
-				}
-			);
-
-			if (!uploadResponse) {
-				throw new AppError('Failed to post listing', {
-					code: 'LISTING_UPLOAD_FAILED',
-					context: 'Post Listing',
-				});
-			}
-
-			// Dismiss loading toast and show success
-			toast.dismiss(loadingToast);
-			toast.success('Listing posted successfully!');
-			setSuccessMessage('Listing posted successfully!');
-
 			// Reset form data on success
 			resetForm();
 		} catch (error) {
@@ -262,9 +243,6 @@ const PostListingPage: NextPage = () => {
 			// Log in development, use proper error tracking in production
 			if (process.env.NODE_ENV !== 'production') {
 				console.error('Post listing error:', appError);
-			} else {
-				// In production, this would use a service like Sentry
-				// Example: Sentry.captureException(appError);
 			}
 
 			// Set appropriate user-friendly error message based on error code/type
@@ -301,6 +279,7 @@ const PostListingPage: NextPage = () => {
 			}
 		} finally {
 			window.scrollTo({ top: 0, behavior: 'smooth' });
+			toast.dismiss(loadingToast);
 		}
 	};
 	const handleTabChange = (newTab: 'edit' | 'preview') => {

@@ -26,7 +26,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
 	const formattedDate = formatDistanceToNow(new Date(listing.createdAt), {
 		addSuffix: true,
-	});
+	}).charAt(0).toUpperCase() +
+		formatDistanceToNow(new Date(listing.createdAt), {
+			addSuffix: true,
+		}).slice(1);
 
 	if (viewMode === 'grid') {
 		return (

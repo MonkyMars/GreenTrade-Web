@@ -326,19 +326,19 @@ export default function ListingPage() {
 
 							{/* Image thumbnails */}
 							<div className='p-4 border-t border-gray-100 dark:border-gray-800'>
-								<TabsList className='flex justify-start overflow-x-auto space-x-2 py-1 px-0 h-auto bg-gray-50 dark:bg-gray-800 rounded-lg'>
+								<TabsList className='flex justify-start overflow-x-auto gap-2 py-1 px-1 h-auto bg-gray-50 dark:bg-gray-800 rounded-lg'>
 									{listing.imageUrls.map((img: string, index: number) => (
 										<TabsTrigger
 											key={index}
 											value={index.toString()}
-											className='p-0 rounded-md overflow-hidden data-[state=active]:border-2 data-[state=active]:border-green-500 m-0'
+											className='p-0 rounded-md overflow-hidden data-[state=active]:outline-2 data-[state=active]:outline-green-500 m-0'
 										>
 											<div className='relative w-16 h-16'>
 												<Image
 													src={img}
 													alt={`Thumbnail ${index + 1}`}
 													fill
-													sizes='64px'
+													sizes='176px'
 													className='object-cover'
 												/>
 											</div>
