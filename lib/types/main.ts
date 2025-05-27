@@ -38,6 +38,12 @@ export const UploadListingSchema = z.object({
 	),
 	price: z
 		.number()
+		.max(1000000, {
+			message: 'Price must be less than 1,000,000',
+		})
+		.min(0, {
+			message: 'Price must be at least 0',
+		})
 		.refine((val) => val !== null, { message: 'Price is required' })
 		.refine((val) => !isNaN(Number(val)), { message: 'Price must be a number' })
 		.refine((val) => Number(val) > 0, {
