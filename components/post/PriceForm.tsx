@@ -36,26 +36,28 @@ const PriceLocationForm = ({
 							</span>
 						</div>
 						<input
-							type='text'
+							type='number'
 							name='price'
 							id='price'
-							value={formData.price}
+							value={formData.price || ''}
 							onChange={(e) => {
 								const value = e.target.value;
-								// Only allow numbers and up to 2 decimal places
-								if (value === '' || /^\d+(\.\d{0,2})?$/.test(value)) {
-									setFormData((prev) => ({
-										...prev,
-										price: value === '' ? 0 : parseFloat(value),
-									}));
-								}
+								// Convert to string, limit to 2 decimal places, then parse back to float
+								const formattedValue = value === '' ? 0 : parseFloat(parseFloat(value).toFixed(2));
+								setFormData((prev) => ({
+									...prev,
+									price: formattedValue,
+								}));
 							}}
+							step={0.01}
+							min={0}
+							max={1000000}
 							className={`pl-6 block w-full px-4 py-3 rounded-md shadow-sm text-base transition-all duration-200 ease-in-out focus:ring-0 focus:border-transparent focus:outline-none
-                        ${formErrors.find((error) => error.path[0] === 'price')
+						${formErrors.find((error) => error.path[0] === 'price')
 									? 'border-2 border-red-300 focus:ring-1 focus:ring-green-400'
 									: 'border border-gray-300 dark:border-gray-600 hover:border-green-300'
 								}
-                        dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
+						dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
 							placeholder='0.00'
 						/>
 					</div>
