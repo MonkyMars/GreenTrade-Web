@@ -86,19 +86,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 						'rounded-lg py-2 px-3',
 						isOwn
 							? 'bg-green-400/50 dark:bg-green-900/30 text-gray-800 dark:text-gray-100'
-							: 'bg-accent/10 dark:bg-accent/20 text-gray-800 dark:text-gray-100'
+							: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100'
 					)}
 				>
 					<p className='whitespace-pre-wrap break-words text-sm'>
 						{message.text}
 					</p>
 				</div>
-
-				{/* {!showSender && (
-					<span className="text-xs text-gray-400 dark:text-gray-500 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-						{timeFormatted}
-					</span>
-				)} */}
 			</div>
 		</div>
 	);
