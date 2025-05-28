@@ -165,9 +165,11 @@ const ActivityTabs: React.FC<ActivityTabsProps> = ({
 							))}
 						</div>
 					) : (
-						<p className='text-gray-500 dark:text-gray-400'>
-							No favorites yet.
-						</p>
+						<div className='text-center py-10 border border-dashed border-gray-200 dark:border-gray-800 rounded-md bg-gray-50 dark:bg-gray-900/50'>
+							<p className='text-gray-500 dark:text-gray-400'>
+								No favorites yet.
+							</p>
+						</div>
 					)}
 				</TabsContent>
 
