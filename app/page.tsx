@@ -274,41 +274,41 @@ const Home: NextPage = () => {
 				</section>
 			) : null}
 
-			{/* Impact section */}
+			{/* Why choose section */}
 			<section className='py-16 bg-gradient-to-br from-green-600 to-green-800 text-white'>
 				<div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
 					<div className='text-center mb-12'>
 						<h2 className='text-3xl md:text-4xl font-bold mb-4 flex items-center justify-center'>
-							<FaRecycle className='mr-3 h-6 w-6 text-green-200' />
-							Our Environmental Impact
+							<FaLeaf className='mr-3 h-6 w-6 text-green-200' />
+							Why Choose GreenVue?
 						</h2>
 						<p className='text-xl text-green-50 max-w-3xl mx-auto'>
-							Together, our community is making a difference
+							The smart way to trade sustainably across Europe
 						</p>
-					</div>{' '}
+					</div>
 					<div className='grid md:grid-cols-3 gap-8'>
 						<div className='bg-green-200/20 bg-opacity-10 p-8 rounded-xl text-center shadow-sm hover:shadow-md transition-shadow'>
 							<div className='inline-block p-4 bg-white text-green-500 bg-opacity-20 rounded-full mb-4'>
 								<FaRecycle className='h-10 w-10' />
 							</div>
-							<p className='text-4xl font-bold mb-2'>120K+</p>
-							<p className='text-xl'>Items Reused</p>
+							<h3 className='text-2xl font-bold mb-2'>100% Free</h3>
+							<p className='text-green-50'>No listing fees, no commission - keep all your earnings</p>
 						</div>
 
 						<div className='bg-green-200/20 bg-opacity-10 p-8 rounded-xl text-center shadow-sm hover:shadow-md transition-shadow'>
 							<div className='inline-block p-4 bg-white text-green-500 bg-opacity-20 rounded-full mb-4'>
 								<FaLeaf className='h-10 w-10' />
 							</div>
-							<p className='text-4xl font-bold mb-2'>2.4K</p>
-							<p className='text-xl'>Tons of CO₂ Saved</p>
+							<h3 className='text-2xl font-bold mb-2'>Local Focus</h3>
+							<p className='text-green-50'>Find items near you to reduce shipping and support neighbors</p>
 						</div>
 
 						<div className='bg-green-200/20 bg-opacity-10 p-8 rounded-xl text-center shadow-sm hover:shadow-md transition-shadow'>
 							<div className='inline-block p-4 bg-white text-green-500 bg-opacity-20 rounded-full mb-4'>
 								<FaHandshake className='h-10 w-10' />
 							</div>
-							<p className='text-4xl font-bold mb-2'>50K+</p>
-							<p className='text-xl'>Active Members</p>
+							<h3 className='text-2xl font-bold mb-2'>Secure Trading</h3>
+							<p className='text-green-50'>Built-in messaging and safety features for peace of mind</p>
 						</div>
 					</div>
 				</div>

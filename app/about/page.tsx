@@ -125,11 +125,11 @@ const About: NextPage = () => {
 
 						{/* Step 1 */}
 						<div className='relative md:grid md:grid-cols-2 md:gap-8 mb-12 md:mb-24'>
-							<div className='md:text-right md:pr-12 bg-accent p-2 py-4 rounded-lg'>
-								<h3 className='text-2xl font-bold text-white mb-4'>
+							<div className='md:text-right md:pr-12 p-2 py-4 rounded-lg'>
+								<h3 className='text-2xl font-bold dark:text-white text-gray-700 mb-4'>
 									1. Create your account
 								</h3>
-								<p className='text-gray-200'>
+								<p className='dark:text-gray-200 text-gray-600'>
 									Sign up with your email or social media account and set up
 									your sustainable trader profile in minutes.
 								</p>
@@ -139,26 +139,26 @@ const About: NextPage = () => {
 						{/* Step 2 */}
 						<div className='relative md:grid md:grid-cols-2 md:gap-8 mb-12 md:mb-24'>
 							<div className='md:order-2 md:text-left md:pl-12 bg-accent p-2 py-4 rounded-lg'>
-								<h3 className='text-2xl font-bold text-white mb-4'>
+								<h3 className='text-2xl font-bold dark:text-white text-gray-700 mb-4'>
 									2. List your items
 								</h3>
-								<p className='text-gray-200'>
+								<p className='dark:text-gray-200 text-gray-600'>
 									Upload photos and descriptions of your sustainable goods, set
 									your price or trade preferences, and highlight their
 									eco-friendly qualities.
 								</p>
 							</div>
-							<div className='mt-6 md:mt-0 md:order-1 md:pr-12' />{' '}
+							<div className='mt-6 md:mt-0 md:order-1 md:pr-12' />
 							{/* div for positioning */}
 						</div>
 
 						{/* Step 3 */}
 						<div className='relative md:grid md:grid-cols-2 md:gap-8'>
 							<div className='md:text-right md:pr-12 bg-accent p-2 py-4 rounded-lg'>
-								<h3 className='text-2xl font-bold text-white mb-4'>
+								<h3 className='text-2xl font-bold dark:text-white text-gray-700 mb-4'>
 									3. Connect and trade
 								</h3>
-								<p className='text-gray-200'>
+								<p className='dark:text-gray-200 text-gray-600'>
 									Message other users, arrange meetups using our integrated map
 									feature, and complete your sustainable trades with confidence.
 								</p>

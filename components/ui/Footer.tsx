@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { FaLeaf, FaHeart } from 'react-icons/fa';
 import { FiMail } from 'react-icons/fi';
 import { categories } from '@/lib/functions/categories';
+import { encodeQueryParam } from '@/lib/functions/url';
 
 const Footer: React.FC = () => {
 	return (
@@ -123,7 +124,7 @@ const Footer: React.FC = () => {
 									{categories.slice(1, 6).map((category) => (
 										<Link
 											key={category.id}
-											href={`/browse?category=${category.id}`}
+											href={`/browse?category=${encodeQueryParam(category.name)}`}
 											className='text-base text-gray-600 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400'
 										>
 											{category.name}
