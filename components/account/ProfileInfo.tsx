@@ -149,6 +149,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 						<input
 							type="text"
 							name="country"
+							id='country'
 							value={user?.location?.country || ''}
 							onChange={(e) => {
 								if (!user) return;

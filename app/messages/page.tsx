@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { ConversationList } from '@/components/message/ConversationList';
 import { ChatInterface } from '@/components/message/ChatInterface';
@@ -20,6 +21,7 @@ import { NextPage } from 'next';
 
 const MessagesPageContent: NextPage = () => {
 	const { user } = useAuth();
+	const searchParams = useSearchParams();
 	const [conversations, setConversations] = useState<Conversation[]>([]);
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [activeConversationId, setActiveConversationId] = useState<
@@ -43,6 +45,18 @@ const MessagesPageContent: NextPage = () => {
 			);
 		}
 	}, [user?.id]);
+
+	// Handle URL parameter for conversation selection
+	useEffect(() => {
+		const conversationParam = searchParams.get('conversation');
+		if (conversationParam && conversations.length > 0) {
+			// Check if the conversation ID exists in the user's conversations
+			const conversationExists = conversations.some(c => c.id === conversationParam);
+			if (conversationExists && conversationParam !== activeConversationId) {
+				setActiveConversationId(conversationParam);
+			}
+		}
+	}, [searchParams, conversations, activeConversationId]);
 
 	// WebSocket message handler
 	const onNewMessage = (newMessage: ChatMessage) => {

@@ -2,7 +2,7 @@
 
 // This is a client-side page that allows authorized users to post a new listing to GreenVue.
 // It includes a form for entering item details, uploading images, and selecting eco-friendly attributes.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { uploadListing } from '@/lib/backend/listings/uploadListing';
 import { FetchedListing, UploadListingSchema, type UploadListing } from '@/lib/types/main';
@@ -79,24 +79,40 @@ const PostListingPage: NextPage = () => {
 		null
 	);
 	const [previewViewmode, setPreviewView] = useState<'grid' | 'list'>('grid');
+	const errorToastId = useRef<string | number>(null);
 
-	// Check if user has set their location for posting
 	useEffect(() => {
-		if (user && user.id) {
-			if (!user.location?.city || !user.location?.country) {
-				setErrorMessage(
-					'Location required: Please update your profile with a location before posting.'
-				);
-				toast.error('Missing location information', {
-					duration: 5000,
+		// Only run if user is defined
+		if (!user || !user.id) return;
+
+		const isMissingLocation = !user.location?.city || !user.location?.country;
+		const isLocationError = errorMessage.includes('location');
+
+		if (isMissingLocation) {
+			setErrorMessage(
+				'Location required: Please update your profile with a location before posting.'
+			);
+
+			// Show toast only if it hasn't already been shown
+			if (!errorToastId.current) {
+				errorToastId.current = toast.error('Missing location information', {
+					duration: 2000,
 					icon: '📍',
 				});
-			} else if (errorMessage.includes('location')) {
-				// Clear location-related error when user has location
+			}
+		} else {
+			// Clear location error if it's resolved
+			if (isLocationError) {
 				setErrorMessage('');
 			}
+
+			// Dismiss the toast if it's active
+			if (errorToastId.current) {
+				toast.dismiss(errorToastId.current);
+				errorToastId.current = null;
+			}
 		}
-	}, [user, errorMessage]);
+	}, [user, errorMessage, setErrorMessage]);
 
 	// Handle form input changes
 	const handleChange = (
@@ -202,13 +218,6 @@ const PostListingPage: NextPage = () => {
 					{
 						maxRetries: 3,
 						delayMs: 1000,
-						onRetry: (attempt) => {
-							if (process.env.NODE_ENV !== 'production') {
-								console.log(`Retrying upload (attempt ${attempt})...`);
-							} else {
-								toast.loading(`Retrying upload (attempt ${attempt})...`);
-							}
-						}
 					}
 				);
 				setUploading(false);

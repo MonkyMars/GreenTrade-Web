@@ -229,9 +229,8 @@ const RegisterPage: NextPage = () => {
 									type='text'
 									autoComplete='name'
 									required
-									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${
-										errors.name ? 'border-red-300' : 'border-gray-300'
-									} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
+									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.name ? 'border-red-300' : 'border-gray-300'
+										} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
 									placeholder='Full Name'
 									value={formData.name}
 									onChange={handleChange}
@@ -258,9 +257,8 @@ const RegisterPage: NextPage = () => {
 									type='email'
 									autoComplete='email'
 									required
-									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${
-										errors.email ? 'border-red-300' : 'border-gray-300'
-									} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
+									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.email ? 'border-red-300' : 'border-gray-300'
+										} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
 									placeholder='Email address'
 									value={formData.email}
 									onChange={handleChange}
@@ -287,9 +285,8 @@ const RegisterPage: NextPage = () => {
 									type='password'
 									autoComplete='new-password'
 									required
-									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${
-										errors.password ? 'border-red-300' : 'border-gray-300'
-									} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
+									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'
+										} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
 									placeholder='Password'
 									value={formData.password}
 									onChange={handleChange}
@@ -304,11 +301,11 @@ const RegisterPage: NextPage = () => {
 							{/* Password strength indicator */}
 							{formData.password && (
 								<div className='mt-2'>
-									<div className='flex justify-between mb-1'>
-										<span className='text-xs text-gray-500 dark:text-gray-400'>
+									<div className='flex justify-between mb-1 text-gray-500 dark:text-gray-400'>
+										<span className='text-xs'>
 											Password strength:
 										</span>
-										<span className='text-xs font-medium'>
+										<span className='text-xs font-medium '>
 											{passwordStrength === 0 && 'Very Weak'}
 											{passwordStrength === 1 && 'Weak'}
 											{passwordStrength === 2 && 'Fair'}
@@ -319,15 +316,14 @@ const RegisterPage: NextPage = () => {
 									</div>
 									<div className='w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700'>
 										<div
-											className={`h-1.5 rounded-full ${
-												passwordStrength <= 1
-													? 'bg-red-500'
-													: passwordStrength <= 2
-														? 'bg-orange-500'
-														: passwordStrength <= 3
-															? 'bg-yellow-500'
-															: 'bg-green-500'
-											}`}
+											className={`h-1.5 rounded-full ${passwordStrength <= 1
+												? 'bg-red-500'
+												: passwordStrength <= 2
+													? 'bg-orange-500'
+													: passwordStrength <= 3
+														? 'bg-yellow-500'
+														: 'bg-green-500'
+												}`}
 											style={{ width: `${(passwordStrength / 5) * 100}%` }}
 										></div>
 									</div>
@@ -349,11 +345,10 @@ const RegisterPage: NextPage = () => {
 									type='password'
 									autoComplete='new-password'
 									required
-									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${
-										errors.passwordConfirm
-											? 'border-red-300'
-											: 'border-gray-300'
-									} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
+									className={`appearance-none rounded-md relative block w-full pl-10 px-3 py-2 border ${errors.passwordConfirm
+										? 'border-red-300'
+										: 'border-gray-300'
+										} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:placeholder-gray-400`}
 									placeholder='Confirm Password'
 									value={formData.passwordConfirm}
 									onChange={handleChange}

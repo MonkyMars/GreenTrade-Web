@@ -8,6 +8,7 @@ import { EmailConfirmationBar } from '@/components/ui/EmailConfirmationBar';
 import { Analytics } from '@vercel/analytics/react';
 import { Toaster } from '@/components/ui/sonner';
 import ConstructionBanner from '@/components/ui/ConstuctionBanner';
+import { QueryProvider } from '@/components/providers/QueryProvider';
 
 const geistSans = Geist({
 	variable: '--font-geist-sans',
@@ -86,7 +87,9 @@ export default function RootLayout({
 					<Navigation />
 					<ConstructionBanner />
 					<EmailConfirmationBar />
-					{children}
+					<QueryProvider>
+						{children}
+					</QueryProvider>
 					<Toaster />
 					<FooterWrapper />
 				</AuthProvider>

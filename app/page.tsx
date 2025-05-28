@@ -18,8 +18,6 @@ import { NextPage } from 'next';
 import { Button } from '@/components/ui/button';
 import { encodeQueryParam } from '@/lib/functions/url';
 import {
-	QueryClient,
-	QueryClientProvider,
 	useQuery,
 } from '@tanstack/react-query';
 import ListingCard from '@/components/ui/ListingCard';
@@ -41,7 +39,6 @@ const Home: NextPage = () => {
 	});
 
 	const handleNavigate = () => {
-		console.log(selectedCategory);
 		if (searchQuery) {
 			router.push(
 				`/browse?search=${searchQuery}&category=${encodeQueryParam(selectedCategory)}`
@@ -433,14 +430,4 @@ const Home: NextPage = () => {
 	);
 };
 
-const HomePage = () => {
-	const [queryClient] = useState(() => new QueryClient());
-
-	return (
-		<QueryClientProvider client={queryClient}>
-			<Home />
-		</QueryClientProvider>
-	);
-};
-
-export default HomePage;
+export default Home;

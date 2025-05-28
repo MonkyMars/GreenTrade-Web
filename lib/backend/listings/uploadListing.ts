@@ -159,12 +159,6 @@ export const uploadListing = async (
 
 						// Append the file to the FormData
 						formData.append('file', file);
-
-						if (process.env.NODE_ENV !== 'production') {
-							console.log(
-								`Converted image URI to File: ${file.name}, size: ${file.size}, type: ${file.type}`
-							);
-						}
 					} else {
 						console.warn('Invalid image object:', image);
 					}
@@ -181,10 +175,6 @@ export const uploadListing = async (
 				}
 			})
 		);
-
-		if (process.env.NODE_ENV !== 'production') {
-			console.log('Uploading images to /api/listings');
-		}
 
 		// Show loading state to user
 		const loadingToast = toast.loading('Uploading...');
@@ -213,10 +203,6 @@ export const uploadListing = async (
 
 		// Dismiss loading toast on success
 		toast.dismiss(loadingToast);
-
-		if (process.env.NODE_ENV !== 'production') {
-			console.log('Image upload response:', response.data);
-		}
 
 		// Check if the response has the expected format
 		if (!response.data || !response.data.success) {

@@ -41,7 +41,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 					className={cn(
 						'w-10 h-10 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 flex-shrink-0 mr-3',
 						isOwn
-							? 'bg-green-300 dark:bg-accent/50'
+							? 'bg-green-300 dark:bg-green-900/30'
 							: 'bg-green-100 dark:bg-green-900/30'
 					)}
 				>
@@ -85,7 +85,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 					className={cn(
 						'rounded-lg py-2 px-3',
 						isOwn
-							? 'bg-green-400/50 dark:bg-accent/[0.8] text-gray-800 dark:text-gray-100'
+							? 'bg-green-400/50 dark:bg-green-900/30 text-gray-800 dark:text-gray-100'
 							: 'bg-accent/10 dark:bg-accent/20 text-gray-800 dark:text-gray-100'
 					)}
 				>

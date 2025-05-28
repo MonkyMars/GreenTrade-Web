@@ -12,7 +12,6 @@ import ListingCard from '../../components/ui/ListingCard';
 import { FilterOptions, filterListings } from './filtering';
 import { NextPage } from 'next';
 import { Button } from '@/components/ui/button';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const ITEMS_PER_PAGE: number = 50; // Define items per page
 
@@ -37,7 +36,7 @@ const BrowserComponent: NextPage = () => {
 		sortBy: 'newest',
 	});
 
-	// Use React Query directly without useEffect
+	// Use React Query to fetch all listings
 	const {
 		data: allListings = [],
 		isSuccess
@@ -896,13 +895,10 @@ const BrowserComponent: NextPage = () => {
 };
 
 const BrowsePage = () => {
-	const [queryClient] = useState(() => new QueryClient());
 	return (
 		// Wrap BrowserComponent in Suspense for searchParams hook
 		<Suspense fallback={<div>Loading Filters...</div>}>
-			<QueryClientProvider client={queryClient}>
-				<BrowserComponent />
-			</QueryClientProvider>
+			<BrowserComponent />
 		</Suspense>
 	);
 };

@@ -80,7 +80,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
 											<div className='flex justify-between items-baseline'>
 												<h3
 													className={cn(
-														'font-medium text-gray-900 dark:text-gray-100 truncate max-w-[120px]',
+														'font-medium text-gray-900! dark:text-gray-100! truncate max-w-[120px]',
 														isActive && 'text-primary dark:text-accent'
 													)}
 												>

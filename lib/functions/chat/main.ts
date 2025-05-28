@@ -1,6 +1,9 @@
 import api from '@/lib/backend/api/axiosConfig';
 import { ChatMessage, Conversation } from '@/lib/types/chat';
 
+// Re-export contact seller functionality
+export { useContactSeller, navigateToConversation } from './contactSeller';
+
 /**
  * Determines if the current user is the buyer in a conversation
  */

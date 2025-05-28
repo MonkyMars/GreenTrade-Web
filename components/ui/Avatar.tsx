@@ -33,7 +33,7 @@ const AvatarVariants = cva(
 
 export interface AvatarProps
 	extends React.HTMLAttributes<HTMLDivElement>,
-		VariantProps<typeof AvatarVariants> {
+	VariantProps<typeof AvatarVariants> {
 	user: User | null;
 }
 

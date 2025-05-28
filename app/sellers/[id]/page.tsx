@@ -1,166 +1,77 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { FaStar, FaCheckCircle, FaRegClock, FaEnvelope } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Seller } from '@/lib/types/seller';
-import { FetchedListing } from '@/lib/types/main';
 import { getSellerListings } from '@/lib/backend/listings/getListings';
 import ListingCard from '@/components/ui/ListingCard';
-import api from '@/lib/backend/api/axiosConfig';
 import { toast } from 'sonner';
-import { AppError, retryOperation } from '@/lib/errorUtils';
+import { AppError } from '@/lib/errorUtils';
 import { getReviews } from '@/lib/backend/reviews/getReviews';
-import { FetchedReview } from '@/lib/types/review';
 import ReviewCard from '@/components/ui/ReviewCard';
 import { NextPage } from 'next';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { getSeller } from '@/lib/backend/sellers/getSeller';
+import { sendMessage } from '@/lib/backend/messages/sendMessage';
 
 const SellerPage: NextPage = () => {
 	const router = useRouter();
 	const params = useParams();
-	const [seller, setSeller] = useState<Seller | null>(null);
-	const [listings, setListings] = useState<FetchedListing[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
 	const [messageOpen, setMessageOpen] = useState(false);
 	const [message, setMessage] = useState('');
-	const [sendingMessage, setSendingMessage] = useState(false);
-	const [sellerReviews, setSellerReviews] = useState<FetchedReview[]>([]);
 
-	useEffect(() => {
-		const fetchSellerData = async () => {
-			setIsLoading(true);
-
-			// Show loading toast for better UX
-			const loadingToast = toast.loading('Loading seller profile...');
-
-			try {
-				// Fetch seller information with retry logic and proper error typing
-				const response = await retryOperation(
-					() => api.get(`/seller/${params.id}`),
-					{
-						context: 'Fetching seller profile',
-						maxRetries: 3,
-						showToastOnRetry: false, // We have our own loading toast
-					}
-				);
-
-				if (!response.data || !response.data.success) {
-					throw new AppError(
-						response.data?.message || 'Failed to fetch seller',
-						{
-							code: 'FETCH_FAILED',
-							status: response.status,
-						}
-					);
-				}
-
-				if (process.env.NODE_ENV !== 'production') {
-					console.log(response.data.data);
-				}
-
-				const sellerObject: Seller = {
-					id: response.data.data.id,
-					name: response.data.data.name,
-					bio: response.data.data.bio,
-					rating: response.data.data.rating,
-					verified: response.data.data.verified,
-					createdAt: response.data.data.created_at,
-				};
-
-				setSeller(sellerObject);
-
-				// Fetch seller's listings - getSellerListings already has retry and error handling
-				const sellerListings = await getSellerListings(params.id as string);
-				setListings(sellerListings as FetchedListing[]);
-
-				// Dismiss the loading toast
-				toast.dismiss(loadingToast);
-			} catch (error) {
-				// Dismiss the loading toast
-				toast.dismiss(loadingToast);
-
-				// Convert to AppError if not already
-				const appError =
-					error instanceof AppError
-						? error
-						: AppError.from(error, 'Fetching seller profile');
-
-				// Handle error properly with user feedback
-				let errorMessage = 'Failed to load seller profile. Please try again.';
-
-				if (appError.status === 404) {
-					errorMessage = 'Seller not found.';
-				} else if (appError.message) {
-					errorMessage = appError.message;
-				}
-
-				// Show error to user
-				toast.error(errorMessage);
-
-				// Log in development, use proper error tracking in production
-				if (process.env.NODE_ENV !== 'production') {
-					console.error('Error fetching seller data:', appError);
-				} else {
-					// In production, this would use a service like Sentry
-					// Example: Sentry.captureException(appError);
-				}
-			} finally {
-				setIsLoading(false);
+	// Query for seller data
+	const {
+		data: seller,
+		isLoading: isSellerLoading,
+		error: sellerError
+	} = useQuery({
+		queryKey: ['seller', params.id],
+		queryFn: () => getSeller(params.id as string),
+		enabled: !!params.id,
+		retry: (failureCount, error) => {
+			// Don't retry if it's a 404 or similar client error
+			if (error instanceof AppError && error.status && error.status < 500) {
+				return false;
 			}
-		};
+			return failureCount < 2;
+		},
+	});
 
-		if (params.id) {
-			fetchSellerData();
-		}
-	}, [params.id]);
+	// Query for seller's listings
+	const {
+		data: listings = []
+	} = useQuery({
+		queryKey: ['sellerListings', params.id],
+		queryFn: () => getSellerListings(params.id as string),
+		enabled: !!params.id,
+		retry: 1,
+	});
 
-	const handleSendMessage = async (e: React.FormEvent) => {
-		e.preventDefault();
+	// Query for seller reviews
+	const {
+		data: sellerReviews = []
+	} = useQuery({
+		queryKey: ['sellerReviews', seller?.id],
+		queryFn: () => getReviews(seller!.id),
+		enabled: !!seller?.id,
+		retry: 1,
+	});
 
-		if (!message.trim()) {
-			toast.error('Please enter a message');
-			return;
-		}
-
-		// Prevent double-submission
-		if (sendingMessage) return;
-
-		setSendingMessage(true);
-		const loadingToast = toast.loading('Sending message...');
-
-		// This would integrate with your messaging system
-		try {
-			// Example API call with retry logic and proper error typing
-			await retryOperation(
-				() =>
-					api.post('/messages', {
-						sellerId: seller?.id,
-						message,
-					}),
-				{
-					context: 'Sending message',
-					maxRetries: 3,
-					showToastOnRetry: false, // We have our own loading toast
-				}
-			);
-
-			// Dismiss loading toast
-			toast.dismiss(loadingToast);
-
-			// Show success message
+	// Mutation for sending messages
+	const sendMessageMutation = useMutation({
+		mutationFn: async ({ sellerId, message }: { sellerId: string; message: string }) => {
+			return sendMessage(sellerId, message);
+		},
+		onSuccess: () => {
 			toast.success('Message sent successfully!');
-
-			// Reset form
 			setMessage('');
 			setMessageOpen(false);
-		} catch (error) {
-			// Dismiss loading toast
-			toast.dismiss(loadingToast);
-
-			// Convert to AppError if not already
+		},
+		onError: (error) => {
 			const appError =
 				error instanceof AppError
 					? error
@@ -175,21 +86,16 @@ const SellerPage: NextPage = () => {
 				errorMessage = appError.message;
 			}
 
-			// Show error to user
 			toast.error(errorMessage);
 
 			// Log in development, use proper error tracking in production
 			if (process.env.NODE_ENV !== 'production') {
 				console.error('Error sending message:', appError);
-			} else {
-				// In production, this would use a service like Sentry
-				// Example: Sentry.captureException(appError);
 			}
-		} finally {
-			setSendingMessage(false);
-		}
-	};
+		},
+	});
 
+	// Handle escape key to close message form
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.key === 'Escape') {
@@ -203,32 +109,67 @@ const SellerPage: NextPage = () => {
 		};
 	}, []);
 
-	useEffect(() => {
-		const fetchSellerReviews = async () => {
-			if (seller) {
-				try {
-					const data = await getReviews(seller.id);
-					if (!data) {
-						throw new AppError('Failed to fetch reviews', {
-							code: 'FETCH_FAILED',
-							status: 500,
-						});
-					}
+	const handleSendMessage = async (e: React.FormEvent) => {
+		e.preventDefault();
 
-					setSellerReviews(data);
-				} catch (error) {
-					const appError =
-						error instanceof AppError
-							? error
-							: AppError.from(error, 'Fetching seller reviews');
-					if (process.env.NODE_ENV !== 'production') {
-						console.error('Error fetching seller reviews:', appError);
-					}
-				}
-			}
-		};
-		fetchSellerReviews();
-	}, [seller]);
+		if (!message.trim()) {
+			toast.error('Please enter a message');
+			return;
+		}
+
+		if (!seller) {
+			toast.error('Seller information not available');
+			return;
+		}
+
+		sendMessageMutation.mutate({
+			sellerId: seller.id,
+			message,
+		});
+	};
+
+	// Handle loading states
+	const isLoading = isSellerLoading;
+
+	// Handle errors
+	if (sellerError) {
+		// If it's a client error (like 404), show not found
+		if (sellerError instanceof AppError && sellerError.status && sellerError.status < 500) {
+			return (
+				<div className='mx-auto px-4 py-8 max-w-7xl'>
+					<div className='text-center'>
+						<h1 className='text-2xl font-bold text-gray-900 dark:text-white'>
+							Seller not found
+						</h1>
+						<p className='mt-2 text-gray-600 dark:text-gray-400'>
+							The seller you&apos;re looking for doesn&apos;t exist or has been
+							removed.
+						</p>
+						<Button onClick={() => router.push('/browse')} className='mt-4'>
+							Browse Listings
+						</Button>
+					</div>
+				</div>
+			);
+		}
+
+		// For other errors, show a generic error message
+		return (
+			<div className='mx-auto px-4 py-8 max-w-7xl'>
+				<div className='text-center'>
+					<h1 className='text-2xl font-bold text-gray-900 dark:text-white'>
+						Error loading seller
+					</h1>
+					<p className='mt-2 text-gray-600 dark:text-gray-400'>
+						Something went wrong while loading the seller profile.
+					</p>
+					<Button onClick={() => router.push('/browse')} className='mt-4'>
+						Browse Listings
+					</Button>
+				</div>
+			</div>
+		);
+	}
 
 	if (isLoading) {
 		return (
@@ -265,161 +206,276 @@ const SellerPage: NextPage = () => {
 	}
 
 	return (
-		<div className='mx-auto px-4 py-22 max-w-7xl'>
-			{/* Seller Profile Section */}
-			<div className='bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8'>
-				<div className='flex gap-6 items-center'>
-					<div className='flex-shrink-0 mb-4 md:mb-0 md:mr-6'>
-						<div className='relative h-24 w-24 rounded-full bg-green-200 dark:bg-green-700/70 overflow-hidden'>
-							{/* Placeholder for seller image */}
-							<div className='absolute inset-0 flex items-center justify-center text-green-500 dark:text-green-400 text-3xl font-bold'>
-								{seller.name.charAt(0)}
+		<main className='mx-auto px-4 py-22 max-w-7xl'>
+			{/* Seller Profile Section - Main grid layout similar to listing page */}
+			<div className='grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12'>
+				{/* Profile Image and Bio - Takes up 2 columns on desktop */}
+				<div className='lg:col-span-2 space-y-6'>
+					{/* Profile Header Card */}
+					<div className='bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
+						<div className='flex flex-col md:flex-row gap-6 items-start'>
+							<div className='flex-shrink-0'>
+								<div className='relative h-24 w-24 rounded-full bg-green-100 dark:bg-green-900/50 overflow-hidden'>
+									{/* Placeholder for seller image */}
+									<div className='absolute inset-0 flex items-center justify-center text-green-600 dark:text-green-400 text-3xl font-bold'>
+										{seller.name.charAt(0)}
+									</div>
+								</div>
+							</div>
+
+							<div className='flex-grow'>
+								<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4'>
+									<div className='flex items-center gap-3'>
+										<h1 className='text-3xl font-bold text-gray-900 dark:text-gray-100'>
+											{seller.name}
+										</h1>
+										{seller.verified && (
+											<Badge className='bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'>
+												<FaCheckCircle className='mr-1 h-3 w-3' />
+												Verified
+											</Badge>
+										)}
+									</div>
+								</div>
+
+								{/* Rating and member info */}
+								<div className='space-y-3 mb-6'>
+									<div className='flex items-center'>
+										<div className='flex items-center'>
+											{[...Array(5)].map((_, index) => (
+												<FaStar
+													key={index}
+													className={`h-4 w-4 ${index < Math.floor(seller.rating)
+														? 'text-yellow-400'
+														: 'text-gray-300 dark:text-gray-600'
+														}`}
+												/>
+											))}
+										</div>
+										<span className='ml-2 text-gray-700 dark:text-gray-300 font-medium'>
+											{seller.rating.toFixed(1)}
+										</span>
+										<span className='ml-2 text-gray-500 dark:text-gray-400'>
+											({sellerReviews.length} review{sellerReviews.length !== 1 ? 's' : ''})
+										</span>
+									</div>
+
+									<div className='flex items-center space-x-2'>
+										<div className='w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center'>
+											<FaRegClock
+												size={18}
+												className='text-green-600 dark:text-green-400'
+											/>
+										</div>
+										<div>
+											<span className='text-sm text-gray-500 dark:text-gray-400'>
+												Member since
+											</span>
+											<p className='font-medium text-gray-900 dark:text-gray-100'>
+												{format(new Date(seller.createdAt), 'MMMM yyyy')}
+											</p>
+										</div>
+									</div>
+								</div>
+
+								{/* Action buttons for mobile */}
+								<div className='lg:hidden'>
+									<Button
+										onClick={() => setMessageOpen(!messageOpen)}
+										className='w-full bg-green-600 hover:bg-green-700'
+									>
+										<FaEnvelope className='mr-2 h-4 w-4' />
+										Message Seller
+									</Button>
+								</div>
 							</div>
 						</div>
 					</div>
 
-					<div className='flex-grow'>
-						<div className='flex items-center mb-2'>
-							<h1 className='text-3xl font-bold text-gray-900 dark:text-white mr-2'>
-								{seller.name}
-							</h1>
-							{seller.verified && (
-								<Badge className='bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'>
-									<FaCheckCircle className='mr-1 h-3 w-3' />
-									Verified
-								</Badge>
-							)}
+					{/* Bio Section */}
+					<div className='bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
+						<div className='flex items-center space-x-2 mb-4'>
+							<FaCheckCircle className='text-green-600 dark:text-green-500' />
+							<h2 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
+								About {seller.name}
+							</h2>
 						</div>
-
-						<div className='space-y-1 mb-4'>
-							<div className='flex items-center mr-2'>
-								{[...Array(5)].map((_, index) => (
-									<FaStar
-										key={index}
-										className={`h-4 w-4 ${
-											index < Math.floor(seller.rating)
-												? 'text-yellow-400'
-												: 'text-gray-300'
-										}`}
-									/>
-								))}
-								<span className='ml-1 text-gray-700 dark:text-gray-300'>
-									{seller.rating.toFixed(1)}{' '}
-									<span className='text-gray-500 dark:text-gray-400'>
-										(based on {sellerReviews.length} review
-										{sellerReviews.length !== 1 ? 's' : ''})
-									</span>
-								</span>
-							</div>
-							<div className='flex items-center text-gray-500 dark:text-gray-400'>
-								<FaRegClock className='h-4 w-4 mr-1' />
-								<span>
-									Member since {format(new Date(seller.createdAt), 'MMMM yyyy')}
-								</span>
-							</div>
-						</div>
-
-						<p className='text-gray-700 dark:text-gray-300 mb-4'>
+						<p className='text-gray-700 dark:text-gray-300 whitespace-pre-line'>
 							{seller.bio || "This seller hasn't added a bio yet."}
 						</p>
-
-						<Button
-							onClick={() => setMessageOpen(!messageOpen)}
-							className='flex items-center'
-						>
-							<FaEnvelope className='mr-2 h-4 w-4' />
-							Message Seller
-						</Button>
 					</div>
+
+					{/* Message Form */}
+					{messageOpen && (
+						<div className='bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
+							<h3 className='text-lg font-medium text-gray-900 dark:text-gray-100 mb-4'>
+								Send a Message
+							</h3>
+							<form onSubmit={handleSendMessage}>
+								<textarea
+									className='w-full px-4 py-3 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-800 resize-none'
+									rows={4}
+									placeholder='Write your message here...'
+									value={message}
+									onChange={(e) => setMessage(e.target.value)}
+									required
+								></textarea>
+								<div className='flex justify-end gap-3 mt-4'>
+									<Button
+										type='button'
+										variant='ghost'
+										onClick={() => setMessageOpen(false)}
+										disabled={sendMessageMutation.isPending}
+									>
+										Cancel
+									</Button>
+									<Button
+										type='submit'
+										disabled={sendMessageMutation.isPending}
+										className='bg-green-600 hover:bg-green-700'
+									>
+										{sendMessageMutation.isPending ? 'Sending...' : 'Send Message'}
+									</Button>
+								</div>
+							</form>
+						</div>
+					)}
 				</div>
 
-				{/* Message Form */}
-				{messageOpen && (
-					<div className='mt-6 border-t border-gray-200 dark:border-gray-700 pt-6'>
-						<h3 className='text-lg font-medium text-gray-900 dark:text-white mb-4'>
-							Send a Message
-						</h3>
-						<form onSubmit={handleSendMessage}>
-							<textarea
-								className='w-full px-3 py-2 text-gray-700 dark:text-gray-200 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-800 resize-none'
-								rows={4}
-								placeholder='Write your message here...'
-								value={message}
-								onChange={(e) => setMessage(e.target.value)}
-								required
-							></textarea>
-							<div className='flex justify-end mt-3'>
-								<Button
-									type='button'
-									variant='outline'
-									onClick={() => setMessageOpen(false)}
-									className='mr-2'
-								>
-									Cancel
-								</Button>
-								<Button type='submit'>Send Message</Button>
+				{/* Seller Stats & Actions - Takes up 1 column on desktop */}
+				<div className='lg:col-span-1'>
+					<div className='sticky top-20 space-y-6'>
+						{/* Stats Card */}
+						<div className='bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
+							<h3 className='text-lg font-medium text-gray-900 dark:text-gray-100 mb-6 flex items-center'>
+								<FaCheckCircle className='mr-2 h-4 w-4 text-green-500' />
+								Seller Stats
+							</h3>
+
+							<div className='space-y-4'>
+								<div className='flex items-center justify-between'>
+									<span className='text-gray-700 dark:text-gray-300'>
+										Total Listings
+									</span>
+									<span className='font-medium text-gray-900 dark:text-gray-100'>
+										{listings.length}
+									</span>
+								</div>
+
+								<div className='flex items-center justify-between'>
+									<span className='text-gray-700 dark:text-gray-300'>
+										Reviews
+									</span>
+									<span className='font-medium text-gray-900 dark:text-gray-100'>
+										{sellerReviews.length}
+									</span>
+								</div>
+
+								<div className='flex items-center justify-between'>
+									<span className='text-gray-700 dark:text-gray-300'>
+										Rating
+									</span>
+									<div className='flex items-center'>
+										<div className='flex items-center'>
+											{[...Array(5)].map((_, i) => (
+												<FaStar
+													key={i}
+													className={`w-4 h-4 ${i < Math.floor(seller.rating)
+														? 'text-yellow-400'
+														: 'text-gray-300 dark:text-gray-600'
+														}`}
+												/>
+											))}
+										</div>
+										<span className='ml-2 font-medium text-gray-900 dark:text-gray-100'>
+											{seller.rating.toFixed(1)}
+										</span>
+									</div>
+								</div>
 							</div>
-						</form>
+
+							{/* Action buttons for desktop */}
+							<div className='hidden lg:block mt-6 pt-6 border-t border-gray-100 dark:border-gray-800'>
+								<div className='space-y-3'>
+									<Button
+										onClick={() => setMessageOpen(!messageOpen)}
+										className='w-full bg-green-600 hover:bg-green-700'
+									>
+										<FaEnvelope className='mr-2 h-4 w-4' />
+										Message Seller
+									</Button>
+								</div>
+							</div>
+						</div>
 					</div>
-				)}
+				</div>
 			</div>
 
 			{/* Seller's Listings Section */}
-			<div className='space-y-6 mb-8'>
-				<h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-6'>
-					Listings from {seller.name}
-				</h2>
-
-				{listings.length === 0 ? (
-					<div className='bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center'>
-						<p className='text-gray-600 dark:text-gray-400'>
-							This seller doesn&apos;t have any active listings at the moment.
-						</p>
+			<div className='mb-12'>
+				<div className='bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
+					<div className='flex items-center space-x-2 mb-6'>
+						<FaCheckCircle className='text-green-600 dark:text-green-500' />
+						<h2 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
+							Listings from {seller.name}
+						</h2>
+						<Badge variant='secondary' className='bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'>
+							{listings.length} {listings.length === 1 ? 'listing' : 'listings'}
+						</Badge>
 					</div>
-				) : (
-					<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
-						{listings.map((listing, index) => (
-							<div
-								key={listing.id}
-								className='transform transition duration-300 hover:scale-102 hover:shadow-lg'
-							>
+
+					{listings.length === 0 ? (
+						<div className='text-center py-12'>
+							<p className='text-gray-600 dark:text-gray-400'>
+								This seller doesn&apos;t have any active listings at the moment.
+							</p>
+						</div>
+					) : (
+						<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
+							{listings.map((listing) => (
 								<ListingCard
+									key={listing.id}
 									listing={listing}
 									viewMode='grid'
-									className='h-full'
-									key={index}
+									className='shadow-sm hover:shadow-md transition-shadow duration-300'
 								/>
-							</div>
-						))}
-					</div>
-				)}
+							))}
+						</div>
+					)}
+				</div>
 			</div>
 
-			<div className='space-y-6 mb-8'>
-				<h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-6'>
-					Reviews about {seller.name}
-				</h2>
+			{/* Reviews Section */}
+			<div className='bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
+				<div className='flex items-center space-x-2 mb-6'>
+					<FaStar className='text-yellow-500' />
+					<h2 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
+						Reviews for {seller.name}
+					</h2>
+					<Badge variant='secondary' className='bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'>
+						{sellerReviews.length} {sellerReviews.length === 1 ? 'review' : 'reviews'}
+					</Badge>
+				</div>
 
 				{sellerReviews.length === 0 ? (
-					<div className='bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center'>
+					<div className='text-center py-12'>
 						<p className='text-gray-600 dark:text-gray-400'>
 							This seller has no reviews yet.
 						</p>
 					</div>
 				) : (
-					<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
-						{sellerReviews.map((review, index) => (
-							<div
+					<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6'>
+						{sellerReviews.map((review) => (
+							<ReviewCard
 								key={review.id}
-								className='transform transition duration-300 hover:scale-102 hover:shadow-lg'
-							>
-								<ReviewCard review={review} className='h-full' key={index} />
-							</div>
+								review={review}
+								className='shadow-sm hover:shadow-md transition-shadow duration-300'
+							/>
 						))}
 					</div>
 				)}
 			</div>
-		</div>
+		</main>
 	);
 };
 

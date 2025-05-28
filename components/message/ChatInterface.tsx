@@ -157,7 +157,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 						</div>
 						<Link
 							href={`/listings/${conversation.listingId}`}
-							className='flex text-sm text-accent hover:underline'
+							className='flex text-sm hover:underline text-gray-700 dark:text-gray-300'
 						>
 							{conversation.listingName}
 						</Link>

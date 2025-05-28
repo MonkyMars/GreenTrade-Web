@@ -8,20 +8,18 @@ import snakecaseKeys from 'snakecase-keys';
  */
 export const toggleFavorite = async (
 	listingId: string,
-	userId: string,
 	state: boolean
 ): Promise<boolean> => {
 	try {
 		// Use type-safe retry utility with the appropriate HTTP method
 		const data = snakecaseKeys({
 			listingId,
-			userId,
-		})
+		});
 
 		const response = await retryOperation(
 			() =>
 				state
-					? api.delete(`/api/favorites/${listingId}/${userId}`)
+					? api.delete(`/api/favorites/${listingId}`)
 					: api.post(`/api/favorites`, data),
 			{
 				context: 'Updating favorites',
