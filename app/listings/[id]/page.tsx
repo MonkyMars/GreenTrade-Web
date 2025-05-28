@@ -170,7 +170,7 @@ const ListingPage: NextPage = () => {
 	return (
 		<main className='mx-auto px-4 py-22 max-w-7xl'>
 			<div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
-				{/* Image Gallery - Takes up 2 columns on desktop */}
+				{/* Main content area - Takes up 2 columns on desktop */}
 				<div className='lg:col-span-2 space-y-6'>
 					<div className='rounded-xl overflow-hidden shadow-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800'>
 						<Tabs defaultValue='0' className='w-full'>
@@ -238,22 +238,7 @@ const ListingPage: NextPage = () => {
 								</TabsList>
 							</div>
 						</Tabs>
-					</div>
-
-					{/* Description section */}
-					<div className='bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
-						<div className='flex items-center space-x-2 mb-4'>
-							<FaLeaf className='text-green-600 dark:text-green-500' />
-							<h2 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
-								About This Item
-							</h2>
-						</div>
-						<p className='text-gray-700 dark:text-gray-300 whitespace-pre-line'>
-							{listing.description}
-						</p>
-					</div>
-
-					{/* Eco Attributes Card */}
+					</div>					{/* Eco Attributes Card - Moved up for mobile */}
 					<div className='bg-green-50 dark:bg-green-900/20 rounded-xl shadow-md p-6 border border-green-200 dark:border-green-800/50'>
 						<div className='flex items-center space-x-2 mb-4'>
 							<FaLeaf className='text-green-600 dark:text-green-500' />
@@ -297,6 +282,149 @@ const ListingPage: NextPage = () => {
 								</div>
 							</div>
 						</div>
+					</div>
+
+					{/* Listing Info for mobile - Shows only on mobile */}
+					<div className='lg:hidden bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
+						{/* Title and category */}
+						<div className='mb-5'>
+							<div className='flex items-center justify-between'>
+								<Badge
+									variant='secondary'
+									className='mb-2 bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+								>
+									<category.icon className='mr-1 h-4 w-4' />{' '}
+									{listing.category}
+								</Badge>
+								<Button
+									variant='ghost'
+									size='icon'
+									className='h-8 w-8 rounded-full'
+									onClick={onFavorite}
+									disabled={toggleFavoriteMutation.isPending}
+								>
+									{isFavorited ? (
+										<FaHeart className='h-5 w-5 text-red-500' />
+									) : (
+										<FaRegHeart className='h-5 w-5 text-gray-500 dark:text-gray-400' />
+									)}
+								</Button>
+							</div>
+							<h1 className='text-2xl font-bold text-gray-900 dark:text-gray-100'>
+								{listing.title}
+							</h1>
+						</div>
+
+						{/* Price and negotiable */}
+						<div className='mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg'>
+							<div className='flex items-end'>
+								<span className='text-3xl font-bold text-green-700 dark:text-green-400'>
+									€{listing.price}
+								</span>
+								{listing.negotiable && (
+									<span className='ml-2 text-sm text-gray-600 dark:text-gray-400'>
+										(Negotiable)
+									</span>
+								)}
+							</div>
+						</div>
+
+						{/* Quick details */}
+						<div className='space-y-4 mb-6'>
+							<div className='flex items-center space-x-2'>
+								<div className='w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center'>
+									<condition.icon
+										size={18}
+										className='text-green-600 dark:text-green-400'
+									/>
+								</div>
+								<div>
+									<span className='text-sm text-gray-500 dark:text-gray-400'>
+										Condition
+									</span>
+									<p className='font-medium text-gray-900 dark:text-gray-100'>
+										{condition.name}
+									</p>
+								</div>
+							</div>
+
+							<div className='flex items-center space-x-2'>
+								<div className='w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center'>
+									<FaRegClock
+										size={18}
+										className='text-green-600 dark:text-green-400'
+									/>
+								</div>
+								<div>
+									<span className='text-sm text-gray-500 dark:text-gray-400'>
+										Posted
+									</span>
+									<p className='font-medium text-gray-900 dark:text-gray-100'>
+										{timeAgo}
+									</p>
+								</div>
+							</div>
+
+							<div className='flex items-center space-x-2'>
+								<div className='w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center'>
+									<FaMapMarkerAlt
+										size={18}
+										className='text-green-600 dark:text-green-400'
+									/>
+								</div>
+								<div>
+									<span className='text-sm text-gray-500 dark:text-gray-400'>
+										Location
+									</span>
+									<p className='font-medium text-gray-900 dark:text-gray-100'>
+										{`${listing.location?.city || ''}, ${listing.location?.country || ''}` || 'Unknown City'}
+									</p>
+								</div>
+							</div>
+						</div>
+
+						{/* Action buttons */}
+						<div className='space-y-3'>
+							<ContactSellerButton
+								buyerId={user?.id || ''}
+								sellerId={listing.sellerId}
+								listingId={listing.id}
+								sellerName={listing.sellerUsername}
+								variant="default"
+								className="w-full bg-green-600 hover:bg-green-700"
+							/>
+							<div className='flex gap-2'>
+								<Button variant='primaryOutline' className='flex-1 rounded-lg'>
+									Share
+								</Button>
+								<Button variant='primaryOutline' className='flex-1 rounded-lg'>
+									Report
+								</Button>
+							</div>
+						</div>
+					</div>
+
+					{/* Description section - Moved down for mobile */}
+					<div className='bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
+						<div className='flex items-center space-x-2 mb-4'>
+							<FaLeaf className='text-green-600 dark:text-green-500' />
+							<h2 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
+								About This Item
+							</h2>
+						</div>
+						<p className='text-gray-700 dark:text-gray-300 whitespace-pre-line'>
+							{listing.description}
+						</p>
+					</div>
+
+					{/* Bidding UI for mobile - Shows only on mobile */}
+					<div className='lg:hidden'>
+						<BiddingUi
+							listingId={listing.id}
+							isNegotiable={listing.negotiable}
+							bids={listing.bids}
+							isOwner={listing.sellerId === user?.id}
+						/>
 					</div>
 
 					{/* Seller info for mobile - Shows only on mobile */}
@@ -366,7 +494,7 @@ const ListingPage: NextPage = () => {
 				</div>
 
 				{/* Listing Details - Takes up 1 column on desktop */}
-				<div className='lg:col-span-1'>
+				<div className='lg:col-span-1 lg:flex md:hidden'>
 					<div className='sticky top-20 space-y-6'>
 						<div className='bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
 							{/* Title and category */}
@@ -482,15 +610,15 @@ const ListingPage: NextPage = () => {
 									</Button>
 								</div>
 							</div>
+						</div>						{/* Bidding UI for desktop - Hidden on mobile */}
+						<div className='hidden lg:block'>
+							<BiddingUi
+								listingId={listing.id}
+								isNegotiable={listing.negotiable}
+								bids={listing.bids}
+								isOwner={listing.sellerId === user?.id}
+							/>
 						</div>
-
-						{/* Bidding UI */}
-						<BiddingUi
-							listingId={listing.id}
-							isNegotiable={listing.negotiable}
-							bids={listing.bids}
-							isOwner={listing.sellerId === user?.id}
-						/>
 
 						{/* Seller info for desktop - Hidden on mobile */}
 						<div className='hidden lg:block bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
