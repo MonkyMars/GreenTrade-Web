@@ -491,10 +491,8 @@ const ListingPage: NextPage = () => {
 							</div>
 						</div>
 					</div>
-				</div>
-
-				{/* Listing Details - Takes up 1 column on desktop */}
-				<div className='lg:col-span-1 lg:flex md:hidden'>
+				</div>				{/* Listing Details - Takes up 1 column on desktop, hidden on mobile */}
+				<div className='hidden lg:block lg:col-span-1'>
 					<div className='sticky top-20 space-y-6'>
 						<div className='bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
 							{/* Title and category */}
