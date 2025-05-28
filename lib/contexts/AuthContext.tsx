@@ -11,7 +11,7 @@ import React, {
 import axios from 'axios';
 import { User } from '../types/user';
 import api from '../backend/api/axiosConfig';
-import { getUser } from '@/lib/backend/auth/user';
+import { getUser, resendEmail } from '@/lib/backend/auth/user';
 import { toast } from 'sonner';
 import { AppError, handleError, retryOperation } from '@/lib/errorUtils';
 import { useSearchParams } from 'next/navigation';
@@ -31,6 +31,7 @@ interface AuthContextType {
 	refreshTokens: () => Promise<boolean>;
 	reloadUser: () => Promise<void>;
 	getTokenRemainingTime: () => number | null;
+	resendConfirmationEmail: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -68,22 +69,29 @@ const OAuthRedirectHandler: React.FC<{ onUserLoad: (user: User) => void }> = ({
 			} catch (error) {
 				localStorage.removeItem('userId');
 
-				// Handle common errors and expose appropriate messages for user login experience
-				let errorMessage = 'Login failed. Please try again.';
+				// Handle common errors and expose appropriate messages for OAuth login experience
+				let errorMessage = 'OAuth login failed. Please try again.';
 
 				if (axios.isAxiosError(error)) {
 					if (error.response) {
 						// Server responded with an error status code
-						if (error.response.status === 401) {
-							errorMessage = 'Invalid email or password. Please try again.';
+						const status = error.response.status;
+						if (status === 401) {
+							errorMessage = 'Authentication failed. Please try logging in again.';
+						} else if (status === 403) {
+							errorMessage = 'Please confirm your email address before logging in. Check your inbox for a confirmation email.';
+						} else if (status === 404) {
+							errorMessage = 'Account not found. Please check your credentials or create a new account.';
+						} else if (status === 429) {
+							errorMessage = 'Too many login attempts. Please try again later.';
 						} else if (error.response.data && error.response.data.message) {
 							errorMessage = error.response.data.message;
-						} else if (error.response.status >= 500) {
+						} else if (status >= 500) {
 							errorMessage = 'Server error. Please try again later.';
 						}
 					} else if (error.request) {
 						// No response received
-						errorMessage = 'Network error. Please check your connection.';
+						errorMessage = 'Network error. Please check your connection and try again.';
 					}
 				} else if (error instanceof Error) {
 					errorMessage = error.message;
@@ -91,7 +99,7 @@ const OAuthRedirectHandler: React.FC<{ onUserLoad: (user: User) => void }> = ({
 
 				// Log in development, use proper error tracking in production
 				if (process.env.NODE_ENV !== 'production') {
-					console.error('Login failed:', error);
+					console.error('OAuth login failed:', error);
 				}
 
 				// Display error to user via toast
@@ -273,7 +281,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			setLoading(false);
 		}
 	}, [setupTokenRefresh]);
-
 	// Fix the axios interceptor to handle authentication errors
 	useEffect(() => {
 		const interceptor = api.interceptors.response.use(
@@ -281,10 +288,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			async (error) => {
 				const originalRequest = error.config;
 
+				// Don't attempt token refresh for login/register/auth-related endpoints
+				const authEndpoints = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'];
+				const isAuthEndpoint = authEndpoints.some(endpoint =>
+					originalRequest.url?.includes(endpoint)
+				);
+
 				// Prevent infinite retry loops - check retry flag and status code
+				// Only attempt refresh if we have a valid user session (userId exists)
 				if (
 					error.response?.status === 401 &&
 					!originalRequest._retry &&
+					!isAuthEndpoint &&
+					localStorage.getItem('userId') &&
 					refreshAttempts.current < maxRefreshAttempts
 				) {
 					originalRequest._retry = true;
@@ -439,13 +455,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			if (!user) {
 				throw new AppError('User not found', { code: 'USER_NOT_FOUND' });
-			}
-
-			// Update user state - this will trigger navigation due to authentication state change
+			}			// Update user state - this will trigger navigation due to authentication state change
 			setUser(user);
-
-			// Show success message
-			toast.success(`Logged in successfully as ${user.name}!`);
 		} catch (error) {
 			// Handle error and clean up any partial auth state
 			localStorage.removeItem('userId');
@@ -453,34 +464,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			// Handle common errors and expose appropriate messages for user login experience
 			let errorMessage = 'Login failed. Please try again.';
 
-			if (axios.isAxiosError(error)) {
+			// Check if it's an AppError with axios origin or a direct axios error
+			if (error instanceof AppError && error.isAxiosError) {
+				// Handle AppError that originated from axios
+				const status = error.status;
+				if (status === 401) {
+					errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+				} else if (status === 403) {
+					errorMessage = 'Please confirm your email address before logging in. Check your inbox for a confirmation email.';
+				} else if (status === 404) {
+					errorMessage = 'No account found with this email address. Please check your email or create a new account.';
+				} else if (status === 429) {
+					errorMessage = 'Too many login attempts. Please try again later.';
+				} else if (status && status >= 500) {
+					errorMessage = 'Server error. Please try again later.';
+				} else if (error.message && error.message !== 'Login failed') {
+					// Use the error message if it's not the generic one
+					errorMessage = error.message;
+				}
+
+				if (error.isNetworkError) {
+					errorMessage = 'Network error. Please check your connection.';
+				}
+			} else if (axios.isAxiosError(error)) {
+				// Handle direct axios errors (fallback)
 				if (error.response) {
-					// Server responded with an error status code
-					if (error.response.status === 401) {
-						errorMessage = 'Invalid email or password. Please try again.';
+					const status = error.response.status;
+					if (status === 401) {
+						errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+					} else if (status === 403) {
+						errorMessage = 'Please confirm your email address before logging in. Check your inbox for a confirmation email.';
+					} else if (status === 404) {
+						errorMessage = 'No account found with this email address. Please check your email or create a new account.';
+					} else if (status === 429) {
+						errorMessage = 'Too many login attempts. Please try again later.';
 					} else if (error.response.data && error.response.data.message) {
 						errorMessage = error.response.data.message;
-					} else if (error.response.status >= 500) {
+					} else if (status >= 500) {
 						errorMessage = 'Server error. Please try again later.';
 					}
 				} else if (error.request) {
-					// No response received
 					errorMessage = 'Network error. Please check your connection.';
 				}
 			} else if (error instanceof Error) {
 				errorMessage = error.message;
-			}
-
-			// Log in development, use proper error tracking in production
+			}			// Log in development, use proper error tracking in production
 			if (process.env.NODE_ENV !== 'production') {
 				console.error('Login failed:', error);
-			} else {
-				// In production, this would use a service like Sentry
-				// Example: Sentry.captureException(error);
 			}
-
-			// Display error to user via toast
-			toast.error(errorMessage);
 
 			// Rethrow for component handling with standardized message
 			throw new Error(errorMessage);
@@ -549,19 +580,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 			// Handle common registration errors
 			let errorMessage = 'Registration failed. Please try again.';
 
-			if (axios.isAxiosError(error)) {
+			// Check if it's an AppError with axios origin or a direct axios error
+			if (error instanceof AppError && error.isAxiosError) {
+				// Handle AppError that originated from axios
+				const status = error.status;
+				if (status === 409) {
+					errorMessage = 'An account with this email address already exists. Please use a different email or try logging in instead.';
+				} else if (status === 422) {
+					errorMessage = 'Please check your input. Make sure your email is valid and your password meets the requirements.';
+				} else if (status === 429) {
+					errorMessage = 'Too many registration attempts. Please try again later.';
+				} else if (status && status >= 500) {
+					errorMessage = 'Server error occurred during registration. Please try again later or contact support if the problem persists.';
+				} else if (error.message && error.message !== 'Registration failed') {
+					// Use the error message if it's not the generic one
+					errorMessage = error.message;
+				}
+
+				if (error.isNetworkError) {
+					errorMessage = 'Network error. Please check your connection and try again.';
+				}
+			} else if (axios.isAxiosError(error)) {
+				// Handle direct axios errors (fallback)
 				if (error.response) {
-					if (error.response.status === 409) {
-						errorMessage =
-							'Email already exists. Please use a different email address.';
+					const status = error.response.status;
+					if (status === 409) {
+						errorMessage = 'An account with this email address already exists. Please use a different email or try logging in instead.';
+					} else if (status === 422) {
+						errorMessage = 'Please check your input. Make sure your email is valid and your password meets the requirements.';
+					} else if (status === 429) {
+						errorMessage = 'Too many registration attempts. Please try again later.';
+					} else if (status >= 500) {
+						errorMessage = 'Server error occurred during registration. Please try again later or contact support if the problem persists.';
 					} else if (error.response.data?.message) {
 						errorMessage = error.response.data.message;
-					} else if (error.response.status >= 500) {
-						errorMessage = 'Server error. Please try again later.';
 					}
 				} else if (error.request) {
-					errorMessage =
-						'Network error. Please check your connection and try again.';
+					errorMessage = 'Network error. Please check your connection and try again.';
 				}
 			} else if (error instanceof Error) {
 				errorMessage = error.message;
@@ -631,6 +686,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 		}
 	};
 
+	// Resend confirmation email function
+	const resendConfirmationEmail = async (email: string) => {
+		try {
+			const data = await resendEmail(email);
+			if (!data) {
+				throw new Error('No data returned from resendEmail');
+			}
+			toast.success('Confirmation email resent successfully!');
+		} catch (error) {
+			console.error('Error resending email:', error);
+			toast.error(
+				'Failed to resend confirmation email. Please try again later.'
+			);
+		}
+	};
+
 	const reloadUser = async () => {
 		setLoading(true);
 		try {
@@ -671,26 +742,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 		return remainingTime > 0 ? Math.floor(remainingTime / 1000) : 0; // Return in seconds
 	};
 
-	return (
-		<AuthContext.Provider
-			value={{
-				user,
-				loading,
-				login,
-				register,
-				logout,
-				isAuthenticated: !!user,
-				refreshTokens,
-				reloadUser,
-				getTokenRemainingTime,
-			}}
-		>
-			{/* Wrap the OAuth handler in a Suspense boundary */}
-			<Suspense fallback={null}>
-				<OAuthRedirectHandler onUserLoad={handleSetUser} />
-			</Suspense>
-			{children}
-		</AuthContext.Provider>
+	return (<AuthContext.Provider
+		value={{
+			user,
+			loading,
+			login,
+			register,
+			logout,
+			isAuthenticated: !!user,
+			refreshTokens,
+			reloadUser,
+			getTokenRemainingTime,
+			resendConfirmationEmail,
+		}}
+	>
+		{/* Wrap the OAuth handler in a Suspense boundary */}
+		<Suspense fallback={null}>
+			<OAuthRedirectHandler onUserLoad={handleSetUser} />
+		</Suspense>
+		{children}
+	</AuthContext.Provider>
 	);
 };
 

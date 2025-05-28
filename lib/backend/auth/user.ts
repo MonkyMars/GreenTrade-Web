@@ -173,7 +173,7 @@ export const resendEmail = async (email: string) => {
 	try {
 		// Use our type-safe retry utility
 		const response = await retryOperation(
-			() => api.post('/api/auth/resend_email', { email }),
+			() => api.post('/auth/resend_email', { email }),
 			{
 				context: 'Resending verification email',
 				maxRetries: 2,

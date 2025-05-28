@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FaLeaf, FaEnvelope, FaLock, FaGoogle } from 'react-icons/fa';
@@ -23,7 +23,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 const Login: NextPage = () => {
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const { login } = useAuth();
+	const { login, resendConfirmationEmail } = useAuth();
 	const [formData, setFormData] = useState<LoginFormData>({
 		email: '',
 		password: '',
@@ -33,6 +33,29 @@ const Login: NextPage = () => {
 	>({});
 	const [isLoading, setIsLoading] = useState(false);
 	const [loginError, setLoginError] = useState('');
+	const [isResendingEmail, setIsResendingEmail] = useState(false);
+	const [resendCooldown, setResendCooldown] = useState(0);
+
+	// Effect to handle resend cooldown timer
+	useEffect(() => {
+		let interval: NodeJS.Timeout | null = null;
+
+		if (resendCooldown > 0) {
+			interval = setInterval(() => {
+				setResendCooldown((prev) => {
+					if (prev <= 1) {
+						if (interval) clearInterval(interval);
+						return 0;
+					}
+					return prev - 1;
+				});
+			}, 1000);
+		}
+
+		return () => {
+			if (interval) clearInterval(interval);
+		};
+	}, [resendCooldown]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value, type, checked } = e.target;
@@ -101,7 +124,11 @@ const Login: NextPage = () => {
 			let errorMessage: string;
 
 			if (appError.code === 'INVALID_CREDENTIALS' || appError.status === 401) {
-				errorMessage = 'Invalid email or password. Please try again.';
+				errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+			} else if (appError.status === 403) {
+				errorMessage = 'Please confirm your email address before logging in. Check your inbox for a confirmation email.';
+			} else if (appError.status === 404) {
+				errorMessage = 'No account found with this email address. Please check your email or create a new account.';
 			} else if (appError.code === 'ACCOUNT_LOCKED') {
 				errorMessage = 'Your account has been locked. Please contact support.';
 			} else if (appError.code === 'RATE_LIMITED') {
@@ -142,6 +169,24 @@ const Login: NextPage = () => {
 		}
 	};
 
+	const handleResendConfirmation = async () => {
+		if (!formData.email || isResendingEmail || resendCooldown > 0) {
+			return;
+		}
+
+		setIsResendingEmail(true);
+		try {
+			await resendConfirmationEmail(formData.email);
+			// Start 60-second cooldown timer only on successful resend
+			setResendCooldown(60);
+		} catch (error) {
+			// Error is already handled and displayed by the resendConfirmationEmail function
+			console.error('Failed to resend confirmation email:', error);
+		} finally {
+			setIsResendingEmail(false);
+		}
+	};
+
 	return (
 		<div className='min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4 py-22 sm:px-6 lg:px-8'>
 			<div className='max-w-md w-full space-y-8 p-8 rounded-lg dark:bg-slate-800 shadow-xl'>
@@ -171,14 +216,51 @@ const Login: NextPage = () => {
 
 				{loginError && (
 					<div
-						className='bg-red-100 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded relative'
+						className='bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg relative'
 						role='alert'
 					>
-						<span className='block sm:inline'>
-							{loginError === 'Invalid credentials'
-								? 'Invalid email or password. Please try again.'
-								: loginError}
-						</span>
+						<div className='flex'>
+							<div className='flex-shrink-0'>
+								<svg className='h-5 w-5 text-red-400' viewBox='0 0 20 20' fill='currentColor'>
+									<path fillRule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z' clipRule='evenodd' />
+								</svg>
+							</div>
+							<div className='ml-3'>
+								<h3 className='text-sm font-medium text-red-800 dark:text-red-200'>
+									Login Failed
+								</h3>
+								<div className='mt-1 text-sm text-red-700 dark:text-red-300'>
+									<p>{loginError}</p>
+									{(loginError.includes('confirm your email') || loginError.includes('email not confirmed')) && (
+										<p className='mt-2 text-xs'>
+											Didn&apos;t receive the email?
+											<button
+												type='button'
+												className={`ml-1 underline ${isResendingEmail || resendCooldown > 0
+														? 'cursor-not-allowed opacity-50'
+														: 'cursor-pointer hover:no-underline'
+													}`}
+												onClick={handleResendConfirmation}
+												disabled={isResendingEmail || resendCooldown > 0}
+											>
+												{isResendingEmail
+													? 'Resending...'
+													: resendCooldown > 0
+														? `Resend in ${resendCooldown}s`
+														: 'Resend confirmation'}
+											</button>
+										</p>
+									)}
+									{loginError.includes('No account found') && (
+										<p className='mt-2 text-xs'>
+											<Link href='/register' className='underline hover:no-underline'>
+												Create a new account instead
+											</Link>
+										</p>
+									)}
+								</div>
+							</div>
+						</div>
 					</div>
 				)}
 

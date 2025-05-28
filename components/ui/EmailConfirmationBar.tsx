@@ -5,10 +5,9 @@ import React from 'react';
 import { FiAlertCircle, FiX } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { resendEmail } from '@/lib/backend/auth/user';
 
 export const EmailConfirmationBar: React.FC = () => {
-	const { user } = useAuth();
+	const { user, resendConfirmationEmail } = useAuth();
 	const [isVisible, setIsVisible] = useState(false);
 
 	// Check if user is logged in but hasn't confirmed email (lastSignInAt is undefined)
@@ -20,19 +19,17 @@ export const EmailConfirmationBar: React.FC = () => {
 		setIsVisible(false);
 	};
 
-	const handleResendEmail = async (): Promise<void> => {
-		if (!user) return;
+	const handleResendEmail = async () => {
+		if (!user || !user.email) return;
+
 		try {
-			const data = await resendEmail(user.email);
-			if (!data) {
-				throw new Error('No data returned from resendEmail');
-			}
-			toast.success('Confirmation email resent successfully!');
+			await resendConfirmationEmail(user.email);
+			toast.success('Verification email sent successfully');
 		} catch (error) {
-			console.error('Error resending email:', error);
-			toast.error(
-				'Failed to resend confirmation email. Please try again later.'
-			);
+			if (process.env.NODE_ENV === 'production') {
+				console.trace('Failed to resend verification email:', error);
+			}
+			toast.error('Failed to resend verification email');
 		} finally {
 			handleClose();
 		}
