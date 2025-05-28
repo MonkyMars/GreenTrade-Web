@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getFavorites } from '@/lib/backend/favorites/getFavorites';
@@ -11,42 +11,65 @@ import { Button } from '@/components/ui/button';
 import { FaArrowRight, FaHeart, FaList, FaThLarge } from 'react-icons/fa';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { NextPage } from 'next';
+import { cn } from '@/lib/utils';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { AppError } from '@/lib/errorUtils';
 
 const FavoritesPage: NextPage = () => {
-	const [favorites, setFavorites] = useState<FetchedListing[]>([]);
-	const [loading, setLoading] = useState(true);
 	const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 	const router = useRouter();
 	const { user } = useAuth();
+	const queryClient = useQueryClient();
 
-	useEffect(() => {
-		const loadFavorites = async () => {
-			if (!user) return; // Ensure user is available before fetching
-			try {
-				setLoading(true);
-				const data = await getFavorites();
-				setFavorites(data);
-			} catch (error) {
-				console.error('Error loading favorites:', error);
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		loadFavorites();
-	}, [user]);
-
-	const handleRemoveFavorite = async (listingId: string) => {
-		if (!user) return; // Ensure user is available before toggling favorite
-		try {
-			await toggleFavorite(listingId, user.id, true); // Remove from favorites
-			// Remove from local state after successful toggle
-			setFavorites((prevFavorites) =>
-				prevFavorites.filter((favorite) => favorite.id !== listingId)
-			);
-		} catch (error) {
-			console.error('Error removing from favorites:', error);
+	// Query for favorites
+	const {
+		data: favorites = [],
+		isLoading: loading
+	} = useQuery({
+		queryKey: ['favorites', user?.id],
+		queryFn: getFavorites,
+		enabled: !!user,
+		retry: 2,
+		meta: {
+			errorMessage: 'Failed to load favorites'
 		}
+	});
+
+	// Mutation for removing favorites
+	const removeFavoriteMutation = useMutation({
+		mutationFn: async (listingId: string) => {
+			return toggleFavorite(listingId, true); // Remove from favorites
+		},
+		onSuccess: (_, listingId) => {
+			// Update the favorites cache by removing the item
+			queryClient.setQueryData(['favorites', user?.id], (oldData: FetchedListing[] | undefined) => {
+				return oldData ? oldData.filter(listing => listing.id !== listingId) : [];
+			});
+
+			// Also invalidate individual favorite status queries
+			queryClient.invalidateQueries({
+				queryKey: ['favorite', listingId, user?.id]
+			});
+
+			toast.success('Removed from favorites');
+		},
+		onError: (error) => {
+			const appError = error instanceof AppError
+				? error
+				: AppError.from(error, 'Removing from favorites');
+
+			if (process.env.NODE_ENV !== 'production') {
+				console.error('Error removing from favorites:', appError);
+			}
+
+			toast.error('Failed to remove from favorites');
+		}
+	});
+
+	const handleRemoveFavorite = (listingId: string) => {
+		if (!user) return;
+		removeFavoriteMutation.mutate(listingId);
 	};
 
 	return (
@@ -132,22 +155,26 @@ const FavoritesPage: NextPage = () => {
 								: 'space-y-6'
 						}
 					>
-						{favorites.map((listing) => (
-							<div key={listing.id} className='relative group'>
-								<ListingCard
-									listing={listing}
-									viewMode={viewMode}
-									className='shadow-sm hover:shadow-md transition-shadow duration-300'
-								/>{' '}
-								<button
-									onClick={() => handleRemoveFavorite(listing.id)}
-									className='absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full cursor-pointer shadow-md opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-50 dark:hover:bg-red-900 z-10 border border-gray-200 dark:border-gray-800 hover:scale-110'
-									aria-label='Remove from favorites'
-								>
-									<FaHeart className='h-5 w-5 text-red-500' />
-								</button>
-							</div>
-						))}
+						{favorites.map((listing: FetchedListing) => {
+							const isFavorite = true; // Always true since these are favorites
+							return (
+								<div key={listing.id} className='relative group'>
+									<ListingCard
+										listing={listing}
+										viewMode={viewMode}
+										className='shadow-sm hover:shadow-md transition-shadow duration-300'
+									/>{' '}
+									<button
+										onClick={() => handleRemoveFavorite(listing.id)}
+										disabled={removeFavoriteMutation.isPending}
+										className={cn('absolute top-2 right-2 p-2 bg-white dark:bg-gray-900 rounded-full cursor-pointer shadow-md transition-all duration-200 z-10 border border-gray-200 dark:border-gray-800 hover:scale-110', isFavorite ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-gray-500')}
+										aria-label='Remove from favorites'
+									>
+										<FaHeart className={cn('h-5 w-5', isFavorite ? 'text-red-500' : 'text-gray-400')} />
+									</button>
+								</div>
+							);
+						})}
 					</div>
 				)}
 			</div>

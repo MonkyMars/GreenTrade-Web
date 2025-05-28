@@ -221,10 +221,6 @@ export const getSellerListings = async (
 			);
 		}
 
-		if (validListings.length === 0 && process.env.NODE_ENV === 'production') {
-			toast.info('No valid listings found for this seller.');
-		}
-
 		return validListings;
 	} catch (error) {
 		// Dismiss loading toast if we're in production

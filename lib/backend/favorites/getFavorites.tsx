@@ -35,24 +35,29 @@ export const getFavorites = async (): Promise<FetchedListing[]> => {
 					status: response.status,
 				}
 			);
-		}
-
-		// Convert snake_case to camelCase and validate with Zod
+		}		// Convert snake_case to camelCase and validate with Zod
 		const rawData = response.data.data;
 		const camelCaseData = camelcaseKeys(rawData, { deep: true });
 
+		// Map listingId to id for proper schema validation
+		const mappedData = camelCaseData.map((listing: Record<string, unknown>) => {
+			if (listing.listingId && !listing.id) {
+				listing.id = listing.listingId;
+				delete listing.listingId;
+			}
+			return listing;
+		});
+
 		// Validate each listing with Zod schema
-		const favorites = camelCaseData.map((listing: unknown) =>
+		const favorites = mappedData.map((listing: unknown) =>
 			FetchedListingSchema.parse(listing)
 		);
+
+
 
 		// Dismiss loading toast if in production
 		if (loadingToast && process.env.NODE_ENV === 'production') {
 			toast.dismiss(loadingToast);
-		}
-
-		if (favorites.length === 0 && process.env.NODE_ENV === 'production') {
-			toast.info("You don't have any favorites yet.");
 		}
 
 		return favorites;

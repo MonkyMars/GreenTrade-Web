@@ -15,217 +15,88 @@ import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FetchedListing, FetchedListingSchema } from '@/lib/types/main';
+import { FetchedListing } from '@/lib/types/main';
 import { findCategory } from '@/lib/functions/categories';
-import { useEffect, useState } from 'react';
-import api from '@/lib/backend/api/axiosConfig';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getListings } from '@/lib/backend/listings/getListings';
+import { getSimilarListings } from '@/lib/backend/listings/getSimilarListings';
 import { useRouter } from 'next/navigation';
-import { AppError, retryOperation } from '@/lib/errorUtils';
+import { AppError } from '@/lib/errorUtils';
 import { toast } from 'sonner';
 import { toggleFavorite } from '@/lib/backend/favorites/favorites';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { isFavorite } from '@/lib/backend/favorites/getFavorites';
 import { findCondition } from '@/lib/functions/conditions';
 import ListingCard from '@/components/ui/ListingCard';
-import camelcaseKeys from 'camelcase-keys';
+import BiddingUi from '@/components/ui/BiddingUi';
+import { ContactSellerButton } from '@/components/ui/ContactSellerButton';
+import { NextPage } from 'next';
 
-export default function ListingPage() {
+// Query functions
+const fetchListing = async (id: string): Promise<FetchedListing> => {
+	return getListings(id) as Promise<FetchedListing>;
+};
+
+const fetchFavoriteStatus = async (listingId: string): Promise<boolean> => {
+	return isFavorite(listingId);
+};
+
+const ListingPage: NextPage = () => {
 	const router = useRouter();
-	const [listing, setListing] = useState<FetchedListing | null>(null);
-	const [similarListings, setSimilarListings] = useState<FetchedListing[]>([]);
-	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const params = useParams();
 	const { user } = useAuth();
+	const queryClient = useQueryClient();
 
-	useEffect(() => {
-		const fetchSimilarListings = async (
-			category: string
-		): Promise<FetchedListing[]> => {
-			try {
-				if (!category) {
-					return [];
-				}
-
-				// Use our retry operation utility with proper error typing
-				const response = await retryOperation(
-					() => api.get(`/listings/category/${category}`),
-					{
-						context: 'Fetching similar listings',
-						maxRetries: 2,
-						showToastOnRetry: false, // Don't show toast for these retries
-					}
-				);
-
-				if (!response.data.success) {
-					if (process.env.NODE_ENV !== 'production') {
-						console.log(response);
-					}
-					return [];
-				}
-
-				// Convert the data to the expected format and validate
-				const rawListings = response.data.data;
-
-				if (!rawListings || !Array.isArray(rawListings)) {
-					if (process.env.NODE_ENV !== 'production') {
-						console.error('Invalid data format for similar listings:', rawListings);
-					}
-					return [];
-				}
-
-				const validListings: FetchedListing[] = [];
-				let invalidCount = 0;
-
-				// Process each listing with proper validation
-				for (const rawListing of rawListings) {
-					try {
-						// Convert snake_case to camelCase for field names that need it
-						const listing = camelcaseKeys(rawListing, { deep: true });
-
-						if (listing.id === params.id) {
-							// Skip the current listing
-							continue;
-						}
-
-						// Validate with Zod schema
-						const validListing = FetchedListingSchema.parse(listing);
-						validListings.push(validListing);
-					} catch (error) {
-						invalidCount++;
-						if (process.env.NODE_ENV !== 'production') {
-							console.error('Invalid similar listing detected:', error);
-						}
-					}
-				}
-
-				// Show notification if invalid listings were found
-				if (invalidCount > 0 && process.env.NODE_ENV === 'production') {
-					toast.warning(
-						`${invalidCount} invalid similar listing${invalidCount > 1 ? 's' : ''
-						} skipped.`
-					);
-				}
-
-				return validListings;
-			} catch (error) {
-				// Convert to AppError if not already
-				const appError =
-					error instanceof AppError
-						? error
-						: AppError.from(error, 'Fetching similar listings');
-
-				// Log in development, use proper error tracking in production
-				if (process.env.NODE_ENV !== 'production') {
-					console.error('Error fetching similar listings:', appError);
-				} else {
-					// In production, this would use a service like Sentry
-					// Example: Sentry.captureException(appError);
-				}
-
-				// We don't show toasts for similar listings errors to avoid UI clutter
-				// This is a non-critical feature, so we fail gracefully
-				return [];
+	// Query for the main listing
+	const {
+		data: listing,
+		isLoading: isListingLoading,
+		error: listingError
+	} = useQuery({
+		queryKey: ['listing', params.id],
+		queryFn: () => fetchListing(params.id as string),
+		enabled: !!params.id, retry: (failureCount, error) => {
+			// Don't retry if it's a 404 or similar client error
+			if (error instanceof AppError && error.status && error.status < 500) {
+				return false;
 			}
-		};
+			return failureCount < 2;
+		},
+	});	// Query for similar listings
+	const {
+		data: similarListings = []
+	} = useQuery({
+		queryKey: ['similarListings', listing?.category, params.id],
+		queryFn: () => getSimilarListings(listing!.category, params.id as string),
+		enabled: !!listing?.category,
+		retry: 1, // Limited retries for non-critical feature
+	});
 
-		const fetchData = async () => {
-			setIsLoading(true);
-			// Show loading toast in production
-			const loadingToast =
-				process.env.NODE_ENV === 'production'
-					? toast.loading('Loading listing details...')
-					: undefined;
-
-			try {
-				// getListings already implements our error handling
-				const listingData = (await getListings(
-					params.id as string
-				)) as FetchedListing;
-				setListing(listingData);
-
-				// Fetch similar listings after we have the listing data
-				if (listingData && listingData.category) {
-					const validListings = await fetchSimilarListings(listingData.category);
-					setSimilarListings(validListings);
-				}
-
-				// Dismiss loading toast if it exists
-				if (loadingToast) {
-					toast.dismiss(loadingToast);
-				}
-			} catch (error) {
-				// Dismiss loading toast if it exists
-				if (loadingToast) {
-					toast.dismiss(loadingToast);
-				}
-
-				// Convert to AppError if not already
-				const appError =
-					error instanceof AppError
-						? error
-						: AppError.from(error, 'Fetching listing details');
-
-				// Log in development, use proper error tracking in production
-				if (process.env.NODE_ENV !== 'production') {
-					console.error('Error fetching listing:', appError);
-				} else {
-					// In production, this would use a service like Sentry
-					// Example: Sentry.captureException(appError);
-				}
-
-				// We don't need to show a toast here as getListings already handles error messages
-			} finally {
-				setIsLoading(false);
-			}
-		};
-
-		fetchData();
-	}, [params.id]);
-
-	useEffect(() => {
-		const fetchFavoriteStatus = async () => {
-			if (!listing || !user) return;
-			try {
-				const isFavorited = await isFavorite(listing.id);
-
-				if (isFavorited) {
-					setListing((prevListing) => {
-						if (!prevListing) return null;
-						return {
-							...prevListing,
-							isUserFavorite: isFavorited,
-						};
-					});
-				}
-			} catch (error) {
-				// Handle error silently, as this is not critical
-				console.error('Error fetching favorite status:', error);
-			}
-		};
-
-		fetchFavoriteStatus();
-
-		// Disable to prevent infinite loop
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [listing?.id, user]);
-
-	const onFavorite = async () => {
-		if (!listing || !user) return;
-		try {
-			const favorite = await toggleFavorite(
-				listing.id,
-				user.id,
-				listing.isUserFavorite as boolean
-			);
-			setListing((prevListing) => {
-				if (!prevListing) return null;
-				return {
-					...prevListing,
-					isUserFavorite: favorite,
-				};
-			});
-		} catch (error) {
+	// Query for favorite status
+	const {
+		data: isFavorited = false
+	} = useQuery({
+		queryKey: ['favorite', listing?.id, user?.id],
+		queryFn: () => fetchFavoriteStatus(listing!.id),
+		enabled: !!listing?.id && !!user,
+		retry: 1,
+		meta: {
+			errorMessage: 'Failed to load favorite status'
+		}
+	});
+	// Mutation for toggling favorite
+	const toggleFavoriteMutation = useMutation({
+		mutationFn: async ({ listingId, currentStatus }: {
+			listingId: string;
+			currentStatus: boolean
+		}) => {
+			return toggleFavorite(listingId, currentStatus);
+		},
+		onSuccess: (newFavoriteStatus) => {
+			// Update the favorite status in cache - make sure to use the same query key
+			queryClient.setQueryData(['favorite', listing?.id, user?.id], newFavoriteStatus);
+		},
+		onError: (error) => {
 			const appError =
 				error instanceof AppError
 					? error
@@ -234,14 +105,34 @@ export default function ListingPage() {
 			// Log in development, use proper error tracking in production
 			if (process.env.NODE_ENV !== 'production') {
 				console.error('Error toggling favorite status:', appError);
-			} else {
-				// In production, this would use a service like Sentry
-				// Example: Sentry.captureException(appError);
 			}
 
 			toast.error('Failed to update favorite status');
-		}
+		},
+	});
+
+	const onFavorite = async () => {
+		if (!listing || !user) return;
+
+		toggleFavoriteMutation.mutate({
+			listingId: listing.id,
+			currentStatus: isFavorited,
+		});
 	};
+
+	// Handle loading states
+	const isLoading = isListingLoading;
+	// Handle errors
+	if (listingError) {
+		// If it's a client error (like 404), show not found
+		if (listingError instanceof AppError && listingError.status && listingError.status < 500) {
+			return notFound();
+		}
+
+		// For other errors, you might want to show an error page
+		// For now, we'll show not found as a fallback
+		return notFound();
+	}
 
 	if (isLoading) {
 		return (
@@ -456,12 +347,15 @@ export default function ListingPage() {
 											Verified
 										</Badge>
 									)}
-								</div>
-
-								<div className='mt-4 space-y-2'>
-									<Button variant='default' className='w-full'>
-										Message Seller
-									</Button>
+								</div>								<div className='mt-4 space-y-2'>
+									<ContactSellerButton
+										buyerId={user?.id || ''}
+										sellerId={listing.sellerId}
+										listingId={listing.id}
+										sellerName={listing.sellerUsername}
+										variant="default"
+										className="w-full"
+									/>
 									<Button variant='outline' className='w-full'>
 										View Profile
 									</Button>
@@ -484,14 +378,14 @@ export default function ListingPage() {
 									>
 										<category.icon className='mr-1 h-4 w-4' />{' '}
 										{listing.category}
-									</Badge>
-									<Button
+									</Badge>									<Button
 										variant='ghost'
 										size='icon'
 										className='h-8 w-8 rounded-full'
 										onClick={onFavorite}
+										disabled={toggleFavoriteMutation.isPending}
 									>
-										{listing.isUserFavorite ? (
+										{isFavorited ? (
 											<FaHeart className='h-5 w-5 text-red-500' />
 										) : (
 											<FaRegHeart className='h-5 w-5 text-gray-500 dark:text-gray-400' />
@@ -569,26 +463,34 @@ export default function ListingPage() {
 										</p>
 									</div>
 								</div>
-							</div>
-
-							{/* Action buttons */}
+							</div>							{/* Action buttons */}
 							<div className='space-y-3'>
-								<Button className='w-full bg-green-600 hover:bg-green-700'>
-									Contact Seller
-								</Button>
-								<Button variant='primaryOutline' className='w-full'>
-									Make an Offer
-								</Button>
+								<ContactSellerButton
+									buyerId={user?.id || ''}
+									sellerId={listing.sellerId}
+									listingId={listing.id}
+									sellerName={listing.sellerUsername}
+									variant="default"
+									className="w-full bg-green-600 hover:bg-green-700"
+								/>
 								<div className='flex gap-2'>
-									<Button variant='ghost' className='flex-1 rounded-lg'>
+									<Button variant='primaryOutline' className='flex-1 rounded-lg'>
 										Share
 									</Button>
-									<Button variant='ghost' className='flex-1 rounded-lg'>
+									<Button variant='primaryOutline' className='flex-1 rounded-lg'>
 										Report
 									</Button>
 								</div>
 							</div>
 						</div>
+
+						{/* Bidding UI */}
+						<BiddingUi
+							listingId={listing.id}
+							isNegotiable={listing.negotiable}
+							bids={listing.bids}
+							isOwner={listing.sellerId === user?.id}
+						/>
 
 						{/* Seller info for desktop - Hidden on mobile */}
 						<div className='hidden lg:block bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
@@ -680,3 +582,5 @@ export default function ListingPage() {
 		</main>
 	);
 }
+
+export default ListingPage;

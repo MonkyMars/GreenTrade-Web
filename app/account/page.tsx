@@ -6,10 +6,8 @@ import { User } from '@/lib/types/user';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { getSellerListings } from '@/lib/backend/listings/getListings';
-import { FetchedListing } from '@/lib/types/main';
 import { calculateAverageEcoScore } from '@/lib/functions/calculateEcoScore';
 import { getReviews } from '@/lib/backend/reviews/getReviews';
-import { FetchedReview } from '@/lib/types/review';
 import api from '@/lib/backend/api/axiosConfig';
 import { NextPage } from 'next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,6 +21,7 @@ import ActivityTabs from '@/components/account/ActivityTabs';
 import { AppError } from '@/lib/errorUtils';
 import { getFavorites } from '@/lib/backend/favorites/getFavorites';
 import { fetchCountriesInEurope } from '@/lib/functions/countries';
+import { useQuery } from '@tanstack/react-query';
 
 interface ActiveTab {
 	activeTab: 'profile' | 'seller' | 'security' | 'delete';
@@ -39,10 +38,7 @@ const AccountPage: NextPage = () => {
 	const [user, setUser] = useState<User | null>(null);
 	const [activeTab, setActiveTab] = useState<ActiveTab['activeTab']>('profile');
 	const [updateSuccess, setUpdateSuccess] = useState<string>('');
-	const [userListings, setUserListings] = useState<FetchedListing[]>([]);
-	const [userReviews, setUserReviews] = useState<FetchedReview[]>([]);
 	const [disabled, setDisabled] = useState<boolean>(false);
-	const [userFavorites, setUserFavorites] = useState<FetchedListing[]>([]);
 	const [error, setError] = useState<string | null>(null);
 
 	// Update user data when auth state changes
@@ -77,46 +73,27 @@ const AccountPage: NextPage = () => {
 	};
 
 	// Fetch user listings and reviews
-	useEffect(() => {
-		if (!user?.id) return;
+	// Use React Query for fetching user data
+	const { data: userListings = [] } = useQuery({
+		queryKey: ['userListings', user?.id],
+		queryFn: () => getSellerListings(user!.id),
+		enabled: !!user?.id,
+		staleTime: 5 * 60 * 1000, // 5 minutes
+	});
 
-		const fetchUserListings = async () => {
-			try {
-				const data = await getSellerListings(user.id);
-				if (data.length > 0) {
-					setUserListings(data);
-				}
-			} catch (error) {
-				console.error('Error fetching user listings:', error);
-			}
-		};
+	const { data: userReviews = [] } = useQuery({
+		queryKey: ['userReviews', user?.id],
+		queryFn: () => getReviews(user!.id),
+		enabled: !!user?.id,
+		staleTime: 5 * 60 * 1000, // 5 minutes
+	});
 
-		const fetchUserReviews = async () => {
-			try {
-				const data = await getReviews(user.id);
-				if (data.length > 0) {
-					setUserReviews(data);
-				}
-			} catch (error) {
-				console.error('Error fetching user reviews:', error);
-			}
-		};
-
-		const fetchUserFavorites = async () => {
-			try {
-				const response: FetchedListing[] = await getFavorites();
-				if (response.length > 0) {
-					setUserFavorites(response);
-				}
-			} catch (error) {
-				console.error('Error fetching user favorites:', error);
-			}
-		};
-
-		fetchUserListings();
-		fetchUserReviews();
-		fetchUserFavorites();
-	}, [user?.id]);
+	const { data: userFavorites = [] } = useQuery({
+		queryKey: ['userFavorites', user?.id],
+		queryFn: () => getFavorites(),
+		enabled: !!user?.id,
+		staleTime: 5 * 60 * 1000, // 5 minutes
+	});
 
 	// Handle user data update
 	const handleUpdateUser = async (e: React.FormEvent) => {
@@ -199,9 +176,7 @@ const AccountPage: NextPage = () => {
 		};
 
 		try {
-			console.log('Updating user data:', updatedUserData);
 			const response = await api.patch(`/api/auth/user`, updatedUserData);
-			console.log('Update response:', response.data);
 
 			if (!response.data.success) {
 				setError(response.data.message || 'Failed to update user data');
