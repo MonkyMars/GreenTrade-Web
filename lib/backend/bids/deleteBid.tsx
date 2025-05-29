@@ -1,23 +1,23 @@
 import { AppError } from '@/lib/errorUtils';
+import api from '../api/axiosConfig';
 
 export async function deleteBid(bidId: string): Promise<{ message: string }> {
 	try {
-		const response = await fetch(`/api/bid/${bidId}`, {
+		const response = await api.delete(`/api/bid/${bidId}`, {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
 			},
 		});
-		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({}));
+		if (response.status !== 200) {
+			const errorData = response.data.message;
 			throw new AppError(
 				errorData.error || `Failed to delete bid: ${response.status}`,
 				{ status: response.status, code: 'BID_DELETION_FAILED' }
 			);
 		}
 
-		const result = await response.json();
-		return result;
+		return response.data.data;
 	} catch (error) {
 		if (error instanceof AppError) {
 			throw error;

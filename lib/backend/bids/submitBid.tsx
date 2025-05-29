@@ -1,6 +1,7 @@
 import { AppError } from '@/lib/errorUtils';
 import { BidSchema } from '@/lib/types/main';
 import { z } from 'zod';
+import api from '../api/axiosConfig';
 
 export interface SubmitBidData {
 	listingId: string;
@@ -12,26 +13,19 @@ export async function submitBid(data: SubmitBidData): Promise<{ message: string 
 		// Validate input data
 		const validatedData = BidSchema.pick({ listingId: true, price: true }).parse(data);
 
-		const response = await fetch(`/api/bid/${validatedData.listingId}`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({
-				price: validatedData.price,
-			}),
+		const response = await api.post(`/api/bid/${validatedData.listingId}`, {
+			price: validatedData.price,
 		});
 
-		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({}));
+		if (response.status !== 200) {
+			const errorData = response.data.message;
 			throw new AppError(
 				errorData.error || `Failed to submit bid: ${response.status}`,
 				{ status: response.status, code: 'BID_SUBMISSION_FAILED' }
 			);
 		}
 
-		const result = await response.json();
-		return result;
+		return response.data.data;
 	} catch (error) {
 		if (error instanceof AppError) {
 			throw error;

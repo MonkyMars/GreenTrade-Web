@@ -88,7 +88,6 @@ export const FetchedListingSchema = UploadListingSchema.extend({
 	sellerRating: z.number().min(0).max(5),
 	sellerVerified: z.boolean(),
 	isUserFavorite: z.boolean().optional(),
-	bids: z.array(FetchedBidSchema).optional(),
 });
 
 // Type inference from schemas

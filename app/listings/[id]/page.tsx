@@ -31,6 +31,7 @@ import ListingCard from '@/components/ui/ListingCard';
 import BiddingUi from '@/components/ui/BiddingUi';
 import { ContactSellerButton } from '@/components/ui/ContactSellerButton';
 import { NextPage } from 'next';
+import { getBids } from '@/lib/backend/bids/getBids';
 
 // Query functions
 const fetchListing = async (id: string): Promise<FetchedListing> => {
@@ -81,6 +82,14 @@ const ListingPage: NextPage = () => {
 			errorMessage: 'Failed to load favorite status',
 		},
 	});
+
+	const { data: bids = [] } = useQuery({
+		queryKey: ['bids', listing?.id],
+		queryFn: () => getBids(listing!.id),
+		enabled: !!listing,
+		retry: 1, // Limited retries for non-critical feature
+	})
+
 	// Mutation for toggling favorite
 	const toggleFavoriteMutation = useMutation({
 		mutationFn: async ({
@@ -427,7 +436,7 @@ const ListingPage: NextPage = () => {
 						<BiddingUi
 							listingId={listing.id}
 							isNegotiable={listing.negotiable}
-							bids={listing.bids}
+							bids={bids}
 							isOwner={listing.sellerId === user?.id}
 						/>
 					</div>
@@ -627,7 +636,7 @@ const ListingPage: NextPage = () => {
 							<BiddingUi
 								listingId={listing.id}
 								isNegotiable={listing.negotiable}
-								bids={listing.bids}
+								bids={bids}
 								isOwner={listing.sellerId === user?.id}
 							/>
 						</div>
