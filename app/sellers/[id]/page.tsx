@@ -311,9 +311,15 @@ const SellerPage: NextPage = () => {
 								About {seller.name}
 							</h2>
 						</div>
-						<p className='text-gray-700 dark:text-gray-300 whitespace-pre-line'>
-							{seller.bio || "This seller hasn't added a bio yet."}
-						</p>
+						{seller.bio ? (
+							<p className='text-sm text-gray-500 dark:text-gray-400 mb-2'>
+								{seller.bio}
+							</p>
+						) : (
+							<p className='text-sm text-gray-500 dark:text-gray-400 mb-2'>
+								This seller has not provided a bio.
+							</p>
+						)}
 					</div>
 
 					{/* Message Form */}
