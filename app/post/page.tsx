@@ -321,7 +321,6 @@ const PostListingPage: NextPage = () => {
 				sellerCreatedAt: user?.createdAt || new Date(),
 				sellerRating: 0,
 				sellerVerified: false,
-				bids: [],
 			};
 			setPreviewListing(previewListing);
 		}
