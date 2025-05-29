@@ -51,21 +51,20 @@ const ListingPage: NextPage = () => {
 	const {
 		data: listing,
 		isLoading: isListingLoading,
-		error: listingError
+		error: listingError,
 	} = useQuery({
 		queryKey: ['listing', params.id],
 		queryFn: () => fetchListing(params.id as string),
-		enabled: !!params.id, retry: (failureCount, error) => {
+		enabled: !!params.id,
+		retry: (failureCount, error) => {
 			// Don't retry if it's a 404 or similar client error
 			if (error instanceof AppError && error.status && error.status < 500) {
 				return false;
 			}
 			return failureCount < 2;
 		},
-	});	// Query for similar listings
-	const {
-		data: similarListings = []
-	} = useQuery({
+	}); // Query for similar listings
+	const { data: similarListings = [] } = useQuery({
 		queryKey: ['similarListings', listing?.category, params.id],
 		queryFn: () => getSimilarListings(listing!.category, params.id as string),
 		enabled: !!listing?.category,
@@ -73,28 +72,32 @@ const ListingPage: NextPage = () => {
 	});
 
 	// Query for favorite status
-	const {
-		data: isFavorited = false
-	} = useQuery({
+	const { data: isFavorited = false } = useQuery({
 		queryKey: ['favorite', listing?.id, user?.id],
 		queryFn: () => fetchFavoriteStatus(listing!.id),
 		enabled: !!listing?.id && !!user,
 		retry: 1,
 		meta: {
-			errorMessage: 'Failed to load favorite status'
-		}
+			errorMessage: 'Failed to load favorite status',
+		},
 	});
 	// Mutation for toggling favorite
 	const toggleFavoriteMutation = useMutation({
-		mutationFn: async ({ listingId, currentStatus }: {
+		mutationFn: async ({
+			listingId,
+			currentStatus,
+		}: {
 			listingId: string;
-			currentStatus: boolean
+			currentStatus: boolean;
 		}) => {
 			return toggleFavorite(listingId, currentStatus);
 		},
 		onSuccess: (newFavoriteStatus) => {
 			// Update the favorite status in cache - make sure to use the same query key
-			queryClient.setQueryData(['favorite', listing?.id, user?.id], newFavoriteStatus);
+			queryClient.setQueryData(
+				['favorite', listing?.id, user?.id],
+				newFavoriteStatus
+			);
 		},
 		onError: (error) => {
 			const appError =
@@ -125,7 +128,11 @@ const ListingPage: NextPage = () => {
 	// Handle errors
 	if (listingError) {
 		// If it's a client error (like 404), show not found
-		if (listingError instanceof AppError && listingError.status && listingError.status < 500) {
+		if (
+			listingError instanceof AppError &&
+			listingError.status &&
+			listingError.status < 500
+		) {
 			return notFound();
 		}
 
@@ -238,7 +245,8 @@ const ListingPage: NextPage = () => {
 								</TabsList>
 							</div>
 						</Tabs>
-					</div>					{/* Eco Attributes Card - Moved up for mobile */}
+					</div>{' '}
+					{/* Eco Attributes Card - Moved up for mobile */}
 					<div className='bg-green-50 dark:bg-green-900/20 rounded-xl shadow-md p-6 border border-green-200 dark:border-green-800/50'>
 						<div className='flex items-center space-x-2 mb-4'>
 							<FaLeaf className='text-green-600 dark:text-green-500' />
@@ -283,7 +291,6 @@ const ListingPage: NextPage = () => {
 							</div>
 						</div>
 					</div>
-
 					{/* Listing Info for mobile - Shows only on mobile */}
 					<div className='lg:hidden bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
 						{/* Title and category */}
@@ -293,8 +300,7 @@ const ListingPage: NextPage = () => {
 									variant='secondary'
 									className='mb-2 bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
 								>
-									<category.icon className='mr-1 h-4 w-4' />{' '}
-									{listing.category}
+									<category.icon className='mr-1 h-4 w-4' /> {listing.category}
 								</Badge>
 								<Button
 									variant='ghost'
@@ -377,7 +383,8 @@ const ListingPage: NextPage = () => {
 										Location
 									</span>
 									<p className='font-medium text-gray-900 dark:text-gray-100'>
-										{`${listing.location?.city || ''}, ${listing.location?.country || ''}` || 'Unknown City'}
+										{`${listing.location?.city || ''}, ${listing.location?.country || ''}` ||
+											'Unknown City'}
 									</p>
 								</div>
 							</div>
@@ -390,8 +397,8 @@ const ListingPage: NextPage = () => {
 								sellerId={listing.sellerId}
 								listingId={listing.id}
 								sellerName={listing.sellerUsername}
-								variant="default"
-								className="w-full bg-green-600 hover:bg-green-700"
+								variant='default'
+								className='w-full bg-green-600 hover:bg-green-700'
 							/>
 							<div className='flex gap-2'>
 								<Button variant='primaryOutline' className='flex-1 rounded-lg'>
@@ -403,7 +410,6 @@ const ListingPage: NextPage = () => {
 							</div>
 						</div>
 					</div>
-
 					{/* Description section - Moved down for mobile */}
 					<div className='bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
 						<div className='flex items-center space-x-2 mb-4'>
@@ -416,7 +422,6 @@ const ListingPage: NextPage = () => {
 							{listing.description}
 						</p>
 					</div>
-
 					{/* Bidding UI for mobile - Shows only on mobile */}
 					<div className='lg:hidden'>
 						<BiddingUi
@@ -426,7 +431,6 @@ const ListingPage: NextPage = () => {
 							isOwner={listing.sellerId === user?.id}
 						/>
 					</div>
-
 					{/* Seller info for mobile - Shows only on mobile */}
 					<div className='lg:hidden bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
 						<div className='flex items-center space-x-4'>
@@ -475,23 +479,25 @@ const ListingPage: NextPage = () => {
 											Verified
 										</Badge>
 									)}
-								</div>								<div className='mt-4 space-y-2'>
+								</div>{' '}
+								<div className='mt-4 space-y-2'>
 									<ContactSellerButton
 										buyerId={user?.id || ''}
 										sellerId={listing.sellerId}
 										listingId={listing.id}
 										sellerName={listing.sellerUsername}
-										variant="default"
-										className="w-full"
+										variant='default'
+										className='w-full'
 									/>
-									<Button variant='outline' className='w-full'>
+									<Button variant='outline' className='w-full' onClick={() => router.push(`/sellers/${listing.sellerId}`)}>
 										View Profile
 									</Button>
 								</div>
 							</div>
 						</div>
 					</div>
-				</div>				{/* Listing Details - Takes up 1 column on desktop, hidden on mobile */}
+				</div>{' '}
+				{/* Listing Details - Takes up 1 column on desktop, hidden on mobile */}
 				<div className='hidden lg:block lg:col-span-1'>
 					<div className='sticky top-20 space-y-6'>
 						<div className='bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
@@ -504,7 +510,8 @@ const ListingPage: NextPage = () => {
 									>
 										<category.icon className='mr-1 h-4 w-4' />{' '}
 										{listing.category}
-									</Badge>									<Button
+									</Badge>{' '}
+									<Button
 										variant='ghost'
 										size='icon'
 										className='h-8 w-8 rounded-full'
@@ -522,7 +529,6 @@ const ListingPage: NextPage = () => {
 									{listing.title}
 								</h1>
 							</div>
-
 							{/* Price and negotiable */}
 							<div className='mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg'>
 								<div className='flex items-end'>
@@ -536,7 +542,6 @@ const ListingPage: NextPage = () => {
 									)}
 								</div>
 							</div>
-
 							{/* Quick details */}
 							<div className='space-y-4 mb-6'>
 								<div className='flex items-center space-x-2'>
@@ -585,30 +590,39 @@ const ListingPage: NextPage = () => {
 											Location
 										</span>
 										<p className='font-medium text-gray-900 dark:text-gray-100'>
-											{`${listing.location?.city || ''}, ${listing.location?.country || ''}` || 'Unknown City'}
+											{`${listing.location?.city || ''}, ${listing.location?.country || ''}` ||
+												'Unknown City'}
 										</p>
 									</div>
 								</div>
-							</div>							{/* Action buttons */}
+							</div>{' '}
+							{/* Action buttons */}
 							<div className='space-y-3'>
 								<ContactSellerButton
 									buyerId={user?.id || ''}
 									sellerId={listing.sellerId}
 									listingId={listing.id}
 									sellerName={listing.sellerUsername}
-									variant="default"
-									className="w-full bg-green-600 hover:bg-green-700"
+									variant='default'
+									className='w-full bg-green-600 hover:bg-green-700'
 								/>
 								<div className='flex gap-2'>
-									<Button variant='primaryOutline' className='flex-1 rounded-lg'>
+									<Button
+										variant='primaryOutline'
+										className='flex-1 rounded-lg'
+									>
 										Share
 									</Button>
-									<Button variant='primaryOutline' className='flex-1 rounded-lg'>
+									<Button
+										variant='primaryOutline'
+										className='flex-1 rounded-lg'
+									>
 										Report
 									</Button>
 								</div>
 							</div>
-						</div>						{/* Bidding UI for desktop - Hidden on mobile */}
+						</div>{' '}
+						{/* Bidding UI for desktop - Hidden on mobile */}
 						<div className='hidden lg:block'>
 							<BiddingUi
 								listingId={listing.id}
@@ -617,7 +631,6 @@ const ListingPage: NextPage = () => {
 								isOwner={listing.sellerId === user?.id}
 							/>
 						</div>
-
 						{/* Seller info for desktop - Hidden on mobile */}
 						<div className='hidden lg:block bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
 							<h3 className='text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center'>
@@ -707,6 +720,6 @@ const ListingPage: NextPage = () => {
 			)}
 		</main>
 	);
-}
+};
 
 export default ListingPage;

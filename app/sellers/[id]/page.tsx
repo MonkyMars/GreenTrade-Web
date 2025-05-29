@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { FaStar, FaCheckCircle, FaRegClock, FaEnvelope } from 'react-icons/fa';
+import { FaStar, FaCheckCircle, FaRegClock, FaEnvelope, FaPencilAlt } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getSellerListings } from '@/lib/backend/listings/getListings';
@@ -128,8 +128,10 @@ const SellerPage: NextPage = () => {
 		});
 	};
 
-	// Handle loading states
-	const isLoading = isSellerLoading;
+	const handleReviewClick = () => {
+		if (!seller) return;
+		router.push(`/sellers/${seller.id}/review`)
+	};
 
 	// Handle errors
 	if (sellerError) {
@@ -171,7 +173,7 @@ const SellerPage: NextPage = () => {
 		);
 	}
 
-	if (isLoading) {
+	if (isSellerLoading) {
 		return (
 			<div className='mx-auto px-4 py-8 max-w-7xl'>
 				<div className='flex items-center justify-center h-96'>
@@ -236,21 +238,30 @@ const SellerPage: NextPage = () => {
 											</Badge>
 										)}
 									</div>
-								</div>
-
-								{/* Rating and member info */}
+								</div>								{/* Rating and member info */}
 								<div className='space-y-3 mb-6'>
 									<div className='flex items-center'>
 										<div className='flex items-center'>
-											{[...Array(5)].map((_, index) => (
-												<FaStar
-													key={index}
-													className={`h-4 w-4 ${index < Math.floor(seller.rating)
-														? 'text-yellow-400'
-														: 'text-gray-300 dark:text-gray-600'
-														}`}
-												/>
-											))}
+											{[...Array(5)].map((_, index) => {
+												const hasHalfStar =
+													index + 0.5 === Math.floor(seller.rating) + 0.5 &&
+													!Number.isInteger(seller.rating);
+												return index < Math.floor(seller.rating) ? (
+													<FaStar key={index} className='h-4 w-4 text-yellow-400' />
+												) : hasHalfStar ? (
+													<div key={index} className='relative'>
+														<FaStar className='h-4 w-4 text-gray-300 dark:text-gray-600' />
+														<div className='absolute top-0 left-0 overflow-hidden w-[50%]'>
+															<FaStar className='h-4 w-4 text-yellow-400' />
+														</div>
+													</div>
+												) : (
+													<FaStar
+														key={index}
+														className='h-4 w-4 text-gray-300 dark:text-gray-600'
+													/>
+												);
+											})}
 										</div>
 										<span className='ml-2 text-gray-700 dark:text-gray-300 font-medium'>
 											{seller.rating.toFixed(1)}
@@ -369,23 +380,32 @@ const SellerPage: NextPage = () => {
 									<span className='font-medium text-gray-900 dark:text-gray-100'>
 										{sellerReviews.length}
 									</span>
-								</div>
-
-								<div className='flex items-center justify-between'>
+								</div>								<div className='flex items-center justify-between'>
 									<span className='text-gray-700 dark:text-gray-300'>
 										Rating
 									</span>
 									<div className='flex items-center'>
 										<div className='flex items-center'>
-											{[...Array(5)].map((_, i) => (
-												<FaStar
-													key={i}
-													className={`w-4 h-4 ${i < Math.floor(seller.rating)
-														? 'text-yellow-400'
-														: 'text-gray-300 dark:text-gray-600'
-														}`}
-												/>
-											))}
+											{[...Array(5)].map((_, i) => {
+												const hasHalfStar =
+													i + 0.5 === Math.floor(seller.rating) + 0.5 &&
+													!Number.isInteger(seller.rating);
+												return i < Math.floor(seller.rating) ? (
+													<FaStar key={i} className='w-4 h-4 text-yellow-400' />
+												) : hasHalfStar ? (
+													<div key={i} className='relative'>
+														<FaStar className='w-4 h-4 text-gray-300 dark:text-gray-600' />
+														<div className='absolute top-0 left-0 overflow-hidden w-[50%]'>
+															<FaStar className='w-4 h-4 text-yellow-400' />
+														</div>
+													</div>
+												) : (
+													<FaStar
+														key={i}
+														className='w-4 h-4 text-gray-300 dark:text-gray-600'
+													/>
+												);
+											})}
 										</div>
 										<span className='ml-2 font-medium text-gray-900 dark:text-gray-100'>
 											{seller.rating.toFixed(1)}
@@ -447,14 +467,22 @@ const SellerPage: NextPage = () => {
 
 			{/* Reviews Section */}
 			<div className='bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
-				<div className='flex items-center space-x-2 mb-6'>
-					<FaStar className='text-yellow-500' />
-					<h2 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
-						Reviews for {seller.name}
-					</h2>
-					<Badge variant='secondary' className='bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'>
-						{sellerReviews.length} {sellerReviews.length === 1 ? 'review' : 'reviews'}
-					</Badge>
+				<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6'>
+					<div className='flex items-center space-x-2'>
+						<FaStar className='text-yellow-500' />
+						<h2 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
+							Reviews for {seller.name}
+						</h2>
+						<Badge variant='secondary' className='bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'>
+							{sellerReviews.length} {sellerReviews.length === 1 ? 'review' : 'reviews'}
+						</Badge>
+					</div>
+					<div className='flex-shrink-0'>
+						<Button variant={'primaryOutline'} onClick={handleReviewClick} className='w-full sm:w-auto'>
+							<FaPencilAlt className='mr-2 h-4 w-4' />
+							Write a Review
+						</Button>
+					</div>
 				</div>
 
 				{sellerReviews.length === 0 ? (

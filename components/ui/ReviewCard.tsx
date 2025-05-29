@@ -12,15 +12,26 @@ const ReviewCard = ({ review, className = '' }: ReviewCardProps) => {
 	// Generate stars based on rating
 	const renderStars = () => {
 		const stars = [];
+		const rating = review.rating;
+
 		for (let i = 1; i <= 5; i++) {
+			let starClass = '';
+
+			if (i <= Math.floor(rating)) {
+				// Full star
+				starClass = 'text-yellow-400';
+			} else if (i === Math.ceil(rating) && rating % 1 !== 0) {
+				// Partial star - for simplicity we'll show it as full since we can't easily show half stars with FontAwesome
+				starClass = 'text-yellow-400';
+			} else {
+				// Empty star
+				starClass = 'text-gray-300 dark:text-gray-600';
+			}
+
 			stars.push(
 				<FaStar
 					key={i}
-					className={`h-4 w-4 ${
-						i <= review.rating
-							? 'text-yellow-400'
-							: 'text-gray-300 dark:text-gray-600'
-					}`}
+					className={`h-4 w-4 ${starClass}`}
 				/>
 			);
 		}
@@ -56,9 +67,13 @@ const ReviewCard = ({ review, className = '' }: ReviewCardProps) => {
 								</>
 							)}
 						</div>
-					</div>
+					</div>			</div>
+				<div className='flex items-center'>
+					<div className='flex'>{renderStars()}</div>
+					<span className='ml-2 text-sm text-gray-600 dark:text-gray-400'>
+						{review.rating.toFixed(1)}
+					</span>
 				</div>
-				<div className='flex'>{renderStars()}</div>
 			</div>
 
 			<div className='mt-4'>

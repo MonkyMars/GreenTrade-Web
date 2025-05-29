@@ -13,9 +13,7 @@ export const ReviewSchema = z.object({
 export const FetchedReviewSchema = ReviewSchema.extend({
 	id: z.string(),
 	createdAt: z.date().or(z.string().pipe(z.coerce.date())),
-	updatedAt: z.date().or(z.string().pipe(z.coerce.date())),
 	userName: z.string(),
-	userPicture: z.string(), // TODO: add user picture to the review
 });
 
 export type Review = z.infer<typeof ReviewSchema>;
