@@ -1,27 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { FaStar, FaCheckCircle, FaRegClock, FaEnvelope, FaPencilAlt } from 'react-icons/fa';
+import { FaStar, FaCheckCircle, FaRegClock, FaPencilAlt } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getSellerListings } from '@/lib/backend/listings/getListings';
 import ListingCard from '@/components/ui/ListingCard';
-import { toast } from 'sonner';
 import { AppError } from '@/lib/errorUtils';
 import { getReviews } from '@/lib/backend/reviews/getReviews';
 import ReviewCard from '@/components/ui/ReviewCard';
 import { NextPage } from 'next';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { getSeller } from '@/lib/backend/sellers/getSeller';
-import { sendMessage } from '@/lib/backend/messages/sendMessage';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 const SellerPage: NextPage = () => {
 	const router = useRouter();
 	const params = useParams();
-	const [messageOpen, setMessageOpen] = useState(false);
-	const [message, setMessage] = useState('');
+	const { user } = useAuth();
 
 	// Query for seller data
 	const {
@@ -60,73 +57,6 @@ const SellerPage: NextPage = () => {
 		enabled: !!seller?.id,
 		retry: 1,
 	});
-
-	// Mutation for sending messages
-	const sendMessageMutation = useMutation({
-		mutationFn: async ({ sellerId, message }: { sellerId: string; message: string }) => {
-			return sendMessage(sellerId, message);
-		},
-		onSuccess: () => {
-			toast.success('Message sent successfully!');
-			setMessage('');
-			setMessageOpen(false);
-		},
-		onError: (error) => {
-			const appError =
-				error instanceof AppError
-					? error
-					: AppError.from(error, 'Sending message');
-
-			// Handle error properly with user feedback
-			let errorMessage = 'Failed to send message. Please try again.';
-
-			if (appError.status === 401) {
-				errorMessage = 'Please log in to send messages.';
-			} else if (appError.message) {
-				errorMessage = appError.message;
-			}
-
-			toast.error(errorMessage);
-
-			// Log in development, use proper error tracking in production
-			if (process.env.NODE_ENV !== 'production') {
-				console.error('Error sending message:', appError);
-			}
-		},
-	});
-
-	// Handle escape key to close message form
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'Escape') {
-				setMessageOpen(false);
-			}
-		};
-
-		window.addEventListener('keydown', handleKeyDown);
-		return () => {
-			window.removeEventListener('keydown', handleKeyDown);
-		};
-	}, []);
-
-	const handleSendMessage = async (e: React.FormEvent) => {
-		e.preventDefault();
-
-		if (!message.trim()) {
-			toast.error('Please enter a message');
-			return;
-		}
-
-		if (!seller) {
-			toast.error('Seller information not available');
-			return;
-		}
-
-		sendMessageMutation.mutate({
-			sellerId: seller.id,
-			message,
-		});
-	};
 
 	const handleReviewClick = () => {
 		if (!seller) return;
@@ -238,7 +168,8 @@ const SellerPage: NextPage = () => {
 											</Badge>
 										)}
 									</div>
-								</div>								{/* Rating and member info */}
+								</div>
+								{/* Rating and member info */}
 								<div className='space-y-3 mb-6'>
 									<div className='flex items-center'>
 										<div className='flex items-center'>
@@ -288,17 +219,6 @@ const SellerPage: NextPage = () => {
 										</div>
 									</div>
 								</div>
-
-								{/* Action buttons for mobile */}
-								<div className='lg:hidden'>
-									<Button
-										onClick={() => setMessageOpen(!messageOpen)}
-										className='w-full bg-green-600 hover:bg-green-700'
-									>
-										<FaEnvelope className='mr-2 h-4 w-4' />
-										Message Seller
-									</Button>
-								</div>
 							</div>
 						</div>
 					</div>
@@ -321,42 +241,6 @@ const SellerPage: NextPage = () => {
 							</p>
 						)}
 					</div>
-
-					{/* Message Form */}
-					{messageOpen && (
-						<div className='bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-800'>
-							<h3 className='text-lg font-medium text-gray-900 dark:text-gray-100 mb-4'>
-								Send a Message
-							</h3>
-							<form onSubmit={handleSendMessage}>
-								<textarea
-									className='w-full px-4 py-3 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-800 resize-none'
-									rows={4}
-									placeholder='Write your message here...'
-									value={message}
-									onChange={(e) => setMessage(e.target.value)}
-									required
-								></textarea>
-								<div className='flex justify-end gap-3 mt-4'>
-									<Button
-										type='button'
-										variant='ghost'
-										onClick={() => setMessageOpen(false)}
-										disabled={sendMessageMutation.isPending}
-									>
-										Cancel
-									</Button>
-									<Button
-										type='submit'
-										disabled={sendMessageMutation.isPending}
-										className='bg-green-600 hover:bg-green-700'
-									>
-										{sendMessageMutation.isPending ? 'Sending...' : 'Send Message'}
-									</Button>
-								</div>
-							</form>
-						</div>
-					)}
 				</div>
 
 				{/* Seller Stats & Actions - Takes up 1 column on desktop */}
@@ -419,19 +303,6 @@ const SellerPage: NextPage = () => {
 									</div>
 								</div>
 							</div>
-
-							{/* Action buttons for desktop */}
-							<div className='hidden lg:block mt-6 pt-6 border-t border-gray-100 dark:border-gray-800'>
-								<div className='space-y-3'>
-									<Button
-										onClick={() => setMessageOpen(!messageOpen)}
-										className='w-full bg-green-600 hover:bg-green-700'
-									>
-										<FaEnvelope className='mr-2 h-4 w-4' />
-										Message Seller
-									</Button>
-								</div>
-							</div>
 						</div>
 					</div>
 				</div>
@@ -483,12 +354,14 @@ const SellerPage: NextPage = () => {
 							{sellerReviews.length} {sellerReviews.length === 1 ? 'review' : 'reviews'}
 						</Badge>
 					</div>
-					<div className='flex-shrink-0'>
-						<Button variant={'primaryOutline'} onClick={handleReviewClick} className='w-full sm:w-auto'>
-							<FaPencilAlt className='mr-2 h-4 w-4' />
-							Write a Review
-						</Button>
-					</div>
+					{user && user.id !== seller.id && (
+						<div className='flex-shrink-0'>
+							<Button variant={'primaryOutline'} onClick={handleReviewClick} className='w-full sm:w-auto'>
+								<FaPencilAlt className='mr-2 h-4 w-4' />
+								Write a Review
+							</Button>
+						</div>
+					)}
 				</div>
 
 				{sellerReviews.length === 0 ? (
