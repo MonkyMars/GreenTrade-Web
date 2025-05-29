@@ -95,7 +95,7 @@ const PostListingPage: NextPage = () => {
 
 			// Show toast only if it hasn't already been shown
 			if (!errorToastId.current) {
-				errorToastId.current = toast.error('Missing location information', {
+				errorToastId.current = toast.error('Missing location information, you may need to refresh the page.', {
 					duration: 2000,
 					icon: '📍',
 				});

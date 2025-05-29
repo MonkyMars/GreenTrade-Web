@@ -12,6 +12,7 @@ import ListingCard from '../../components/ui/ListingCard';
 import { FilterOptions, filterListings } from './filtering';
 import { NextPage } from 'next';
 import { Button } from '@/components/ui/button';
+import { conditions } from '@/lib/functions/conditions';
 
 const ITEMS_PER_PAGE: number = 50; // Define items per page
 
@@ -532,10 +533,11 @@ const BrowserComponent: NextPage = () => {
 											className='block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md dark:bg-gray-700 dark:text-white'
 										>
 											<option value='all'>Any Condition</option>
-											<option value='New'>New</option>
-											<option value='Like New'>Like New</option>
-											<option value='Good'>Good</option>
-											<option value='Fair'>Fair</option>
+											{conditions.map((condition, index) => (
+												<option key={index + '-mobile'} value={condition.name}>
+													{condition.name.charAt(0).toUpperCase() + condition.name.slice(1)}
+												</option>
+											))}
 										</select>
 									</div>
 								</div>
@@ -725,10 +727,11 @@ const BrowserComponent: NextPage = () => {
 										className='block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md dark:bg-gray-700 dark:text-white'
 									>
 										<option value='all'>Any Condition</option>
-										<option value='New'>New</option>
-										<option value='Like New'>Like New</option>
-										<option value='Good'>Good</option>
-										<option value='Fair'>Fair</option>
+										{conditions.map((condition, index) => (
+											<option key={index + '-desktop'} value={condition.name}>
+												{condition.name.charAt(0).toUpperCase() + condition.name.slice(1)}
+											</option>
+										))}
 									</select>
 								</div>
 								{/* Apply Button for Desktop */}

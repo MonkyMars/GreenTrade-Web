@@ -13,9 +13,21 @@ import { BASE_URL } from '@/lib/backend/api/axiosConfig';
 import LoginSkeleton from '@/components/login/pageSkeleton';
 
 const loginSchema = z.object({
-	email: z.string().email('Please enter a valid email address'),
-	password: z.string().min(8, 'Password must be at least 8 characters'),
-	rememberMe: z.boolean().optional(),
+	email: z
+		.string()
+		.email('Please enter a valid email address')
+		.max(254, 'Email must be at most 254 characters')
+		.refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+			message: 'Email contains invalid characters',
+		}),
+
+	password: z
+		.string()
+		.min(8, 'Password must be at least 8 characters')
+		.max(128, 'Password must be at most 128 characters')
+		.refine((val) => !/\s/.test(val), {
+			message: 'Password cannot contain spaces',
+		}),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -124,11 +136,14 @@ const Login: NextPage = () => {
 			let errorMessage: string;
 
 			if (appError.code === 'INVALID_CREDENTIALS' || appError.status === 401) {
-				errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+				errorMessage =
+					'Invalid email or password. Please check your credentials and try again.';
 			} else if (appError.status === 403) {
-				errorMessage = 'Please confirm your email address before logging in. Check your inbox for a confirmation email.';
+				errorMessage =
+					'Please confirm your email address before logging in. Check your inbox for a confirmation email.';
 			} else if (appError.status === 404) {
-				errorMessage = 'No account found with this email address. Please check your email or create a new account.';
+				errorMessage =
+					'No account found with this email address. Please check your email or create a new account.';
 			} else if (appError.code === 'ACCOUNT_LOCKED') {
 				errorMessage = 'Your account has been locked. Please contact support.';
 			} else if (appError.code === 'RATE_LIMITED') {
@@ -221,8 +236,16 @@ const Login: NextPage = () => {
 					>
 						<div className='flex'>
 							<div className='flex-shrink-0'>
-								<svg className='h-5 w-5 text-red-400' viewBox='0 0 20 20' fill='currentColor'>
-									<path fillRule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z' clipRule='evenodd' />
+								<svg
+									className='h-5 w-5 text-red-400'
+									viewBox='0 0 20 20'
+									fill='currentColor'
+								>
+									<path
+										fillRule='evenodd'
+										d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z'
+										clipRule='evenodd'
+									/>
 								</svg>
 							</div>
 							<div className='ml-3'>
@@ -231,29 +254,33 @@ const Login: NextPage = () => {
 								</h3>
 								<div className='mt-1 text-sm text-red-700 dark:text-red-300'>
 									<p>{loginError}</p>
-									{(loginError.includes('confirm your email') || loginError.includes('email not confirmed')) && (
-										<p className='mt-2 text-xs'>
-											Didn&apos;t receive the email?
-											<button
-												type='button'
-												className={`ml-1 underline ${isResendingEmail || resendCooldown > 0
-														? 'cursor-not-allowed opacity-50'
-														: 'cursor-pointer hover:no-underline'
-													}`}
-												onClick={handleResendConfirmation}
-												disabled={isResendingEmail || resendCooldown > 0}
-											>
-												{isResendingEmail
-													? 'Resending...'
-													: resendCooldown > 0
-														? `Resend in ${resendCooldown}s`
-														: 'Resend confirmation'}
-											</button>
-										</p>
-									)}
+									{(loginError.includes('confirm your email') ||
+										loginError.includes('email not confirmed')) && (
+											<p className='mt-2 text-xs'>
+												Didn&apos;t receive the email?
+												<button
+													type='button'
+													className={`ml-1 underline ${isResendingEmail || resendCooldown > 0
+															? 'cursor-not-allowed opacity-50'
+															: 'cursor-pointer hover:no-underline'
+														}`}
+													onClick={handleResendConfirmation}
+													disabled={isResendingEmail || resendCooldown > 0}
+												>
+													{isResendingEmail
+														? 'Resending...'
+														: resendCooldown > 0
+															? `Resend in ${resendCooldown}s`
+															: 'Resend confirmation'}
+												</button>
+											</p>
+										)}
 									{loginError.includes('No account found') && (
 										<p className='mt-2 text-xs'>
-											<Link href='/register' className='underline hover:no-underline'>
+											<Link
+												href='/register'
+												className='underline hover:no-underline'
+											>
 												Create a new account instead
 											</Link>
 										</p>

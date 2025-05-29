@@ -14,17 +14,46 @@ import { BASE_URL } from '@/lib/backend/api/axiosConfig';
 
 const registerSchema = z
 	.object({
-		name: z.string().min(2, 'Name must be at least 2 characters'),
-		email: z.string().email('Please enter a valid email address'),
-		location: z.string().min(0, 'Location must be at least 2 characters'),
+		name: z
+			.string()
+			.min(2, 'Name must be at least 2 characters')
+			.max(100, 'Name must be at most 100 characters')
+			.regex(
+				/^[a-zA-Z0-9_. ]+$/,
+				'Name can only contain letters, numbers, spaces, underscores, and periods'
+			)
+			.refine(
+				(val) => !val.trim().startsWith('.') && !val.trim().endsWith('.'),
+				{
+					message: 'Name cannot start or end with a period',
+				}
+			),
+
+		email: z
+			.string()
+			.email('Please enter a valid email address')
+			.max(254, 'Email must be at most 254 characters')
+			.refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+				message: 'Email contains invalid characters',
+			}),
+
 		password: z
 			.string()
 			.min(8, 'Password must be at least 8 characters')
+			.max(128, 'Password must be at most 128 characters')
 			.regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
 			.regex(/[a-z]/, 'Password must contain at least one lowercase letter')
 			.regex(/[0-9]/, 'Password must contain at least one number')
-			.regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
+			.regex(
+				/[^A-Za-z0-9]/,
+				'Password must contain at least one special character'
+			)
+			.refine((val) => !/\s/.test(val), {
+				message: 'Password cannot contain spaces',
+			}),
+
 		passwordConfirm: z.string().min(8, 'Please confirm your password'),
+
 		acceptTerms: z.boolean().refine((val) => val === true, {
 			message: 'You must accept the terms and privacy policy',
 		}),
@@ -42,7 +71,6 @@ const RegisterPage: NextPage = () => {
 	const [formData, setFormData] = useState<RegisterFormData>({
 		name: '',
 		email: '',
-		location: '',
 		password: '',
 		passwordConfirm: '',
 		acceptTerms: false,
@@ -116,27 +144,33 @@ const RegisterPage: NextPage = () => {
 				formData.name,
 				formData.email,
 				formData.password,
-				formData.location
 			);
 
 			// Registration successful - Redirect to dashboard.
 			router.push('/account?registered=true');
 		} catch (error) {
 			// Convert error to a strongly-typed AppError if possible and provide specific error messages
-			const appError = error instanceof AppError ? error : AppError.from(error, 'Registration');
+			const appError =
+				error instanceof AppError
+					? error
+					: AppError.from(error, 'Registration');
 			let errorMessage = 'Registration failed. Please try again.';
 
 			// Handle specific status codes
 			if (appError.status === 409) {
-				errorMessage = 'An account with this email address already exists. Please use a different email or try logging in instead.';
+				errorMessage =
+					'An account with this email address already exists. Please use a different email or try logging in instead.';
 			} else if (appError.status && appError.status >= 500) {
-				errorMessage = 'Server error occurred during registration. Please try again later or contact support if the problem persists.';
+				errorMessage =
+					'Server error occurred during registration. Please try again later or contact support if the problem persists.';
 			} else if (appError.message) {
 				// Check if it's our specific error message from the auth context
 				if (appError.message.includes('already exists')) {
-					errorMessage = 'An account with this email address already exists. Please use a different email or try logging in instead.';
+					errorMessage =
+						'An account with this email address already exists. Please use a different email or try logging in instead.';
 				} else if (appError.message.includes('Server error')) {
-					errorMessage = 'Server error occurred during registration. Please try again later or contact support if the problem persists.';
+					errorMessage =
+						'Server error occurred during registration. Please try again later or contact support if the problem persists.';
 				} else {
 					errorMessage = appError.message;
 				}
@@ -214,15 +248,24 @@ const RegisterPage: NextPage = () => {
 							Sign in
 						</Link>
 					</p>
-				</div>				{registerError && (
+				</div>{' '}
+				{registerError && (
 					<div
 						className='bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg relative'
 						role='alert'
 					>
 						<div className='flex'>
 							<div className='flex-shrink-0'>
-								<svg className='h-5 w-5 text-red-400' viewBox='0 0 20 20' fill='currentColor'>
-									<path fillRule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z' clipRule='evenodd' />
+								<svg
+									className='h-5 w-5 text-red-400'
+									viewBox='0 0 20 20'
+									fill='currentColor'
+								>
+									<path
+										fillRule='evenodd'
+										d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z'
+										clipRule='evenodd'
+									/>
 								</svg>
 							</div>
 							<div className='ml-3'>
@@ -233,11 +276,17 @@ const RegisterPage: NextPage = () => {
 									<p>{registerError}</p>
 									{registerError.includes('already exists') && (
 										<p className='mt-2 text-xs'>
-											<Link href='/login' className='underline hover:no-underline'>
+											<Link
+												href='/login'
+												className='underline hover:no-underline'
+											>
 												Try logging in instead
 											</Link>
 											{' or '}
-											<Link href='/forgot-password' className='underline hover:no-underline'>
+											<Link
+												href='/forgot-password'
+												className='underline hover:no-underline'
+											>
 												reset your password
 											</Link>
 										</p>
@@ -252,7 +301,6 @@ const RegisterPage: NextPage = () => {
 						</div>
 					</div>
 				)}
-
 				<form className='mt-8 space-y-6' onSubmit={handleSubmit}>
 					<div className='rounded-md shadow-sm -space-y-px'>
 						<div className='mb-4'>
@@ -342,9 +390,7 @@ const RegisterPage: NextPage = () => {
 							{formData.password && (
 								<div className='mt-2'>
 									<div className='flex justify-between mb-1 text-gray-500 dark:text-gray-400'>
-										<span className='text-xs'>
-											Password strength:
-										</span>
+										<span className='text-xs'>Password strength:</span>
 										<span className='text-xs font-medium '>
 											{passwordStrength === 0 && 'Very Weak'}
 											{passwordStrength === 1 && 'Weak'}

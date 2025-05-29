@@ -120,26 +120,34 @@ const AccountPage: NextPage = () => {
 		if (!name) {
 			errors.push('Name is required');
 		} else {
-			if (name.length < 2) errors.push('Name must be at least 2 characters long');
+			if (name.length < 2)
+				errors.push('Name must be at least 2 characters long');
 			if (name.length > 40) errors.push('Name cannot exceed 40 characters');
-			if (!/^[a-zA-Z\s]+$/.test(name)) errors.push('Name can only contain letters and spaces');
+			if (!/^[a-zA-Z\s.]+$/.test(name))
+				errors.push('Name can only contain letters, spaces, and periods');
 		}
 
 		// Bio validations
 		if (bio) {
-			if (bio.length < 10) errors.push('Bio must be at least 10 characters long');
+			if (bio.length < 10)
+				errors.push('Bio must be at least 10 characters long');
 			if (bio.length > 500) errors.push('Bio cannot exceed 500 characters');
 			if (!/^[a-zA-Z0-9\s.,!?'"-]*$/.test(bio)) {
-				errors.push('Bio can only contain letters, numbers, spaces, and basic punctuation');
+				errors.push(
+					'Bio can only contain letters, numbers, spaces, and basic punctuation'
+				);
 			}
 		}
 
 		// City validations
 		if (city) {
-			if (city.length < 2) errors.push('City must be at least 2 characters long');
+			if (city.length < 2)
+				errors.push('City must be at least 2 characters long');
 			if (city.length > 50) errors.push('City cannot exceed 50 characters');
-			if (!/^[a-zA-Z\s]+$/.test(city)) {
-				errors.push('City can only contain letters and spaces');
+			if (!/^[a-zA-Z\s.'-]+$/.test(city)) {
+				errors.push(
+					'City can only contain letters, spaces, periods, and hyphens'
+				);
 			}
 		}
 
@@ -186,13 +194,15 @@ const AccountPage: NextPage = () => {
 			setUpdateSuccess('User data updated successfully!');
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		} catch (error: any) {
-			setError(error.response?.data?.message || 'An error occurred while updating user data');
+			setError(
+				error.response?.data?.message ||
+				'An error occurred while updating user data'
+			);
 			if (process.env.NODE_ENV !== 'production') {
 				console.error('Error updating user data:', error);
 			}
 		}
 	};
-
 
 	// Update disabled state for Save button
 	useEffect(() => {

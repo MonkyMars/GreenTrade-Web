@@ -24,7 +24,6 @@ interface AuthContextType {
 		name: string,
 		email: string,
 		password: string,
-		location: string
 	) => Promise<void>;
 	logout: () => Promise<void>;
 	isAuthenticated: boolean;
@@ -523,7 +522,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 		name: string,
 		email: string,
 		password: string,
-		location: string
 	) => {
 		try {
 			setLoading(true);
@@ -535,7 +533,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 						name,
 						email,
 						password,
-						location,
 					}),
 				{
 					maxRetries: 2, // Fewer retries for registration
