@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FaGavel, FaTrash, FaCrown, FaSort } from 'react-icons/fa';
-import { FetchedBid } from '@/lib/types/main';
+import { FetchedBid, FetchedListing } from '@/lib/types/main';
 import { formatDistanceToNow } from 'date-fns';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { submitBid } from '@/lib/backend/bids/submitBid';
@@ -16,14 +16,14 @@ import { AppError } from '@/lib/errorUtils';
 import { toast } from 'sonner';
 
 interface BiddingUiProps {
-	listingId: string;
+	listing: FetchedListing;
 	isNegotiable: boolean;
 	bids?: FetchedBid[];
 	isOwner?: boolean;
 }
 
 export default function BiddingUi({
-	listingId,
+	listing,
 	isNegotiable,
 	bids = [],
 	isOwner = false,
@@ -47,15 +47,26 @@ export default function BiddingUi({
 			if (!user) {
 				throw new AppError('You must be logged in to place a bid', { status: 401, code: 'NOT_AUTHENTICATED' });
 			}
-			return submitBid({ listingId, price });
+			return submitBid({ listingId: listing.id, price });
 		},
 		onSuccess: () => {
 			// Invalidate and refetch the listing to get updated bids
-			queryClient.invalidateQueries({ queryKey: ['listing', listingId] });
+			queryClient.invalidateQueries({ queryKey: ['listing', listing.id] });
 			setBidAmount('');
 			toast.success('Bid submitted successfully!');
+			// Update local bids state
+			if (!user) return;
+			bids.push({
+				id: crypto.randomUUID(),
+				listingId: listing.id,
+				userId: user.id,
+				userName: user.name || 'Anonymous',
+				price: parseFloat(bidAmount),
+				createdAt: new Date(),
+				userPicture: user.picture || '',
+			});
 		}, onError: (error) => {
-			const appError = error instanceof AppError ? error : new AppError('Failed to submit bid', { status: 500, code: 'BID_SUBMISSION_FAILED' });
+			const appError = error instanceof AppError ? error : new AppError('Failed to submit bid, please refresh the page and try again.', { status: 500, code: 'BID_SUBMISSION_FAILED' });
 			toast.error(appError.message);
 		},
 	});
@@ -64,8 +75,18 @@ export default function BiddingUi({
 	const deleteBidMutation = useMutation({
 		mutationFn: deleteBid,
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['listing', listingId] });
+			queryClient.invalidateQueries({ queryKey: ['listing', listing.id] });
 			toast.success('Bid removed successfully!');
+			// Update local bids state
+			if (!user) return;
+			const updatedBids = bids.filter(bid => bid.userId !== user.id);
+			queryClient.setQueryData(['listing', listing.id], (oldData: FetchedListing | undefined) => {
+				if (!oldData) return oldData;
+				return {
+					...oldData,
+					bids: updatedBids,
+				};
+			});
 		}, onError: (error) => {
 			const appError = error instanceof AppError ? error : new AppError('Failed to delete bid', { status: 500, code: 'BID_DELETION_FAILED' });
 			toast.error(appError.message);

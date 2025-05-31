@@ -434,7 +434,7 @@ const ListingPage: NextPage = () => {
 					{/* Bidding UI for mobile - Shows only on mobile */}
 					<div className='lg:hidden'>
 						<BiddingUi
-							listingId={listing.id}
+							listing={listing}
 							isNegotiable={listing.negotiable}
 							bids={bids}
 							isOwner={listing.sellerId === user?.id}
@@ -634,7 +634,7 @@ const ListingPage: NextPage = () => {
 						{/* Bidding UI for desktop - Hidden on mobile */}
 						<div className='hidden lg:block'>
 							<BiddingUi
-								listingId={listing.id}
+								listing={listing}
 								isNegotiable={listing.negotiable}
 								bids={bids}
 								isOwner={listing.sellerId === user?.id}

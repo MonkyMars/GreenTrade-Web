@@ -3,12 +3,7 @@ import api from '../api/axiosConfig';
 
 export async function deleteBid(bidId: string): Promise<{ message: string }> {
 	try {
-		const response = await api.delete(`/api/bid/${bidId}`, {
-			method: 'DELETE',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		});
+		const response = await api.delete(`/api/bids/${bidId}`);
 		if (response.status !== 200) {
 			const errorData = response.data.message;
 			throw new AppError(

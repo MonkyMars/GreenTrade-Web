@@ -2,6 +2,7 @@ import { AppError } from '@/lib/errorUtils';
 import { BidSchema } from '@/lib/types/main';
 import { z } from 'zod';
 import api from '../api/axiosConfig';
+import snakecaseKeys from 'snakecase-keys';
 
 export interface SubmitBidData {
 	listingId: string;
@@ -13,9 +14,12 @@ export async function submitBid(data: SubmitBidData): Promise<{ message: string 
 		// Validate input data
 		const validatedData = BidSchema.pick({ listingId: true, price: true }).parse(data);
 
-		const response = await api.post(`/api/bid/${validatedData.listingId}`, {
+		const body = {
+			listingId: validatedData.listingId,
 			price: validatedData.price,
-		});
+		}
+
+		const response = await api.post(`/api/listings/${validatedData.listingId}/bids`, snakecaseKeys(body, { deep: true }));
 
 		if (response.status !== 200) {
 			const errorData = response.data.message;
