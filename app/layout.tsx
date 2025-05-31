@@ -90,7 +90,7 @@ export default function RootLayout({
 					<QueryProvider>
 						{children}
 					</QueryProvider>
-					<Toaster />
+					<Toaster toastOptions={{ className: "rounded-xl! shadow-md! bg-white! dark:bg-gray-900! border! border-gray-200! dark:border-gray-800! hover:border-green-200! dark:hover:border-green-800! text-gray-900! dark:text-gray-100! transition-all! duration-300!" }} />
 					<FooterWrapper />
 				</AuthProvider>
 			</body>
