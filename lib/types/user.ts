@@ -17,6 +17,7 @@ export const UserSchema = z.object({
 	picture: z.string().url().optional(),
 	bio: z.string().min(10).max(500).optional(),
 	ecoScore: z.number().min(0).max(10).optional(),
+	provider: z.enum(['email', 'google']).default('email'),
 });
 
 export type User = z.infer<typeof UserSchema>;

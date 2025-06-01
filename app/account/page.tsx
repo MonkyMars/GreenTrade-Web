@@ -59,7 +59,7 @@ const AccountPage: NextPage = () => {
 	// Handle account deletion
 	const handleDeleteAccount = async () => {
 		try {
-			const response = await api.delete('/user/delete');
+			const response = await api.delete('/api/auth/delete');
 
 			if (!response.data.success) {
 				throw new Error('Failed to delete account');
@@ -314,7 +314,7 @@ const AccountPage: NextPage = () => {
 
 								{activeTab === 'security' && (
 									<motion.div key='security' {...tabAnimationProps}>
-										<SecuritySettings onUserDownload={onUserDownload} />
+										<SecuritySettings onUserDownload={onUserDownload} user={user} />
 									</motion.div>
 								)}
 
