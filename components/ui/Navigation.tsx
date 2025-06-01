@@ -238,9 +238,9 @@ const Navigation: React.FC<NavigationProps> = ({ transparent = false }) => {
 				{isOpen && (
 					<motion.div
 						initial={{ opacity: 0, height: 0 }}
-						animate={{ opacity: 1, height: 'auto' }}
+						animate={{ opacity: 1, height: 'calc(100vh - 4rem)' }}
 						exit={{ opacity: 0, height: 0 }}
-						className='md:hidden bg-white dark:bg-gray-900 shadow-lg z-99'
+						className='md:hidden bg-white dark:bg-gray-900 shadow-lg z-99 overflow-y-auto'
 					>
 						<div className='px-4 py-6 space-y-6'>
 							{/* Primary Navigation - Browse Section */}
