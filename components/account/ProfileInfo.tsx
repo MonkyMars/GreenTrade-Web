@@ -3,9 +3,18 @@
 import { FaUser, FaCheck } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { User } from '@/lib/types/user';
-import { fetchCountriesInEurope } from '@/lib/functions/countries';
+import {
+	fetchCountriesInEurope,
+} from '@/lib/functions/countries';
 import { cn } from '@/lib/utils';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 
 interface ProfileInfoProps {
 	user: User | null;
@@ -29,6 +38,16 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 	setUser,
 }) => {
 	const countries = useMemo(() => fetchCountriesInEurope(), []);
+	const [countrySearch, setCountrySearch] = useState('');
+
+	// Filter countries based on search
+	const filteredCountries = useMemo(() => {
+		if (!countrySearch) return countries;
+		return countries.filter((country) =>
+			country.name.toLowerCase().includes(countrySearch.toLowerCase())
+		);
+	}, [countries, countrySearch]);
+
 	// Common classes
 	const formGroupClasses = 'group';
 	const labelClasses =
@@ -47,7 +66,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 	const successBoxClasses =
 		'bg-green-50 dark:bg-green-900/20 border border-green-200 text-green-700 dark:text-green-300 px-4 py-3 rounded-md mb-6';
 	const successCloseButtonClasses =
-		'ml-auto text-green-700 dark:text-green-300 hover:text-green-900 flex items-center justify-center dark:hover:text-green-200 text-2xl';
+		'ml-auto text-green-700 dark:text-green-300 hover:text-green-900 flex items-center justify-center dark:hover:text-green-200 text-2xl cursor-pointer';
 
 	return (
 		<div className='bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 mb-6 rounded-xl shadow-sm hover:shadow-md transition-shadow'>
@@ -99,7 +118,6 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 							className={inputClasses}
 						/>
 					</div>
-
 					<div className={formGroupClasses}>
 						<label htmlFor='email' className={labelClasses}>
 							Email Address
@@ -114,7 +132,6 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 						/>
 						<p className={hintTextClasses}>Email cannot be changed</p>
 					</div>
-
 					<div className={cn(formGroupClasses, 'block')}>
 						<label htmlFor='city' className={labelClasses}>
 							City / Town
@@ -134,24 +151,21 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 										location: {
 											...prevUser.location,
 											city: e.target.value,
-										}
+										},
 									} as User;
 								});
 							}}
 							className={inputClasses}
 						/>
-					</div>
-
+					</div>{' '}
 					<div className={`block ${formGroupClasses}`}>
 						<label htmlFor='country' className={labelClasses}>
 							Country
 						</label>
-						<input
-							type="text"
-							name="country"
-							id='country'
+						<Select
+							name='country'
 							value={user?.location?.country || ''}
-							onChange={(e) => {
+							onValueChange={(value) => {
 								if (!user) return;
 								setUser((prevUser) => {
 									if (!prevUser) return prevUser;
@@ -159,24 +173,57 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 										...prevUser,
 										location: {
 											...prevUser.location,
-											country: e.target.value,
-										}
+											country: value,
+										},
 									} as User;
 								});
+								setCountrySearch(''); // Reset search on selection
 							}}
-							list='countries'
-							className={inputClasses}
-							placeholder='Select your country'
-							autoComplete='on'
-						/>
-						<datalist id='countries'>
-							{countries.map((country, index) => (
-								<option
-									key={index}
-									value={country.name}
-								/>
-							))}
-						</datalist>
+						>
+							<SelectTrigger className={cn(inputClasses, 'justify-between')}>
+								<SelectValue placeholder='Select your country'>
+									{user?.location?.country && (
+										<span className='flex items-center gap-2'>
+											{user.location.country}
+										</span>
+									)}
+								</SelectValue>
+							</SelectTrigger>
+							<SelectContent className='max-h-80 w-full bg-white dark:bg-gray-900 rounded-lg shadow-sm border-gray-200 dark:border-gray-800'>
+								<div className='p-2 border-b border-gray-200 dark:border-gray-800'>
+									<input
+										type='text'
+										placeholder='Search countries...'
+										value={countrySearch}
+										onChange={(e) => setCountrySearch(e.target.value)}
+										className='w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white'
+									/>
+								</div>
+								<div className='max-h-60 overflow-y-auto'>
+									{filteredCountries.length > 0 ? (
+										filteredCountries.map((country, index) => (
+											<SelectItem
+												key={index}
+												value={country.name}
+												className='text-black dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-800'
+											>
+												<span className='flex items-center gap-3'>
+													<span className='text-lg'>{country.flag}</span>
+													<span className='text-sm'>{country.name}</span>
+												</span>
+											</SelectItem>
+										))
+									) : (
+										<div className='p-4 text-center text-sm text-gray-500 dark:text-gray-400'>
+											No countries found
+										</div>
+									)}
+								</div>
+							</SelectContent>
+						</Select>
+						<p className={hintTextClasses}>
+							Search and select your country from the list
+						</p>
 					</div>
 				</div>
 

@@ -17,9 +17,7 @@ import { useRouter } from 'next/navigation';
 import { NextPage } from 'next';
 import { Button } from '@/components/ui/button';
 import { encodeQueryParam } from '@/lib/functions/url';
-import {
-	useQuery,
-} from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import ListingCard from '@/components/ui/ListingCard';
 
 const Home: NextPage = () => {
@@ -29,14 +27,13 @@ const Home: NextPage = () => {
 	const router = useRouter();
 
 	// Use React Query directly without useEffect
-	const {
-		data: featuredListings = [],
-		isLoading
-	} = useQuery<FetchedListing[]>({
-		queryKey: ['listings', 'featured'],
-		queryFn: () => getListings('', 4) as Promise<FetchedListing[]>,
-		staleTime: 1000 * 60 * 5, // 5 mins
-	});
+	const { data: featuredListings = [], isLoading } = useQuery<FetchedListing[]>(
+		{
+			queryKey: ['listings', 'featured'],
+			queryFn: () => getListings('', 4) as Promise<FetchedListing[]>,
+			staleTime: 1000 * 60 * 5, // 5 mins
+		}
+	);
 
 	const handleNavigate = () => {
 		if (searchQuery) {
@@ -108,7 +105,11 @@ const Home: NextPage = () => {
 										</SelectTrigger>
 										<SelectContent className='bg-white dark:bg-gray-900 rounded-lg shadow-sm border-gray-200 dark:border-gray-800 mt-3'>
 											{categories.map((category, index) => (
-												<SelectItem key={index} value={category.name} className='text-black dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-800'>
+												<SelectItem
+													key={index}
+													value={category.name}
+													className='text-black dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-800'
+												>
 													{category.name}
 												</SelectItem>
 											))}
@@ -289,7 +290,9 @@ const Home: NextPage = () => {
 								<FaRecycle className='h-10 w-10' />
 							</div>
 							<h3 className='text-2xl font-bold mb-2'>100% Free</h3>
-							<p className='text-green-50'>No listing fees, no commission - keep all your earnings</p>
+							<p className='text-green-50'>
+								No listing fees, no commission - keep all your earnings
+							</p>
 						</div>
 
 						<div className='bg-green-200/20 bg-opacity-10 p-8 rounded-xl text-center shadow-sm hover:shadow-md transition-shadow'>
@@ -297,7 +300,9 @@ const Home: NextPage = () => {
 								<FaLeaf className='h-10 w-10' />
 							</div>
 							<h3 className='text-2xl font-bold mb-2'>Local Focus</h3>
-							<p className='text-green-50'>Find items near you to reduce shipping and support neighbors</p>
+							<p className='text-green-50'>
+								Find items near you to reduce shipping and support neighbors
+							</p>
 						</div>
 
 						<div className='bg-green-200/20 bg-opacity-10 p-8 rounded-xl text-center shadow-sm hover:shadow-md transition-shadow'>
@@ -305,7 +310,9 @@ const Home: NextPage = () => {
 								<FaHandshake className='h-10 w-10' />
 							</div>
 							<h3 className='text-2xl font-bold mb-2'>Secure Trading</h3>
-							<p className='text-green-50'>Built-in messaging and safety features for peace of mind</p>
+							<p className='text-green-50'>
+								Built-in messaging and safety features for peace of mind
+							</p>
 						</div>
 					</div>
 				</div>

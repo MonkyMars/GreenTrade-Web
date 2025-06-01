@@ -151,6 +151,18 @@ const AccountPage: NextPage = () => {
 			}
 		}
 
+		// Country validations
+		if (country) {
+			if (country.length < 2)
+				errors.push('Country must be at least 2 characters long');
+			if (country.length > 50) errors.push('Country cannot exceed 50 characters');
+			if (!/^[a-zA-Z\s.'-]+$/.test(country)) {
+				errors.push(
+					'Country can only contain letters, spaces, periods, and hyphens'
+				);
+			}
+		}
+
 		// Country validation
 		try {
 			const countries = fetchCountriesInEurope();
