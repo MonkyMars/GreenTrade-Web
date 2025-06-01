@@ -7,7 +7,7 @@ import { AuthProvider } from '@/lib/contexts/AuthContext';
 import { EmailConfirmationBar } from '@/components/ui/EmailConfirmationBar';
 import { Analytics } from '@vercel/analytics/react';
 import { Toaster } from '@/components/ui/sonner';
-import ConstructionBanner from '@/components/ui/ConstuctionBanner';
+// import ConstructionBanner from '@/components/ui/ConstuctionBanner';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 
 const geistSans = Geist({
@@ -85,7 +85,7 @@ export default function RootLayout({
 				<Analytics />
 				<AuthProvider>
 					<Navigation />
-					<ConstructionBanner />
+					{/* <ConstructionBanner /> */}
 					<EmailConfirmationBar />
 					<QueryProvider>
 						{children}
