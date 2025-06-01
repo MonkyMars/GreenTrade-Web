@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Confirm Your GreenVue Account</title>
+		<style>
+			/* Reset and base styles */
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			body {
+				font-family:
+					-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+					'Helvetica Neue', Arial, sans-serif;
+				line-height: 1.6;
+				color: #374151;
+				background-color: #f3f4f6;
+				margin: 0;
+				padding: 24px 16px;
+			}
+
+			.email-container {
+				max-width: 672px;
+				margin: 0 auto;
+				background-color: transparent;
+			}
+
+			/* Header Card - matches your listing page hero */
+			.header-card {
+				background-color: #ffffff;
+				border-radius: 12px;
+				box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+				padding: 24px;
+				border: 1px solid #e5e7eb;
+				margin-bottom: 24px;
+				text-align: center;
+			}
+
+			.logo {
+				display: inline-flex;
+				align-items: center;
+				color: #111827;
+				font-size: 24px;
+				font-weight: 700;
+				text-decoration: none;
+				margin-bottom: 16px;
+			}
+
+			.logo-icon {
+				width: 32px;
+				height: 32px;
+				margin-right: 8px;
+				color: #10b981;
+			}
+
+			.logo-eu {
+				color: #10b981;
+			}
+
+			.header-title {
+				color: #111827;
+				font-size: 24px;
+				font-weight: 700;
+				margin-bottom: 8px;
+			}
+
+			.header-subtitle {
+				color: #6b7280;
+				font-size: 16px;
+				margin: 0;
+			}
+
+			/* Main content card - matches your listing details layout */
+			.content-card {
+				background-color: #ffffff;
+				border-radius: 12px;
+				box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+				padding: 24px;
+				border: 1px solid #e5e7eb;
+				margin-bottom: 24px;
+			}
+
+			/* Section headers - matches your "About This Item" pattern */
+			.section-header {
+				display: flex;
+				align-items: center;
+				margin-bottom: 16px;
+			}
+
+			.section-icon {
+				width: 20px;
+				height: 20px;
+				color: #059669;
+				margin-right: 8px;
+			}
+
+			.section-title {
+				font-size: 20px;
+				font-weight: 600;
+				color: #111827;
+				margin: 0;
+			}
+
+			.welcome-text {
+				font-size: 16px;
+				color: #374151;
+				line-height: 1.6;
+				margin-bottom: 24px;
+			}
+
+			/* Email display - matches your green accent cards */
+			.email-display {
+				background-color: #f0fdf4;
+				border: 1px solid #dcfce7;
+				border-radius: 8px;
+				padding: 16px;
+				text-align: center;
+				margin: 24px 0;
+			}
+
+			.email-label {
+				font-size: 14px;
+				color: #374151;
+				font-weight: 500;
+				margin-bottom: 4px;
+			}
+
+			.email-value {
+				font-size: 16px;
+				color: #111827;
+				font-weight: 600;
+			}
+
+			/* CTA Button - matches your ContactSellerButton style */
+			.cta-section {
+				text-align: center;
+				margin: 32px 0;
+			}
+
+			.cta-button {
+				display: inline-block;
+				background-color: #059669;
+				color: #ffffff;
+				text-decoration: none;
+				padding: 12px 24px;
+				border-radius: 8px;
+				font-weight: 600;
+				font-size: 16px;
+				transition: all 0.2s ease;
+			}
+
+			.cta-button:hover {
+				background-color: #047857;
+			}
+
+			/* Green accent card - matches your eco-features card */
+			.green-accent-card {
+				background-color: #f0fdf4;
+				border: 1px solid #dcfce7;
+				border-radius: 12px;
+				box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+				padding: 24px;
+				margin-bottom: 24px;
+			}
+
+			/* Features grid - simplified to match your card spacing */
+			.features-section {
+				margin: 24px 0;
+			}
+
+			.features-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+				gap: 16px;
+				margin-top: 16px;
+			}
+
+			.feature-item {
+				background-color: #ffffff;
+				border: 1px solid #e5e7eb;
+				border-radius: 8px;
+				padding: 16px;
+				text-align: center;
+			}
+
+			.feature-icon-wrapper {
+				width: 32px;
+				height: 32px;
+				background-color: #f0fdf4;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				margin: 0 auto 12px;
+			}
+
+			.feature-icon {
+				width: 16px;
+				height: 16px;
+				color: #059669;
+			}
+
+			.feature-title {
+				font-size: 14px;
+				font-weight: 600;
+				color: #111827;
+				margin-bottom: 4px;
+			}
+
+			.feature-desc {
+				font-size: 12px;
+				color: #6b7280;
+				line-height: 1.4;
+			}
+
+			/* Mission card text */
+			.mission-title {
+				color: #065f46;
+				font-size: 16px;
+				font-weight: 600;
+				margin-bottom: 8px;
+				text-align: center;
+			}
+
+			.mission-text {
+				color: #047857;
+				font-size: 14px;
+				margin: 0;
+				text-align: center;
+			}
+
+			/* Footer - matches your app footer */
+			.footer {
+				background-color: #ffffff;
+				border: 1px solid #e5e7eb;
+				border-radius: 12px;
+				box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+				padding: 24px;
+				text-align: center;
+			}
+
+			.footer-text {
+				font-size: 14px;
+				color: #6b7280;
+				margin-bottom: 16px;
+			}
+
+			.footer-links {
+				margin-bottom: 16px;
+			}
+
+			.footer-link {
+				color: #059669;
+				text-decoration: none;
+				font-size: 14px;
+				margin: 0 12px;
+			}
+
+			.footer-link:hover {
+				text-decoration: underline;
+			}
+
+			.footer-brand {
+				font-size: 12px;
+				color: #9ca3af;
+			}
+
+			/* Responsive */
+			@media (max-width: 600px) {
+				body {
+					padding: 16px 8px;
+				}
+
+				.header-card,
+				.content-card,
+				.green-accent-card,
+				.footer {
+					padding: 20px;
+					border-radius: 8px;
+				}
+
+				.features-grid {
+					grid-template-columns: 1fr;
+				}
+			}
+
+			/* Dark mode styles - matches your dark theme */
+			@media (prefers-color-scheme: dark) {
+				body {
+					background-color: #111827;
+					color: #d1d5db;
+				}
+
+				.header-card,
+				.content-card,
+				.footer {
+					background-color: #1f2937;
+					border-color: #374151;
+				}
+
+				.logo {
+					color: #f9fafb;
+				}
+
+				.header-title,
+				.section-title {
+					color: #f9fafb;
+				}
+
+				.header-subtitle,
+				.welcome-text {
+					color: #9ca3af;
+				}
+
+				.email-display {
+					background-color: rgba(5, 150, 105, 0.1);
+					border-color: rgba(5, 150, 105, 0.3);
+				}
+
+				.email-value {
+					color: #f9fafb;
+				}
+
+				.green-accent-card {
+					background-color: rgba(5, 150, 105, 0.1);
+					border-color: rgba(5, 150, 105, 0.3);
+				}
+
+				.feature-item {
+					background-color: #374151;
+					border-color: #4b5563;
+				}
+
+				.feature-title {
+					color: #f9fafb;
+				}
+
+				.feature-desc {
+					color: #9ca3af;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="email-container">
+			<!-- Header Card -->
+			<div class="header-card">
+				<div class="logo">
+					<svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor">
+						<path
+							d="M12 2L13.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z"
+						/>
+					</svg>
+					GreenVue<span class="logo-eu">.eu</span>
+				</div>
+				<h1 class="header-title">Welcome to GreenVue!</h1>
+				<p class="header-subtitle">
+					Your sustainable trading journey starts here
+				</p>
+			</div>
+
+			<!-- Main Content Card -->
+			<div class="content-card">
+				<div class="section-header">
+					<svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
+						<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+					</svg>
+					<h2 class="section-title">Almost there!</h2>
+				</div>
+
+				<p class="welcome-text">
+					Thank you for joining our community of eco-conscious traders. We're
+					excited to help you give items a second life while building a more
+					sustainable Europe.
+				</p>
+
+				<!-- Email Display -->
+				<div class="email-display">
+					<div class="email-label">Confirming account for:</div>
+					<div class="email-value">{{ .Email }}</div>
+				</div>
+
+				<!-- CTA Button -->
+				<div class="cta-section">
+					<a href="{{ .ConfirmationUrl }}" class="cta-button">
+						Confirm Your Account
+					</a>
+				</div>
+			</div>
+
+			<!-- Features Card -->
+			<div class="content-card">
+				<div class="section-header">
+					<svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
+						<path
+							d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+						/>
+					</svg>
+					<h2 class="section-title">What you can do with GreenVue</h2>
+				</div>
+
+				<div class="features-grid">
+					<div class="feature-item">
+						<div class="feature-icon-wrapper">
+							<svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+								<path
+									d="M12 2l3.09 6.26L22 9l-5 4.87L18.18 21 12 17.77 5.82 21 7 13.87 2 9l6.91-.74L12 2z"
+								/>
+							</svg>
+						</div>
+						<div class="feature-title">Buy Eco-Friendly</div>
+						<div class="feature-desc">
+							Discover sustainable items with verified eco-scores
+						</div>
+					</div>
+					<div class="feature-item">
+						<div class="feature-icon-wrapper">
+							<svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+								<path
+									d="M12 2l3.09 6.26L22 9l-5 4.87L18.18 21 12 17.77 5.82 21 7 13.87 2 9l6.91-.74L12 2z"
+								/>
+							</svg>
+						</div>
+						<div class="feature-title">Sell Sustainably</div>
+						<div class="feature-desc">
+							Give your items a second life in our marketplace
+						</div>
+					</div>
+					<div class="feature-item">
+						<div class="feature-icon-wrapper">
+							<svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+								<path
+									d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+								/>
+							</svg>
+						</div>
+						<div class="feature-title">Connect Locally</div>
+						<div class="feature-desc">
+							Trade with verified users in your area
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Green Accent Card - Mission -->
+			<div class="green-accent-card">
+				<div class="section-header">
+					<svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
+						<path
+							d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+						/>
+					</svg>
+					<h3 class="mission-title">Join the Green Revolution</h3>
+				</div>
+				<p class="mission-text">
+					Every item you trade helps reduce waste and creates a more sustainable
+					future for Europe. Together, we're building a circular economy that
+					benefits everyone.
+				</p>
+			</div>
+
+			<!-- Footer -->
+			<div class="footer">
+				<p class="footer-text">
+					If you didn't sign up for GreenVue, you can safely ignore this email.
+				</p>
+				<div class="footer-links">
+					<a href="{{ .SiteUrl }}/about" class="footer-link">About Us</a>
+					<a href="{{ .SiteUrl }}/privacy" class="footer-link"
+						>Privacy Policy</a
+					>
+					<a href="{{ .SiteUrl }}/terms" class="footer-link"
+						>Terms of Service</a
+					>
+				</div>
+				<p class="footer-brand">
+					© 2025 GreenVue.eu - Sustainable Trading Solutions<br />
+					Building a greener Europe, one trade at a time.
+				</p>
+			</div>
+		</div>
+	</body>
+</html>

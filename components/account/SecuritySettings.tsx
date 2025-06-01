@@ -1,13 +1,91 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { FaShieldAlt, FaKey } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
+import { sendResetPasswordEmail } from '@/lib/backend/email/resetPassword';
+import { toast } from 'sonner';
+import { User } from '@/lib/types/user';
+import { capitalizeFirstLetter } from '@/lib/functions/capitalization';
 
 interface SecuritySettingsProps {
 	onUserDownload: () => Promise<void>;
+	user: User | null;
 }
 
-const SecuritySettings = ({ onUserDownload }: SecuritySettingsProps) => {
+const SecuritySettings = ({ onUserDownload, user }: SecuritySettingsProps) => {
+	const [lastResetEmailTime, setLastResetEmailTime] = useState<number | null>(null);
+	const [resetCooldown, setResetCooldown] = useState<number>(0);
+	const [canResetPassword, setCanResetPassword] = useState<boolean>(true);
+	// Rate limiting constants
+	const RESET_EMAIL_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour in milliseconds
+
+	// Load last reset time from localStorage on component mount
+	useEffect(() => {
+		if (user) {
+			const storageKey = `resetEmail_${user.email}`;
+			const storedTime = localStorage.getItem(storageKey);
+			if (storedTime) {
+				const lastTime = parseInt(storedTime, 10);
+				setLastResetEmailTime(lastTime);
+
+				// Calculate remaining cooldown
+				const now = Date.now();
+				const timeSinceLastReset = now - lastTime;
+				if (timeSinceLastReset < RESET_EMAIL_COOLDOWN_MS) {
+					const remainingCooldown = Math.ceil((RESET_EMAIL_COOLDOWN_MS - timeSinceLastReset) / 1000);
+					setResetCooldown(remainingCooldown);
+				}
+			}
+		}
+	}, [user, RESET_EMAIL_COOLDOWN_MS]);
+
+	useEffect(() => {
+		if (!user) return;
+
+		// Check user provider
+		if (user.provider === 'email') {
+			setCanResetPassword(true);
+		} else {
+			setCanResetPassword(false);
+		}
+	}, [user])
+
+	// Cooldown timer effect
+	useEffect(() => {
+		let interval: NodeJS.Timeout | null = null;
+
+		if (resetCooldown > 0) {
+			interval = setInterval(() => {
+				setResetCooldown((prev) => {
+					if (prev <= 1) {
+						if (interval) clearInterval(interval);
+						return 0;
+					}
+					return prev - 1;
+				});
+			}, 1000);
+		}
+
+		return () => {
+			if (interval) clearInterval(interval);
+		};
+	}, [resetCooldown]);
+
+	// Helper function to format cooldown time
+	const formatCooldownTime = (seconds: number): string => {
+		const hours = Math.floor(seconds / 3600);
+		const minutes = Math.floor((seconds % 3600) / 60);
+		const remainingSeconds = seconds % 60;
+
+		if (hours > 0) {
+			return `${hours}h ${minutes}m ${remainingSeconds}s`;
+		} else if (minutes > 0) {
+			return `${minutes}m ${remainingSeconds}s`;
+		} else {
+			return `${remainingSeconds}s`;
+		}
+	};
 	// Common classes
 	const sectionHeaderClasses =
 		'text-md font-medium text-gray-900 dark:text-white mb-4';
@@ -15,22 +93,51 @@ const SecuritySettings = ({ onUserDownload }: SecuritySettingsProps) => {
 	const sectionDividerClasses =
 		'border-t border-gray-200 dark:border-gray-700 pt-6';
 
-	// Form input classes
-	const inputGroupClasses = 'group';
-	const inputLabelClasses =
-		'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors duration-200';
-	const inputFieldClasses =
-		'w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-white transition-all duration-200 hover:border-green-400 dark:hover:border-green-600';
 	// Button classes
 	const greenButtonClasses =
 		'bg-white dark:bg-gray-900 border border-green-500 text-green-600 dark:text-green-500 hover:bg-green-600 hover:text-white dark:hover:bg-green-600 dark:hover:text-white transition-colors duration-200 shadow-sm hover:shadow-md';
 	// const redButtonClasses = "border border-red-500 text-red-600 dark:text-red-500 hover:bg-red-600 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-colors duration-200";
 	const iconClasses = 'mr-2 h-4 w-4';
 
-	// // Session card classes
-	// const sessionCardClasses = "p-4 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800/50";
-	// const sessionCardTitleClasses = "font-medium text-gray-900 dark:text-white";
-	// const activeBadgeClasses = "px-2 py-1 text-xs text-green-700 bg-green-50 dark:text-green-300 dark:bg-green-900/30 rounded-full border border-green-200 dark:border-green-800";
+
+	const handleSendResetPasswordEmail = async () => {
+		if (!user || !user.email) {
+			toast.error('Email is required to send reset password email.');
+			return;
+		}
+
+		// Check rate limiting
+		const now = Date.now();
+		if (lastResetEmailTime && (now - lastResetEmailTime) < RESET_EMAIL_COOLDOWN_MS) {
+			const remainingTime = Math.ceil((RESET_EMAIL_COOLDOWN_MS - (now - lastResetEmailTime)) / 1000);
+			toast.error(`Please wait ${formatCooldownTime(remainingTime)} before requesting another reset email.`);
+			return;
+		}
+
+		try {
+			const { success, message } = await sendResetPasswordEmail(user.email);
+
+			if (success) {
+				// Update the last reset time and store in localStorage
+				const resetTime = Date.now();
+				setLastResetEmailTime(resetTime);
+
+				const storageKey = `resetEmail_${user.email}`;
+				localStorage.setItem(storageKey, resetTime.toString());
+
+				// Start cooldown timer
+				setResetCooldown(Math.ceil(RESET_EMAIL_COOLDOWN_MS / 1000));
+
+				toast.success('Reset password email sent successfully.');
+			} else {
+				toast.error('Failed to send reset password email: ' + message);
+			}
+		} catch (error) {
+			toast.error('An error occurred while sending the reset email.');
+			console.error('Reset email error:', error);
+		}
+	};
+
 	return (
 		<div className='bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 mb-6 rounded-xl shadow-sm hover:shadow-md transition-shadow'>
 			<h2 className='text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center'>
@@ -39,90 +146,35 @@ const SecuritySettings = ({ onUserDownload }: SecuritySettingsProps) => {
 			</h2>
 
 			<div className='space-y-8'>
-				<div>
+				<>
 					<h3 className={sectionHeaderClasses}>Change Password</h3>
-					<div className='space-y-4'>
-						<div className={inputGroupClasses}>
-							<label htmlFor='currentPassword' className={inputLabelClasses}>
-								Current Password
-							</label>
-							<input
-								type='password'
-								id='currentPassword'
-								name='currentPassword'
-								className={inputFieldClasses}
-							/>
-						</div>
-
-						<div className={inputGroupClasses}>
-							<label htmlFor='newPassword' className={inputLabelClasses}>
-								New Password
-							</label>
-							<input
-								type='password'
-								id='newPassword'
-								name='newPassword'
-								className={inputFieldClasses}
-							/>
-						</div>
-
-						<div className={inputGroupClasses}>
-							<label htmlFor='confirmPassword' className={inputLabelClasses}>
-								Confirm New Password
-							</label>
-							<input
-								type='password'
-								id='confirmPassword'
-								name='confirmPassword'
-								className={inputFieldClasses}
-							/>
-						</div>
-					</div>
-
-					<div className='flex justify-end mt-5'>
-						<Button variant='outline' className={greenButtonClasses}>
-							<FaKey className={iconClasses} />
-							Change Password
-						</Button>
-					</div>
-				</div>
-				{/* 
-				<div className={sectionDividerClasses}>
-					<h3 className={sectionHeaderClasses}>
-						Login Sessions
-					</h3>
-					<p className={sectionDescriptionClasses}>
-						Manage your active login sessions. If you notice any
-						suspicious activity, log out of all devices immediately.
-					</p>
-
-					<div className="space-y-4">
-						<div className={sessionCardClasses}>
-							<div className="flex justify-between items-center">
-								<div>
-									<p className={sessionCardTitleClasses}>
-										Current Session
-									</p>
-								</div>
-								<span className={activeBadgeClasses}>
-									Active
-								</span>
+					{canResetPassword ? (
+						<div>
+							<p className={sectionDescriptionClasses}>
+								Request a password reset email to update your account password. {resetCooldown > 0 && (
+									<span className="text-orange-600 dark:text-orange-400 font-medium">
+										You can request another reset email in {formatCooldownTime(resetCooldown)}.
+									</span>
+								)}
+							</p>
+							<div className='flex justify-start'>
+								<Button
+									variant='outline'
+									className={`${greenButtonClasses} ${resetCooldown > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+									onClick={handleSendResetPasswordEmail}
+									disabled={resetCooldown > 0}
+								>
+									<FaKey className={iconClasses} />
+									{resetCooldown > 0 ? `Wait ${formatCooldownTime(resetCooldown)}` : 'Change Password'}
+								</Button>
 							</div>
 						</div>
-					</div>
-
-					<div className="mt-5">
-						<Button
-							variant="outline"
-							className={redButtonClasses}
-							onClick={async () => {
-								await logout()
-							}}
-						>
-							Log Out All Devices
-						</Button>
-					</div>
-				</div> */}
+					) : (
+						<p className={sectionDescriptionClasses}>
+							Password reset is not available for your account type: <strong>{capitalizeFirstLetter(user?.provider)}</strong>.
+						</p>
+					)}
+				</>
 
 				<div className={sectionDividerClasses}>
 					<h3 className={sectionHeaderClasses}>Download Your Data</h3>

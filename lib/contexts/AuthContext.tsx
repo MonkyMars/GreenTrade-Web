@@ -15,6 +15,7 @@ import { getUser, resendEmail } from '@/lib/backend/auth/user';
 import { toast } from 'sonner';
 import { AppError, handleError, retryOperation } from '@/lib/errorUtils';
 import { useSearchParams } from 'next/navigation';
+import camelcaseKeys from 'camelcase-keys';
 
 interface AuthContextType {
 	user: User | null;
@@ -377,7 +378,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 						});
 					}
 
-					setUser(response.data.data.user);
+					if (!response.data || !response.data.data) {
+						throw new AppError('Invalid user data format', {
+							code: 'INVALID_USER_DATA',
+						});
+					}
+
+					const user = response.data.data.user;
+
+					setUser(camelcaseKeys(user, { deep: true }) as User);
 				} catch (apiError) {
 					// If retries fail, handle it gracefully
 					handleError(apiError, 'Authentication validation');

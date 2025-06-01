@@ -2,6 +2,7 @@ import api from '../api/axiosConfig';
 import { User } from '@/lib/types/user';
 import { toast } from 'sonner';
 import { AppError, retryOperation } from '@/lib/errorUtils';
+import camelcaseKeys from 'camelcase-keys';
 
 /**
  * Get user data with improved error handling and retries
@@ -21,8 +22,8 @@ export const getUser = async (): Promise<User> => {
 			});
 		}
 
-		const user = response.data.data.user;
-		return user as User;
+		const user = camelcaseKeys(response.data.data.user, { deep: true }) as User;
+		return user;
 	} catch (error) {
 		// Convert to AppError if not already
 		const appError =
